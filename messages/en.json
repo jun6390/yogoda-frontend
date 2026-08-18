@@ -36,6 +36,16 @@
     "mission": "Mission",
     "my": "MY"
   },
+  "Login": {
+    "title": "Login",
+    "serviceName": "U+ AI LIFE",
+    "heading": "Get started right away",
+    "description": "We analyze your usage patterns\nto recommend the plan and benefits that fit you best.",
+    "continueWithGoogle": "Continue with Google",
+    "continueWithNaver": "Continue with Naver",
+    "continueWithKakao": "Continue with Kakao",
+    "legalNotice": "By signing in, you agree to U+ AI LIFE's <terms>Terms of Service</terms> and <privacy>Privacy Policy</privacy>."
+  },
   "Home": {
     "bannerAriaLabel": "Recommended benefit banners",
     "bannerPrevious": "View previous banner",
