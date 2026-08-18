@@ -12,6 +12,18 @@ body {
 }
 
 /*
+ * 모든 활성 버튼은 터치/클릭 가능한 요소임을 커서로 표시함
+ * disabled 버튼은 비활성 상태가 드러나도록 별도 커서 유지함
+ */
+button:not(:disabled) {
+  cursor: pointer;
+}
+
+button:disabled {
+  cursor: not-allowed;
+}
+
+/*
  * 앱 화면은 네이티브 앱처럼 스크롤바를 노출하지 않음
  * 스크롤 동작은 유지하고 시각적 트랙만 숨김
  */
