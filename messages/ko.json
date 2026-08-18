@@ -148,5 +148,11 @@
     "placePrimary": "혜택 보기",
     "placeSave": "혜택 저장",
     "placeMore": "주변 혜택 4개 더보기"
+  },
+  "AIChat": {
+    "headerTitle": "AI 요금제 상담",
+    "selectBtn": "이 요금제로 선택하기",
+    "explorePlans": "다른 요금제 탐색하기",
+    "inputPlaceholder": "메시지를 입력하세요"
   }
 }

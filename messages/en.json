@@ -148,5 +148,11 @@
     "placePrimary": "View benefit",
     "placeSave": "Save benefit",
     "placeMore": "View 4 more nearby benefits"
+  },
+  "AIChat": {
+    "headerTitle": "AI Plan Consultation",
+    "selectBtn": "Select this plan",
+    "explorePlans": "Explore other plans",
+    "inputPlaceholder": "Enter a message"
   }
 }

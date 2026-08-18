@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { notoSansKr } from "@/styles/fonts";
 import { NextIntlClientProvider, hasLocale } from "next-intl";
-import { getTranslations } from "next-intl/server";
+import { getMessages, getTranslations } from "next-intl/server";
 import { notFound } from "next/navigation";
 
 import { routing } from "@/i18n/routing";
@@ -50,10 +50,12 @@ export default async function LocaleLayout({
     notFound();
   }
 
+  const messages = await getMessages();
+
   return (
     <html lang={locale} suppressHydrationWarning>
       <body className={`${notoSansKr.variable} font-sans`}>
-        <NextIntlClientProvider>
+        <NextIntlClientProvider messages={messages}>
           <AppProviders>{children}</AppProviders>
         </NextIntlClientProvider>
       </body>
