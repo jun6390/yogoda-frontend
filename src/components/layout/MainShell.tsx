@@ -1,7 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { useState, useSyncExternalStore } from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
 
 import { Moon, Sun, X } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
@@ -23,7 +23,17 @@ const languageOptions = [
   { locale: "en", labelKey: "english" },
 ] as const;
 
+const keepMenuOpenKey = "yogoda:keep-menu-open-after-locale-change";
+
 const subscribe = () => () => {};
+
+function shouldKeepMenuOpenAfterLocaleChange() {
+  if (typeof window === "undefined") {
+    return false;
+  }
+
+  return window.sessionStorage.getItem(keepMenuOpenKey) === "true";
+}
 
 function useMounted() {
   return useSyncExternalStore(
@@ -35,7 +45,9 @@ function useMounted() {
 
 export function MainShell({ children }: MainShellProps) {
   const mounted = useMounted();
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isMenuOpen, setIsMenuOpen] = useState(
+    shouldKeepMenuOpenAfterLocaleChange,
+  );
 
   const { resolvedTheme, setTheme } = useTheme();
   const menu = useTranslations("Menu");
@@ -47,6 +59,15 @@ export function MainShell({ children }: MainShellProps) {
 
   const isDark = mounted && resolvedTheme === "dark";
 
+  useEffect(() => {
+    if (!isMenuOpen) {
+      return;
+    }
+
+    // locale 전환 직후 첫 렌더에서만 메뉴 열림 상태 유지함
+    window.sessionStorage.removeItem(keepMenuOpenKey);
+  }, [isMenuOpen]);
+
   const closeMenu = () => {
     // 닫는 순간 내부 버튼이 focus를 잡고 있으면 inert 적용 시 브라우저 접근성 경고가 남
     if (document.activeElement instanceof HTMLElement) {
@@ -57,11 +78,15 @@ export function MainShell({ children }: MainShellProps) {
   };
 
   const changeLocale = (nextLocale: "ko" | "en") => {
+    if (nextLocale === locale) {
+      return;
+    }
+
+    window.sessionStorage.setItem(keepMenuOpenKey, "true");
+
     router.replace(pathname, {
       locale: nextLocale,
     });
-
-    closeMenu();
   };
 
   const toggleTheme = () => {
