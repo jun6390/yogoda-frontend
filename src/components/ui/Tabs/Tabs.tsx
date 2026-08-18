@@ -33,7 +33,7 @@ export function Tabs({
       role="tablist"
       aria-label={t("ariaLabel")}
       className={cn(
-        "flex h-touch w-[390px] items-center border-b border-border-default bg-surface",
+        "flex h-touch w-full items-center border-b border-border-default bg-surface",
         className,
       )}
       {...props}

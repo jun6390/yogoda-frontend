@@ -23,7 +23,7 @@ export function PlanRow({
   return (
     <div
       className={cn(
-        "flex w-[350px] flex-col gap-sm rounded-lg bg-surface p-lg",
+        "flex w-full max-w-[350px] flex-col gap-sm rounded-lg bg-surface p-lg",
         "border border-border-default",
         recommended && "border-[1.5px] border-action-primary",
         className,

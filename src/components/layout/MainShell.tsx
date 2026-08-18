@@ -168,9 +168,7 @@ export function MainShell({ children }: MainShellProps) {
                   <span className="flex size-[32px] items-center justify-center rounded-sm bg-brand-soft text-text-brand">
                     {isDark ? <Moon size={18} /> : <Sun size={18} />}
                   </span>
-                  <span>
-                    {isDark ? menu("darkMode") : menu("lightMode")}
-                  </span>
+                  <span>{isDark ? menu("darkMode") : menu("lightMode")}</span>
                 </span>
 
                 <span

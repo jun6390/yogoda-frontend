@@ -33,7 +33,7 @@ export function BottomSheet({
   return (
     <div
       className={cn(
-        "relative flex w-[350px] flex-col gap-xl rounded-2xl bg-surface p-2xl shadow-lg",
+        "relative flex w-[calc(100vw-40px)] max-w-[350px] flex-col gap-xl rounded-2xl bg-surface p-2xl shadow-lg",
         type === "permission" && "gap-xl",
         className,
       )}
@@ -195,7 +195,7 @@ function PlaceBottomSheet({
   return (
     <div
       className={cn(
-        "flex w-[390px] flex-col gap-lg border-t border-border-default bg-surface px-2xl pb-xl pt-md",
+        "flex w-full max-w-[390px] flex-col gap-lg border-t border-border-default bg-surface px-2xl pb-xl pt-md",
         className,
       )}
       {...props}

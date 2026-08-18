@@ -84,7 +84,8 @@ export function HomeBannerCarousel() {
                 src={slide.src}
                 alt={t(slide.altKey)}
                 fill
-                priority={index === 0}
+                loading="eager"
+                fetchPriority={index === activeIndex ? "high" : "auto"}
                 sizes="(max-width: 390px) 350px, 350px"
                 className="object-contain"
               />
