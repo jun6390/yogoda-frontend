@@ -1,0 +1,142 @@
+{
+  "Common": {
+    "serviceName": "요고다",
+    "designSystem": "요고다 디자인 시스템",
+    "title": "나에게 맞는 통신 생활, 요고다",
+    "description": "디자인 토큰과 다국어 설정이 정상적으로 연결되었습니다.",
+    "recommendPlan": "요금제 추천받기",
+    "loading": "처리 중...",
+    "close": "닫기",
+    "later": "나중에",
+    "retry": "다시 시도"
+  },
+  "Navigation": {
+    "home": "홈",
+    "ai": "AI",
+    "benefits": "혜택",
+    "mission": "미션",
+    "my": "MY",
+    "primaryMenu": "주요 메뉴",
+    "openMenu": "메뉴 열기",
+    "closeMenu": "메뉴 닫기"
+  },
+  "Menu": {
+    "title": "메뉴",
+    "language": "언어",
+    "theme": "테마",
+    "korean": "한국어",
+    "english": "English",
+    "lightMode": "라이트 모드",
+    "darkMode": "다크 모드"
+  },
+  "Pages": {
+    "home": "홈",
+    "ai": "AI",
+    "benefits": "혜택",
+    "mission": "미션",
+    "my": "MY"
+  },
+  "Home": {
+    "bannerAriaLabel": "추천 혜택 배너",
+    "bannerPrevious": "이전 배너 보기",
+    "bannerNext": "다음 배너 보기",
+    "bannerGoTo": "{number}번째 배너 보기",
+    "bannerBenefitAlt": "나만을 위한 U+ 혜택 발견 배너",
+    "bannerPlanAlt": "요금제 비교 배너",
+    "bannerMissionAlt": "미션 참여 포인트 배너",
+    "bannerSpecialAlt": "유플투쁠 매달 새로운 혜택 배너",
+    "bannerCouponAlt": "쿠폰과 제휴혜택 모아보기 배너",
+    "usageTitle": "이번 달 사용",
+    "usageAmount": "43.8GB / 80GB",
+    "usagePrice": "월 69,000원",
+    "usageCall": "통화 무제한",
+    "usageOtt": "OTT 2개 사용 중",
+    "billingTitle": "이번 달 예상 요금",
+    "billingAmount": "69,000원",
+    "billingDueDate": "8월 25일 자동 납부",
+    "couponTitle": "사용 가능 쿠폰",
+    "couponCount": "3개",
+    "couponDescription": "이번 달 만료 1개 포함",
+    "todoTitle": "오늘 처리할 일",
+    "todoCount": "2개",
+    "todoContractTitle": "약정 만료 전 확인",
+    "todoContractDescription": "28일 뒤 선택약정이 끝나요",
+    "todoCouponTitle": "쿠폰 만료 예정",
+    "todoCouponDescription": "스타벅스 쿠폰이 곧 만료돼요",
+    "quickTitle": "바로가기",
+    "viewAll": "전체 보기",
+    "quickPlan": "요금제",
+    "quickBenefit": "혜택",
+    "quickAnalysis": "분석",
+    "quickConsulting": "요금 상담",
+    "membershipTitle": "멤버십",
+    "membershipGrade": "VIP 멤버십",
+    "membershipDescription": "바코드와 쿠폰함을 바로 사용할 수 있어요",
+    "membershipAction": "바코드",
+    "personalBenefitTitle": "해준님 전용 혜택 3개",
+    "personalBenefitDescription": "OTT·카페 혜택을 놓치지 마세요",
+    "view": "보기"
+  },
+  "NotFound": {
+    "label": "404",
+    "title": "페이지를 찾을 수 없어요",
+    "description": "주소가 바뀌었거나 더 이상 제공하지 않는 화면이에요.",
+    "homeAction": "홈으로 돌아가기"
+  },
+  "AIState": {
+    "thinking": "추천 조건을 분석하고 있어요",
+    "streaming": "답변을 작성하고 있어요",
+    "done": "분석이 완료됐어요",
+    "error": "응답에 실패했어요 · 다시 시도",
+    "retry": "응답에 실패했어요 · 다시 시도"
+  },
+  "AITypingIndicator": {
+    "typingAlt": "응답 작성 중",
+    "error": "응답을 불러오지 못했어요."
+  },
+  "Rows": {
+    "aiRecommended": "AI 추천",
+    "free": "무료",
+    "defaultPrice": "3,000원"
+  },
+  "Tabs": {
+    "ariaLabel": "혜택 하위 메뉴",
+    "home": "혜택 홈",
+    "attendance": "출석",
+    "twoPlus": "유플투쁠"
+  },
+  "Modal": {
+    "defaultSecondaryLabel": "나중에"
+  },
+  "Toast": {
+    "defaultActionLabel": "보러가기"
+  },
+  "BottomSheet": {
+    "loginTitle": "로그인하고 가입을 계속해주세요",
+    "loginDescription": "로그인하면 선택한 요금제로\n가입 절차를 이어갈 수 있어요.",
+    "loginCaption": "가입 진행 상황도 안전하게 저장해드려요.",
+    "loginPrimary": "로그인하고 계속하기",
+    "loginSecondary": "나중에하기",
+    "confirmationTitle": "이 결제 수단을 삭제할까요?",
+    "confirmationDescription": "등록된 결제 수단에서 카카오페이 연결을 해제해요.",
+    "confirmationCaption": "현재 기본 결제 수단과 이용 중인 구독은 그대로 유지돼요.",
+    "confirmationPaymentName": "카카오페이",
+    "confirmationPaymentCaption": "연결된 결제 수단",
+    "confirmationKeep": "취소하고 유지하기",
+    "confirmationDelete": "결제 수단 삭제",
+    "permissionTitle": "기기 알림이 꺼져 있어요",
+    "permissionDescription": "알림을 받으려면\n기기 설정에서 U+ AI LIFE 알림을 허용해주세요.",
+    "permissionCaption": "지금 설정한 알림 종류와\n수신 설정은 그대로 저장돼요.",
+    "permissionOpenSettings": "알림 설정 열기",
+    "permissionLater": "나중에",
+    "permissionFootnote": "알림 권한은 기기 설정에서 언제든 다시 변경할 수 있어요.",
+    "placeName": "스타벅스 역삼점",
+    "placeDistance": "도보 4분 · 약 280m",
+    "placeBadge": "무료",
+    "placeTitle": "아메리카노 Tall 1잔 무료",
+    "placeDescription": "VIP 멤버십 고객 전용",
+    "placePrimary": "혜택 보기",
+    "placeSave": "혜택 저장",
+    "placeMore": "주변 혜택 4개 더보기"
+  }
+}

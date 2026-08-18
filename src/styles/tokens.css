@@ -1,0 +1,315 @@
+/*
+ * Yogoda Design Tokens
+ */
+
+/* =========================================================
+   Primitive
+   ========================================================= */
+
+:root {
+  --primitive-brand-magenta: #e01485;
+  --primitive-brand-magenta-dark: #c8006d;
+  --primitive-brand-magenta-light: #f06bb6;
+  --primitive-brand-purple: #7b2cbf;
+  --primitive-brand-deep: #211524;
+  --primitive-brand-pink-50: #fff0f8;
+
+  --primitive-white: #ffffff;
+  --primitive-gray-50: #f8f8fb;
+  --primitive-gray-100: #f2f3f5;
+  --primitive-gray-200: #e5e5eb;
+  --primitive-gray-300: #d1d5db;
+  --primitive-gray-400: #9a9aa3;
+  --primitive-gray-500: #6f6f79;
+  --primitive-gray-600: #4b5563;
+  --primitive-gray-700: #373741;
+  --primitive-gray-800: #1f2937;
+  --primitive-gray-900: #17171c;
+
+  --primitive-success: #199e63;
+  --primitive-success-soft: #eaf8f1;
+  --primitive-warning: #e58b00;
+  --primitive-error: #d92d43;
+  --primitive-error-soft: #fff0f0;
+  --primitive-error-light: #ff6b7a;
+  --primitive-info: #3478f6;
+  --primitive-info-light: #6ea8ff;
+  --primitive-ai-soft: #f6f0ff;
+
+  /*
+   * 실제 컴포넌트는 아래 Semantic Token을 사용함
+   * Light/Dark 전환 시 컴포넌트 코드를 수정하지 않기 위한 구조임
+   */
+  --semantic-background: var(--primitive-gray-50);
+  --semantic-surface: var(--primitive-white);
+  --semantic-surface-subtle: var(--primitive-gray-100);
+  --semantic-brand-soft: var(--primitive-brand-pink-50);
+  --semantic-ai-soft: var(--primitive-ai-soft);
+
+  --semantic-text-on-primary: var(--primitive-white);
+  --semantic-text-primary: var(--primitive-gray-900);
+  --semantic-text-secondary: var(--primitive-gray-500);
+  --semantic-text-tertiary: var(--primitive-gray-400);
+  --semantic-text-inverse: var(--primitive-white);
+  --semantic-text-brand: var(--primitive-brand-magenta);
+
+  --semantic-border: var(--primitive-gray-200);
+  --semantic-border-strong: var(--primitive-gray-300);
+
+  --semantic-action-primary: var(--primitive-brand-magenta);
+  --semantic-action-primary-hover: var(--primitive-brand-magenta-dark);
+  --semantic-action-secondary: var(--primitive-brand-purple);
+
+  --semantic-success: var(--primitive-success);
+  --semantic-success-soft: var(--primitive-success-soft);
+  --semantic-warning: var(--primitive-warning);
+  --semantic-error: var(--primitive-error);
+  --semantic-error-soft: var(--primitive-error-soft);
+  --semantic-info: var(--primitive-info);
+
+  --semantic-icon-default: var(--primitive-gray-900);
+  --semantic-icon-secondary: var(--primitive-gray-500);
+  --semantic-icon-disabled: var(--primitive-gray-300);
+  --semantic-icon-brand: var(--primitive-brand-magenta);
+  --semantic-icon-inverse: var(--primitive-white);
+
+  color-scheme: light;
+}
+
+/*
+ * 테마별 차이는 Semantic Token에서만 관리함
+ * 컴포넌트 내부에 dark:bg-..., dark:text-...를 반복 작성하지 않음
+ */
+.dark {
+  --semantic-background: var(--primitive-gray-900);
+  --semantic-surface: var(--primitive-gray-800);
+  --semantic-surface-subtle: var(--primitive-gray-700);
+  --semantic-brand-soft: var(--primitive-brand-deep);
+  --semantic-ai-soft: #2f2438;
+
+  --semantic-text-on-primary: var(--primitive-white);
+  --semantic-text-primary: var(--primitive-white);
+  --semantic-text-secondary: var(--primitive-gray-300);
+  --semantic-text-tertiary: var(--primitive-gray-400);
+  --semantic-text-inverse: var(--primitive-gray-900);
+  --semantic-text-brand: var(--primitive-brand-magenta-light);
+
+  --semantic-border: var(--primitive-gray-700);
+  --semantic-border-strong: var(--primitive-gray-600);
+
+  --semantic-action-primary: var(--primitive-brand-magenta);
+  --semantic-action-primary-hover: var(--primitive-brand-magenta-dark);
+  --semantic-action-secondary: var(--primitive-brand-purple);
+
+  --semantic-success: var(--primitive-success);
+  --semantic-success-soft: var(--primitive-success-soft);
+  --semantic-warning: var(--primitive-warning);
+  --semantic-error: var(--primitive-error-light);
+  --semantic-error-soft: #3a2229;
+  --semantic-info: var(--primitive-info-light);
+
+  --semantic-icon-default: var(--primitive-white);
+  --semantic-icon-secondary: var(--primitive-gray-300);
+  --semantic-icon-disabled: var(--primitive-gray-600);
+  --semantic-icon-brand: var(--primitive-brand-magenta-light);
+  --semantic-icon-inverse: var(--primitive-gray-900);
+
+  color-scheme: dark;
+}
+
+/* =========================================================
+   Tailwind Theme
+   ========================================================= */
+
+/*
+ * Figma 토큰을 Tailwind Utility와 연결함
+ * 아래 이름은 팀 공통 API가 되므로 임의 변경하지 않음
+ */
+@theme inline {
+  /*
+   * Next Font에서 생성한 Noto Sans KR 변수임
+   * Tailwind의 font-sans 유틸리티와 연결함
+   */
+  --font-sans: var(--font-noto-sans-kr), sans-serif;
+
+  /* 색상임 */
+  --color-background: var(--semantic-background);
+  --color-surface: var(--semantic-surface);
+  --color-surface-subtle: var(--semantic-surface-subtle);
+  --color-brand-soft: var(--semantic-brand-soft);
+  --color-ai-soft: var(--semantic-ai-soft);
+
+  --color-text-on-primary: var(--semantic-text-on-primary);
+  --color-text-primary: var(--semantic-text-primary);
+  --color-text-secondary: var(--semantic-text-secondary);
+  --color-text-tertiary: var(--semantic-text-tertiary);
+  --color-text-inverse: var(--semantic-text-inverse);
+  --color-text-brand: var(--semantic-text-brand);
+
+  --color-border-default: var(--semantic-border);
+  --color-border-strong: var(--semantic-border-strong);
+
+  --color-action-primary: var(--semantic-action-primary);
+  --color-action-primary-hover: var(--semantic-action-primary-hover);
+  --color-action-secondary: var(--semantic-action-secondary);
+
+  --color-success: var(--semantic-success);
+  --color-success-soft: var(--semantic-success-soft);
+  --color-warning: var(--semantic-warning);
+  --color-error: var(--semantic-error);
+  --color-error-soft: var(--semantic-error-soft);
+  --color-info: var(--semantic-info);
+
+  --color-icon-default: var(--semantic-icon-default);
+  --color-icon-secondary: var(--semantic-icon-secondary);
+  --color-icon-disabled: var(--semantic-icon-disabled);
+  --color-icon-brand: var(--semantic-icon-brand);
+  --color-icon-inverse: var(--semantic-icon-inverse);
+
+  /* 4px Base Grid */
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 12px;
+  --spacing-lg: 16px;
+  --spacing-xl: 20px;
+  --spacing-2xl: 24px;
+  --spacing-3xl: 32px;
+  --spacing-4xl: 40px;
+  --spacing-5xl: 48px;
+
+  /* 공통 레이아웃 값임 */
+  --spacing-page: 20px;
+  --spacing-card: 16px;
+  --spacing-chat: 16px;
+  --spacing-section: 32px;
+
+  --spacing-touch: 44px;
+  --spacing-header: 56px;
+  --spacing-profile-header: 72px;
+  --spacing-chat-header: 54px;
+  --spacing-bottom-nav: 72px;
+
+  /*
+   * 390px은 디자인 기준 폭이며 실제 웹 화면을 390px로 고정하지 않음
+   */
+  --container-mobile: 390px;
+  --container-content: 350px;
+
+  /* Radius */
+  --radius-sm: 8px;
+  --radius-xs: 6px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 20px;
+  --radius-2xl: 24px;
+  --radius-full: 999px;
+
+  /*
+   * 일반 카드에는 그림자를 기본 적용하지 않음
+   * Floating UI, Dropdown, Modal 등 계층 표현이 필요한 경우에만 사용함
+   */
+  --shadow-sm: 0 2px 8px rgb(18 20 31 / 8%);
+  --shadow-md: 0 6px 18px -2px rgb(18 20 31 / 12%);
+  --shadow-lg: 0 14px 32px -6px rgb(18 20 31 / 16%);
+
+  /* Typography - Display */
+  --text-display-40-bold: 40px;
+  --text-display-40-bold--line-height: 52px;
+  --text-display-40-bold--letter-spacing: 0;
+  --text-display-40-bold--font-weight: 700;
+
+  --text-display-32-bold: 32px;
+  --text-display-32-bold--line-height: 42px;
+  --text-display-32-bold--letter-spacing: -0.3px;
+  --text-display-32-bold--font-weight: 700;
+
+  --text-display-28-bold: 28px;
+  --text-display-28-bold--line-height: 38px;
+  --text-display-28-bold--letter-spacing: 0;
+  --text-display-28-bold--font-weight: 700;
+
+  /* Typography - Title */
+  --text-title-24-bold: 24px;
+  --text-title-24-bold--line-height: 34px;
+  --text-title-24-bold--letter-spacing: -0.2px;
+  --text-title-24-bold--font-weight: 700;
+
+  --text-title-20-bold: 20px;
+  --text-title-20-bold--line-height: 30px;
+  --text-title-20-bold--letter-spacing: -0.1px;
+  --text-title-20-bold--font-weight: 700;
+
+  --text-title-18-bold: 18px;
+  --text-title-18-bold--line-height: 26px;
+  --text-title-18-bold--letter-spacing: 0;
+  --text-title-18-bold--font-weight: 700;
+
+  --text-title-16-bold: 16px;
+  --text-title-16-bold--line-height: 22px;
+  --text-title-16-bold--letter-spacing: 0;
+  --text-title-16-bold--font-weight: 700;
+
+  /* Typography - Body */
+  --text-body-16-regular: 16px;
+  --text-body-16-regular--line-height: 26px;
+  --text-body-16-regular--letter-spacing: 0;
+  --text-body-16-regular--font-weight: 400;
+
+  --text-body-14-regular: 14px;
+  --text-body-14-regular--line-height: 22px;
+  --text-body-14-regular--letter-spacing: 0;
+  --text-body-14-regular--font-weight: 400;
+
+  /* Typography - Label */
+  --text-label-14-bold: 14px;
+  --text-label-14-bold--line-height: 20px;
+  --text-label-14-bold--letter-spacing: 0;
+  --text-label-14-bold--font-weight: 700;
+
+  --text-label-14-medium: 14px;
+  --text-label-14-medium--line-height: 20px;
+  --text-label-14-medium--letter-spacing: 0;
+  --text-label-14-medium--font-weight: 500;
+
+  /* Typography - Caption */
+  --text-caption-13-regular: 13px;
+  --text-caption-13-regular--line-height: 18px;
+  --text-caption-13-regular--letter-spacing: 0;
+  --text-caption-13-regular--font-weight: 400;
+
+  --text-caption-13-medium: 13px;
+  --text-caption-13-medium--line-height: 18px;
+  --text-caption-13-medium--letter-spacing: 0;
+  --text-caption-13-medium--font-weight: 500;
+
+  --text-caption-13-bold: 13px;
+  --text-caption-13-bold--line-height: 18px;
+  --text-caption-13-bold--letter-spacing: 0;
+  --text-caption-13-bold--font-weight: 700;
+
+  --text-caption-12-regular: 12px;
+  --text-caption-12-regular--line-height: 18px;
+  --text-caption-12-regular--letter-spacing: 0;
+  --text-caption-12-regular--font-weight: 400;
+
+  --text-caption-12-medium: 12px;
+  --text-caption-12-medium--line-height: 18px;
+  --text-caption-12-medium--letter-spacing: 0;
+  --text-caption-12-medium--font-weight: 500;
+
+  --text-caption-12-bold: 12px;
+  --text-caption-12-bold--line-height: 16px;
+  --text-caption-12-bold--letter-spacing: 0;
+  --text-caption-12-bold--font-weight: 700;
+
+  /* Typography - Micro */
+  --text-micro-11-regular: 11px;
+  --text-micro-11-regular--line-height: 14px;
+  --text-micro-11-regular--letter-spacing: 0;
+  --text-micro-11-regular--font-weight: 400;
+
+  --text-micro-11-bold: 11px;
+  --text-micro-11-bold--line-height: 14px;
+  --text-micro-11-bold--letter-spacing: 0;
+  --text-micro-11-bold--font-weight: 700;
+}

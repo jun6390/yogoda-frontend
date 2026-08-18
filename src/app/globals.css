@@ -1,26 +1,25 @@
 @import "tailwindcss";
+@import "../styles/tokens.css";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
+/*
+ * 앱 전체의 기본 배경과 글자색은 Semantic Token을 사용함
+ * 테마 변경 시 페이지마다 별도 스타일을 수정하지 않도록 전역에서 관리함
+ */
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--semantic-background);
+  color: var(--semantic-text-primary);
+}
+
+/*
+ * 앱 화면은 네이티브 앱처럼 스크롤바를 노출하지 않음
+ * 스크롤 동작은 유지하고 시각적 트랙만 숨김
+ */
+* {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+*::-webkit-scrollbar {
+  display: none;
 }

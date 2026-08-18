@@ -1,0 +1,142 @@
+{
+  "Common": {
+    "serviceName": "Yogoda",
+    "designSystem": "Yogoda Design System",
+    "title": "A smarter mobile life, Yogoda",
+    "description": "Design tokens and internationalization are connected correctly.",
+    "recommendPlan": "Get a plan recommendation",
+    "loading": "Processing...",
+    "close": "Close",
+    "later": "Later",
+    "retry": "Try again"
+  },
+  "Navigation": {
+    "home": "Home",
+    "ai": "AI",
+    "benefits": "Benefits",
+    "mission": "Mission",
+    "my": "MY",
+    "primaryMenu": "Primary menu",
+    "openMenu": "Open menu",
+    "closeMenu": "Close menu"
+  },
+  "Menu": {
+    "title": "Menu",
+    "language": "Language",
+    "theme": "Theme",
+    "korean": "Korean",
+    "english": "English",
+    "lightMode": "Light mode",
+    "darkMode": "Dark mode"
+  },
+  "Pages": {
+    "home": "Home",
+    "ai": "AI",
+    "benefits": "Benefits",
+    "mission": "Mission",
+    "my": "MY"
+  },
+  "Home": {
+    "bannerAriaLabel": "Recommended benefit banners",
+    "bannerPrevious": "View previous banner",
+    "bannerNext": "View next banner",
+    "bannerGoTo": "View banner {number}",
+    "bannerBenefitAlt": "Banner for discovering U+ benefits picked for you",
+    "bannerPlanAlt": "Banner for comparing mobile plans",
+    "bannerMissionAlt": "Banner for earning points through missions",
+    "bannerSpecialAlt": "Banner for monthly U+ Two Plus benefits",
+    "bannerCouponAlt": "Banner for coupons and partner benefits",
+    "usageTitle": "This month",
+    "usageAmount": "43.8GB / 80GB",
+    "usagePrice": "KRW 69,000/mo",
+    "usageCall": "Unlimited calls",
+    "usageOtt": "2 OTT services",
+    "billingTitle": "Estimated bill",
+    "billingAmount": "KRW 69,000",
+    "billingDueDate": "Auto pay on Aug 25",
+    "couponTitle": "Available coupons",
+    "couponCount": "3",
+    "couponDescription": "1 expires this month",
+    "todoTitle": "To-do today",
+    "todoCount": "2 items",
+    "todoContractTitle": "Check contract expiry",
+    "todoContractDescription": "Your discount ends in 28 days",
+    "todoCouponTitle": "Coupon expiring soon",
+    "todoCouponDescription": "Starbucks coupon expires soon",
+    "quickTitle": "Shortcuts",
+    "viewAll": "View all",
+    "quickPlan": "Plan",
+    "quickBenefit": "Benefits",
+    "quickAnalysis": "Analysis",
+    "quickConsulting": "Plan chat",
+    "membershipTitle": "Membership",
+    "membershipGrade": "VIP membership",
+    "membershipDescription": "Use your barcode and coupon box right away",
+    "membershipAction": "Barcode",
+    "personalBenefitTitle": "3 benefits picked for Haejun",
+    "personalBenefitDescription": "Don't miss OTT and cafe benefits",
+    "view": "View"
+  },
+  "NotFound": {
+    "label": "404",
+    "title": "Page not found",
+    "description": "The address may have changed or this screen is no longer available.",
+    "homeAction": "Go home"
+  },
+  "AIState": {
+    "thinking": "Analyzing preferences",
+    "streaming": "Writing a reply",
+    "done": "Analysis complete",
+    "error": "Response failed · Try again",
+    "retry": "Response failed · Try again"
+  },
+  "AITypingIndicator": {
+    "typingAlt": "Writing a response",
+    "error": "Could not load the response."
+  },
+  "Rows": {
+    "aiRecommended": "AI recommended",
+    "free": "Free",
+    "defaultPrice": "KRW 3,000"
+  },
+  "Tabs": {
+    "ariaLabel": "Benefits sub navigation",
+    "home": "Benefits home",
+    "attendance": "Attendance",
+    "twoPlus": "U+ Two Plus"
+  },
+  "Modal": {
+    "defaultSecondaryLabel": "Later"
+  },
+  "Toast": {
+    "defaultActionLabel": "View"
+  },
+  "BottomSheet": {
+    "loginTitle": "Log in to continue joining",
+    "loginDescription": "Log in to continue signing up\nwith the plan you selected.",
+    "loginCaption": "We'll safely save your signup progress.",
+    "loginPrimary": "Log in and continue",
+    "loginSecondary": "Do it later",
+    "confirmationTitle": "Delete this payment method?",
+    "confirmationDescription": "Kakao Pay will be disconnected from your saved payment methods.",
+    "confirmationCaption": "Your default payment method and active subscriptions will stay unchanged.",
+    "confirmationPaymentName": "Kakao Pay",
+    "confirmationPaymentCaption": "Connected payment method",
+    "confirmationKeep": "Cancel and keep it",
+    "confirmationDelete": "Delete payment method",
+    "permissionTitle": "Device notifications are off",
+    "permissionDescription": "To receive notifications,\nallow U+ AI LIFE notifications in device settings.",
+    "permissionCaption": "Your selected notification types\nand preferences will stay saved.",
+    "permissionOpenSettings": "Open notification settings",
+    "permissionLater": "Later",
+    "permissionFootnote": "You can change notification permissions anytime in device settings.",
+    "placeName": "Starbucks Yeoksam",
+    "placeDistance": "4 min walk · about 280 m",
+    "placeBadge": "Free",
+    "placeTitle": "Free Tall Americano",
+    "placeDescription": "Exclusive for VIP membership customers",
+    "placePrimary": "View benefit",
+    "placeSave": "Save benefit",
+    "placeMore": "View 4 more nearby benefits"
+  }
+}
