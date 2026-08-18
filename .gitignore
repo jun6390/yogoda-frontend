@@ -34,6 +34,10 @@ Thumbs.db
 Desktop.ini
 *.pem
 
+# local AI agent instructions
+AGENTS.md
+CLAUDE.md
+
 # debug
 *.log
 npm-debug.log*
