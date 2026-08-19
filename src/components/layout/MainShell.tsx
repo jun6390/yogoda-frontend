@@ -3,7 +3,8 @@
 import type { ReactNode } from "react";
 import { useEffect, useState, useSyncExternalStore } from "react";
 
-import { Moon, Sun, X } from "lucide-react";
+import { useMutation } from "@tanstack/react-query";
+import { LogOut, Moon, Sun, X } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 
 import { AppLayout } from "./AppLayout";
@@ -11,8 +12,10 @@ import { AppLayout } from "./AppLayout";
 import { BottomNavigation } from "@/components/ui/BottomNavigation/BottomNavigation";
 import { Header } from "@/components/ui/Header/Header";
 import { usePathname, useRouter } from "@/i18n/navigation";
+import { logout } from "@/lib/api/auth";
 import { cn } from "@/lib/utils";
 import { useTheme } from "@/providers/theme-provider";
+import { useAuthStore } from "@/stores/useAuthStore";
 
 interface MainShellProps {
   children: ReactNode;
@@ -57,6 +60,9 @@ export function MainShell({ children }: MainShellProps) {
   const pathname = usePathname();
   const router = useRouter();
 
+  const accessToken = useAuthStore((state) => state.accessToken);
+  const clearAuth = useAuthStore((state) => state.clearAuth);
+
   const isDark = mounted && resolvedTheme === "dark";
 
   useEffect(() => {
@@ -92,6 +98,16 @@ export function MainShell({ children }: MainShellProps) {
   const toggleTheme = () => {
     setTheme(isDark ? "light" : "dark");
   };
+
+  const { mutate: requestLogout } = useMutation({
+    mutationFn: logout,
+    onSettled: () => {
+      // 서버 로그아웃 요청 성공/실패와 무관하게 로컬 로그인 상태는 정리함
+      clearAuth();
+      closeMenu();
+      router.push("/");
+    },
+  });
 
   return (
     <>
@@ -145,7 +161,7 @@ export function MainShell({ children }: MainShellProps) {
             </button>
           </div>
 
-          <div className="mt-2xl flex flex-col gap-2xl">
+          <div className="mt-2xl flex flex-1 flex-col gap-2xl">
             <section className="space-y-sm">
               <p className="font-sans text-caption-12-bold text-text-tertiary">
                 {menu("language")}
@@ -216,6 +232,21 @@ export function MainShell({ children }: MainShellProps) {
                 </span>
               </button>
             </section>
+
+            {accessToken && (
+              <button
+                type="button"
+                onClick={() => requestLogout()}
+                className={cn(
+                  "mt-auto flex h-[48px] w-full items-center justify-center gap-sm rounded-lg bg-error-soft",
+                  "font-sans text-label-14-bold text-error transition-colors",
+                  "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-action-primary",
+                )}
+              >
+                <LogOut size={18} />
+                {menu("logout")}
+              </button>
+            )}
           </div>
         </aside>
       </div>

@@ -262,7 +262,8 @@
     "korean": "한국어",
     "english": "English",
     "lightMode": "라이트 모드",
-    "darkMode": "다크 모드"
+    "darkMode": "다크 모드",
+    "logout": "로그아웃"
   },
   "Pages": {
     "home": "홈",
