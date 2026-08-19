@@ -288,6 +288,10 @@
     "authFailed": "로그인 인증에 실패했어요."
   },
   "Home": {
+    "myPlan": "내 요금제",
+    "planExplore": "요금제 탐색",
+    "planJoin": "요금제 가입",
+    "planTabsAriaLabel": "요금제 메뉴",
     "bannerAriaLabel": "추천 혜택 배너",
     "bannerPrevious": "이전 배너 보기",
     "bannerNext": "다음 배너 보기",
@@ -327,6 +331,15 @@
     "personalBenefitTitle": "해준님 전용 혜택 3개",
     "personalBenefitDescription": "OTT·카페 혜택을 놓치지 마세요",
     "view": "보기"
+  },
+  "Plans": {
+    "titleLine1": "내 조건에 맞는 요금제를",
+    "titleLine2": "직접 찾아볼 수도 있어요",
+    "filterAll": "전체",
+    "filter5g": "5G",
+    "filterData": "데이터",
+    "filterOtt": "OTT",
+    "filterSenior": "시니어"
   },
   "NotFound": {
     "label": "404",

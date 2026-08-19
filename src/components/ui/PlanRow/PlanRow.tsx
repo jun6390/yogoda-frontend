@@ -23,9 +23,9 @@ export function PlanRow({
   return (
     <div
       className={cn(
-        "flex w-full max-w-[350px] flex-col gap-sm rounded-lg bg-surface p-lg",
-        "border border-border-default",
-        recommended && "border-[1.5px] border-action-primary",
+        "flex w-full flex-col gap-sm rounded-lg bg-surface p-lg",
+        "border border-border-strong",
+        recommended && "border-2 border-action-primary",
         className,
       )}
       {...props}
@@ -34,12 +34,14 @@ export function PlanRow({
         <p className="min-w-0 truncate font-sans text-label-14-bold text-text-primary">
           {name}
         </p>
+
         {recommended ? (
           <span className="shrink-0 rounded-xs bg-brand-soft px-sm py-[2px] font-sans text-micro-11-bold text-text-brand">
             {t("aiRecommended")}
           </span>
         ) : null}
       </div>
+
       <p
         className={cn(
           "font-sans text-label-14-bold text-text-primary",
@@ -48,6 +50,7 @@ export function PlanRow({
       >
         {price}
       </p>
+
       <p className="font-sans text-micro-11-regular text-text-secondary">
         {description}
       </p>

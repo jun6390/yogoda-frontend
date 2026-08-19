@@ -288,6 +288,10 @@
     "authFailed": "Authentication failed."
   },
   "Home": {
+    "myPlan": "My Plan",
+    "planExplore": "Explore Plans",
+    "planJoin": "Join Plan",
+    "planTabsAriaLabel": "Plan menu",
     "bannerAriaLabel": "Recommended benefit banners",
     "bannerPrevious": "View previous banner",
     "bannerNext": "View next banner",
@@ -327,6 +331,15 @@
     "personalBenefitTitle": "3 benefits picked for Haejun",
     "personalBenefitDescription": "Don't miss OTT and cafe benefits",
     "view": "View"
+  },
+  "Plans": {
+    "titleLine1": "Find a plan that fits",
+    "titleLine2": "your needs",
+    "filterAll": "All",
+    "filter5g": "5G",
+    "filterData": "Data",
+    "filterOtt": "OTT",
+    "filterSenior": "Senior"
   },
   "NotFound": {
     "label": "404",
