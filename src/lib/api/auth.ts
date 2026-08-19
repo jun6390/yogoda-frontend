@@ -21,3 +21,9 @@ export function loginWithGoogle(code: string) {
     body: { code },
   });
 }
+
+export function logout() {
+  return apiFetch<{ message: string }>("/api/auth/logout", {
+    method: "POST",
+  });
+}
