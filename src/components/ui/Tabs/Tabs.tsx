@@ -1,44 +1,43 @@
+"use client";
+
 import type { HTMLAttributes } from "react";
-import { useTranslations } from "next-intl";
 
 import { cn } from "@/lib/utils";
 
-type TabValue = "home" | "attendance" | "twoPlus";
-
-interface TabsProps extends HTMLAttributes<HTMLDivElement> {
-  active?: TabValue;
-  onValueChange?: (value: TabValue) => void;
+interface TabItem<T extends string> {
+  value: T;
+  label: string;
 }
 
-const tabs: Array<{
-  value: TabValue;
-  labelKey: TabValue;
-  indicatorWidth: string;
-}> = [
-  { value: "home", labelKey: "home", indicatorWidth: "w-[51px]" },
-  { value: "attendance", labelKey: "attendance", indicatorWidth: "w-[36px]" },
-  { value: "twoPlus", labelKey: "twoPlus", indicatorWidth: "w-[60px]" },
-];
+interface TabsProps<T extends string> extends Omit<
+  HTMLAttributes<HTMLDivElement>,
+  "onChange"
+> {
+  items: readonly TabItem<T>[];
+  active: T;
+  onValueChange?: (value: T) => void;
+  ariaLabel?: string;
+}
 
-export function Tabs({
-  active = "home",
+export function Tabs<T extends string>({
+  items,
+  active,
   onValueChange,
+  ariaLabel = "서브 메뉴",
   className,
   ...props
-}: TabsProps) {
-  const t = useTranslations("Tabs");
-
+}: TabsProps<T>) {
   return (
     <div
       role="tablist"
-      aria-label={t("ariaLabel")}
+      aria-label={ariaLabel}
       className={cn(
         "flex h-touch w-full items-center border-b border-border-default bg-surface",
         className,
       )}
       {...props}
     >
-      {tabs.map((tab) => {
+      {items.map((tab) => {
         const isActive = active === tab.value;
 
         return (
@@ -49,20 +48,17 @@ export function Tabs({
             aria-selected={isActive}
             onClick={() => onValueChange?.(tab.value)}
             className={cn(
-              "relative flex h-full flex-1 items-center justify-center font-sans text-caption-13-medium text-text-secondary",
+              "relative flex h-full flex-1 items-center justify-center",
+              "font-sans text-caption-13-medium text-text-secondary",
               "focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-action-primary",
               isActive && "text-caption-13-bold text-action-primary",
             )}
           >
-            {t(tab.labelKey)}
-            {isActive ? (
-              <span
-                className={cn(
-                  "absolute bottom-0 h-[2px] rounded-full bg-action-primary",
-                  tab.indicatorWidth,
-                )}
-              />
-            ) : null}
+            {tab.label}
+
+            {isActive && (
+              <span className="absolute inset-x-0 bottom-0 h-[2px] bg-action-primary" />
+            )}
           </button>
         );
       })}

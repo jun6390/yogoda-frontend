@@ -275,13 +275,13 @@
   "Login": {
     "back": "Back",
     "title": "Login",
-    "serviceName": "U+ AI LIFE",
+    "serviceName": "Yogoda",
     "heading": "Get started right away",
     "description": "We analyze your usage patterns\nto recommend the plan and benefits that fit you best.",
     "continueWithGoogle": "Continue with Google",
     "continueWithNaver": "Continue with Naver",
     "continueWithKakao": "Continue with Kakao",
-    "legalNotice": "By signing in, you agree to U+ AI LIFE's <terms>Terms of Service</terms> and <privacy>Privacy Policy</privacy>."
+    "legalNotice": "By signing in, you agree to Yogoda's <terms>Terms of Service</terms> and <privacy>Privacy Policy</privacy>."
   },
   "Callback": {
     "processing": "Signing in...",
@@ -290,6 +290,10 @@
     "authFailed": "Authentication failed."
   },
   "Home": {
+    "myPlan": "My Plan",
+    "planExplore": "Explore Plans",
+    "planJoin": "Join Plan",
+    "planTabsAriaLabel": "Plan menu",
     "bannerAriaLabel": "Recommended benefit banners",
     "bannerPrevious": "View previous banner",
     "bannerNext": "View next banner",
@@ -330,6 +334,73 @@
     "personalBenefitDescription": "Don't miss OTT and cafe benefits",
     "view": "View"
   },
+  "Plans": {
+    "titleLine1": "Find a plan that fits",
+    "titleLine2": "your needs",
+    "filterPopular": "Popular",
+    "filterAll": "All",
+    "filterUnlimited": "Unlimited",
+    "filterPriceHigh": "Price: High to Low",
+    "filterPriceLow": "Price: Low to High",
+    "loading": "Loading plans.",
+    "error": "Unable to load plans.",
+    "monthlyPrice": "{amount} KRW/month"
+  },
+  "PlanDetail": {
+    "back": "Go back",
+    "loading": "Loading plan information.",
+    "error": "Unable to load plan information.",
+    "maxBenefit": "Up to ₩{amount}/month in benefits",
+    "effectivePrice": "Effective price",
+    "wonPerMonth": " KRW/month",
+    "upTo": "Up to ₩{amount}",
+    "monthlyValue": "Worth ₩{amount}/month",
+
+    "unlimited": "Unlimited",
+    "data": "Data",
+    "voice": "Calls",
+    "sms": "Messages",
+    "tethering": "Tethering & sharing",
+    "additionalVoice": "Additional calls",
+    "familyData": "Family data",
+
+    "goToBenefits": "Ready to choose your benefits?",
+    "selectCount": "Select {count}",
+    "vipInstruction": "Use this benefit in U+one.",
+    "addonInstruction": "Apply separately in U+one.",
+
+    "selectedBenefits": "Selected benefits",
+    "estimatedPayment": "Estimated monthly payment",
+    "join": "Join plan",
+
+    "sections": {
+      "plus": "Fill your plan with the benefits you want",
+      "premium": "Time to choose your special benefit",
+      "couponChoice": "Choose your Nerget-only benefit",
+      "couponInfo": "Nerget-only benefits",
+      "membership": "Benefits included with Nerget"
+    },
+
+    "steps": {
+      "plusBenefit": "Plus Benefits",
+      "samsungDevice": "Samsung Devices",
+      "appleDevice": "Apple Devices",
+      "maniaDevice": "Mania Devices",
+      "netflix": "Netflix",
+      "dailyPlus": "Daily Plus",
+      "nergetCoupon": "Nerget Coupon",
+      "vipMembership": "VIP Membership Benefits",
+      "addonBenefit": "Additional Benefits",
+      "promotion": "Promotional Benefits"
+    },
+
+    "exitModal": {
+      "title": "Go back to the previous page?",
+      "description": "Your selected benefits will be reset.",
+      "cancel": "Cancel",
+      "confirm": "Confirm"
+    }
+  },
   "NotFound": {
     "label": "404",
     "title": "Page not found",
@@ -350,7 +421,11 @@
   "Rows": {
     "aiRecommended": "AI recommended",
     "free": "Free",
-    "defaultPrice": "KRW 3,000"
+    "defaultPrice": "KRW 3,000",
+    "benefits": "Key benefits",
+    "effectivePrice": "Effective price",
+    "perMonth": " KRW/month",
+    "maxMonthlyBenefit": "Up to <strong>₩{amount}</strong>/month in benefits"
   },
   "Tabs": {
     "ariaLabel": "Benefits sub navigation",
@@ -378,7 +453,7 @@
     "confirmationKeep": "Cancel and keep it",
     "confirmationDelete": "Delete payment method",
     "permissionTitle": "Device notifications are off",
-    "permissionDescription": "To receive notifications,\nallow U+ AI LIFE notifications in device settings.",
+    "permissionDescription": "To receive notifications,\nallow Yogoda notifications in device settings.",
     "permissionCaption": "Your selected notification types\nand preferences will stay saved.",
     "permissionOpenSettings": "Open notification settings",
     "permissionLater": "Later",

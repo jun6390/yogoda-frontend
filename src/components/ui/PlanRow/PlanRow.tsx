@@ -1,56 +1,165 @@
-import type { HTMLAttributes, ReactNode } from "react";
-import { useTranslations } from "next-intl";
+"use client";
 
+import type { HTMLAttributes, ReactNode } from "react";
+import { ChevronDown, ChevronRight } from "lucide-react";
+import { useLocale, useTranslations } from "next-intl";
+
+import { NergetPlanBadge } from "@/components/plans/NergetPlanBadge";
+import { Link } from "@/i18n/navigation";
 import { cn } from "@/lib/utils";
 
 interface PlanRowProps extends HTMLAttributes<HTMLDivElement> {
   recommended?: boolean;
   name: ReactNode;
+  planNumber?: string | number;
   price: ReactNode;
   description: ReactNode;
+  subDescription?: ReactNode;
+  benefits?: string[];
+  href?: string;
+  promotionBadge?: string | null;
+  effectiveMonthlyFee?: number | null;
+  maxMonthlyBenefit?: number | null;
 }
 
 export function PlanRow({
   recommended = false,
   name,
+  planNumber,
   price,
   description,
+  subDescription,
+  benefits = [],
+  href,
+  promotionBadge,
+  effectiveMonthlyFee,
+  maxMonthlyBenefit,
   className,
   ...props
 }: PlanRowProps) {
   const t = useTranslations("Rows");
+  const locale = useLocale();
+
+  const formatNumber = (value: number) =>
+    new Intl.NumberFormat(locale).format(value);
+
+  const mainContent = (
+    <div className="px-lg pb-md pt-lg">
+      <div className="flex items-start justify-between gap-lg">
+        <div className="min-w-0 flex-1">
+          {promotionBadge && (
+            <span className="mb-sm flex h-[22px] w-fit items-center rounded-xs bg-background px-sm font-sans text-micro-11-bold leading-none text-text-secondary">
+              {promotionBadge}
+            </span>
+          )}
+
+          {effectiveMonthlyFee !== null &&
+            effectiveMonthlyFee !== undefined && (
+              <p className="font-sans text-caption-13-medium text-text-primary">
+                <span className="font-sans text-label-14-bold text-action-primary">
+                  {t("effectivePrice")}{" "}
+                </span>
+
+                <strong className="font-sans text-label-14-bold text-text-primary">
+                  {formatNumber(effectiveMonthlyFee)}
+                </strong>
+
+                {t("perMonth")}
+              </p>
+            )}
+
+          <p className="mt-xs font-sans text-micro-11-regular text-text-primary line-through">
+            {price}
+          </p>
+        </div>
+
+        {planNumber !== undefined && (
+          <NergetPlanBadge number={planNumber} size="sm" />
+        )}
+      </div>
+
+      <div className="mt-lg flex items-center justify-between gap-md">
+        <div className="min-w-0">
+          <p className="font-sans text-label-14-bold text-text-primary">
+            {description}
+          </p>
+
+          {subDescription && (
+            <p className="mt-xs font-sans text-micro-11-regular text-text-secondary">
+              {subDescription}
+            </p>
+          )}
+
+          <span className="sr-only">{name}</span>
+
+          {recommended && <span className="sr-only">{t("aiRecommended")}</span>}
+        </div>
+
+        {href && (
+          <ChevronRight
+            aria-hidden="true"
+            size={20}
+            className="shrink-0 text-text-primary"
+          />
+        )}
+      </div>
+    </div>
+  );
 
   return (
     <div
-      className={cn(
-        "flex w-full max-w-[350px] flex-col gap-sm rounded-lg bg-surface p-lg",
-        "border border-border-default",
-        recommended && "border-[1.5px] border-action-primary",
-        className,
-      )}
+      className={cn("w-full overflow-hidden rounded-lg bg-surface", className)}
       {...props}
     >
-      <div className="flex w-full items-center justify-between gap-md">
-        <p className="min-w-0 truncate font-sans text-label-14-bold text-text-primary">
-          {name}
-        </p>
-        {recommended ? (
-          <span className="shrink-0 rounded-xs bg-brand-soft px-sm py-[2px] font-sans text-micro-11-bold text-text-brand">
-            {t("aiRecommended")}
-          </span>
-        ) : null}
-      </div>
-      <p
-        className={cn(
-          "font-sans text-label-14-bold text-text-primary",
-          recommended && "text-action-primary",
-        )}
-      >
-        {price}
-      </p>
-      <p className="font-sans text-micro-11-regular text-text-secondary">
-        {description}
-      </p>
+      {href ? (
+        <Link href={href} className="block">
+          {mainContent}
+        </Link>
+      ) : (
+        mainContent
+      )}
+
+      {maxMonthlyBenefit !== null && maxMonthlyBenefit !== undefined && (
+        <details className="group">
+          <summary className="mx-lg flex cursor-pointer list-none items-center justify-between border-t border-border-default py-md">
+            <p className="font-sans text-micro-11-regular text-text-secondary">
+              {t.rich("maxMonthlyBenefit", {
+                amount: formatNumber(maxMonthlyBenefit),
+                strong: (chunks) => (
+                  <strong className="font-sans text-caption-13-bold text-text-primary">
+                    {chunks}
+                  </strong>
+                ),
+              })}
+            </p>
+
+            <ChevronDown
+              aria-hidden="true"
+              size={17}
+              className="shrink-0 text-text-secondary transition-transform group-open:rotate-180"
+            />
+          </summary>
+
+          {benefits.length > 0 && (
+            <ul className="flex flex-col gap-sm px-lg pb-lg">
+              {benefits.map((benefit) => (
+                <li key={benefit} className="flex items-start gap-sm">
+                  <span
+                    aria-hidden="true"
+                    className="w-[4px] shrink-0 font-sans text-micro-11-regular leading-relaxed text-text-secondary"
+                  >
+                    ·
+                  </span>
+
+                  <span className="min-w-0 flex-1 font-sans text-micro-11-regular leading-relaxed text-text-secondary">
+                    {benefit}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </details>
+      )}
     </div>
   );
 }

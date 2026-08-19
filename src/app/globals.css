@@ -5,8 +5,15 @@
  * 앱 전체의 기본 배경과 글자색은 Semantic Token을 사용함
  * 테마 변경 시 페이지마다 별도 스타일을 수정하지 않도록 전역에서 관리함
  */
+html,
+body {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+}
 
 body {
+  overflow: hidden;
   background: var(--semantic-background);
   color: var(--semantic-text-primary);
 }
