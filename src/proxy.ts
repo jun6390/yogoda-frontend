@@ -7,20 +7,32 @@ import { routing } from "@/i18n/routing";
 const handleI18nRouting = createMiddleware(routing);
 
 const ONBOARDING_COOKIE = "yogoda_onboarding_completed";
+const AUTH_COOKIE = "yogoda_authenticated";
 
 export default function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  const locale = routing.locales.find(
-    (locale) => pathname === `/${locale}` || pathname === `/${locale}/`,
+  const pathLocale = routing.locales.find(
+    (locale) => pathname === `/${locale}` || pathname.startsWith(`/${locale}/`),
   );
+
+  const isHome =
+    pathLocale &&
+    (pathname === `/${pathLocale}` || pathname === `/${pathLocale}/`);
+  const isLoginPage = pathLocale && pathname === `/${pathLocale}/login`;
 
   const hasCompletedOnboarding =
     request.cookies.get(ONBOARDING_COOKIE)?.value === "true";
+  const isAuthenticated = request.cookies.get(AUTH_COOKIE)?.value === "true";
 
-  // 최초 방문자가 홈으로 진입하면 스플래시로 이동
-  if (locale && !hasCompletedOnboarding) {
-    return NextResponse.redirect(new URL(`/${locale}/splash`, request.url));
+  // 로그인된 사용자가 로그인 페이지에 접근하면 홈으로 이동
+  if (isLoginPage && isAuthenticated) {
+    return NextResponse.redirect(new URL(`/${pathLocale}`, request.url));
+  }
+
+  // 최초 방문자가 홈으로 진입하면 스플래시로 이동 (로그인된 사용자는 온보딩을 건너뜀)
+  if (isHome && !hasCompletedOnboarding && !isAuthenticated) {
+    return NextResponse.redirect(new URL(`/${pathLocale}/splash`, request.url));
   }
 
   return handleI18nRouting(request);
