@@ -1,4 +1,239 @@
 {
+  "Onboarding": {
+    "title": "맞춤 요금제 추천 받기",
+    "description": "몇 가지 질문에 답하면\n내 사용 패턴에 맞는 요금제를 추천해드려요.",
+    "primaryAction": "맞춤 요금제 추천 받기",
+    "loginPrompt": "이미 계정이 있으신가요?",
+    "loginAction": "로그인",
+    "guestCaption": "비회원도 일부 AI 추천 기능을 먼저 체험할 수 있어요."
+  },
+  "Permission": {
+    "back": "뒤로가기",
+    "title": "더 정확한 추천을 위해\n몇 가지 권한이 필요해요",
+    "description": "필요한 권한만 요청하고,\n언제든 설정에서 변경할 수 있어요.",
+    "locationTitle": "위치 (선택)",
+    "locationDescription": "내 주변 U+ 혜택을 추천해드려요",
+    "notificationTitle": "알림 (선택)",
+    "notificationDescription": "놓치기 쉬운 혜택과 미션을 알려드려요",
+    "primaryAction": "권한 설정하기",
+    "skipAction": "나중에 할게요"
+  },
+  "Persona": {
+    "skip": "건너뛰기",
+    "back": "뒤로가기",
+    "optionGroup": "통신 생활 유형 선택",
+    "next": "다음",
+    "analyze": "AI 분석 시작",
+    "questions": [
+      {
+        "title": "평소 통신 생활과\n가장 가까운 유형은 무엇인가요?",
+        "description": "정답은 없어요. 가장 가까운 것을 골라주세요.",
+        "options": [
+          {
+            "value": "data",
+            "title": "데이터를 많이 써요",
+            "description": "영상, SNS, 스트리밍을 자주 이용해요"
+          },
+          {
+            "value": "benefit",
+            "title": "혜택을 꼼꼼히 챙겨요",
+            "description": "멤버십과 할인 혜택을 자주 이용해요"
+          },
+          {
+            "value": "saving",
+            "title": "통신비를 줄이고 싶어요",
+            "description": "필요한 만큼만 쓰고 절약하고 싶어요"
+          },
+          {
+            "value": "ai",
+            "title": "AI가 알아서 추천해줬으면 해요",
+            "description": "사용 패턴 기반 추천을 받고 싶어요"
+          }
+        ]
+      },
+      {
+        "title": "한 달에 데이터를\n어느 정도 사용하는 편인가요?",
+        "description": "대략적인 사용량을 골라주세요.",
+        "options": [
+          {
+            "value": "light",
+            "title": "10GB 이하",
+            "description": "메신저와 웹 검색 위주로 사용해요"
+          },
+          {
+            "value": "normal",
+            "title": "10GB ~ 50GB",
+            "description": "SNS와 영상을 적당히 이용해요"
+          },
+          {
+            "value": "heavy",
+            "title": "50GB 이상",
+            "description": "영상과 스트리밍을 자주 이용해요"
+          },
+          {
+            "value": "unlimited",
+            "title": "무제한이 필요해요",
+            "description": "데이터 사용량을 신경 쓰고 싶지 않아요"
+          }
+        ]
+      },
+      {
+        "title": "스마트폰으로 가장 많이\n즐기는 콘텐츠는 무엇인가요?",
+        "description": "가장 자주 사용하는 서비스를 골라주세요.",
+        "options": [
+          {
+            "value": "video",
+            "title": "영상 · OTT",
+            "description": "유튜브, 넷플릭스 등을 자주 봐요"
+          },
+          {
+            "value": "sns",
+            "title": "SNS · 커뮤니티",
+            "description": "인스타그램, 커뮤니티 등을 자주 이용해요"
+          },
+          {
+            "value": "game",
+            "title": "게임",
+            "description": "모바일 게임을 자주 즐겨요"
+          },
+          {
+            "value": "basic",
+            "title": "메신저 · 웹 검색",
+            "description": "기본적인 기능 위주로 사용해요"
+          }
+        ]
+      },
+      {
+        "title": "통신사 혜택 중\n가장 중요하게 생각하는 것은 무엇인가요?",
+        "description": "가장 끌리는 혜택을 하나 골라주세요.",
+        "options": [
+          {
+            "value": "membership",
+            "title": "멤버십 할인",
+            "description": "카페, 영화, 외식 혜택을 중요하게 생각해요"
+          },
+          {
+            "value": "ott",
+            "title": "OTT · 콘텐츠",
+            "description": "영상과 콘텐츠 구독 혜택이 좋아요"
+          },
+          {
+            "value": "coupon",
+            "title": "쿠폰 · 제휴 혜택",
+            "description": "실생활에서 사용할 수 있는 혜택이 좋아요"
+          },
+          {
+            "value": "none",
+            "title": "혜택은 크게 중요하지 않아요",
+            "description": "요금이나 데이터 조건을 더 중요하게 봐요"
+          }
+        ]
+      },
+      {
+        "title": "요금제를 고를 때\n가장 중요하게 보는 기준은 무엇인가요?",
+        "description": "평소 요금제를 선택하는 기준을 알려주세요.",
+        "options": [
+          {
+            "value": "price",
+            "title": "저렴한 가격",
+            "description": "월 통신비를 최대한 아끼고 싶어요"
+          },
+          {
+            "value": "balance",
+            "title": "가격과 데이터의 균형",
+            "description": "적당한 가격에 충분한 데이터가 좋아요"
+          },
+          {
+            "value": "benefits",
+            "title": "풍부한 혜택",
+            "description": "가격보다 받을 수 있는 혜택이 중요해요"
+          },
+          {
+            "value": "premium",
+            "title": "최대한 좋은 조건",
+            "description": "가격보다 데이터와 서비스를 우선해요"
+          }
+        ]
+      },
+      {
+        "title": "마지막으로, 어떤 요금제를\n추천받고 싶나요?",
+        "description": "AI 추천에서 가장 중요하게 반영할 기준이에요.",
+        "options": [
+          {
+            "value": "cheap",
+            "title": "가장 경제적인 요금제",
+            "description": "내 사용량에 맞는 가장 저렴한 요금제를 원해요"
+          },
+          {
+            "value": "data",
+            "title": "데이터가 넉넉한 요금제",
+            "description": "데이터 걱정 없이 사용할 수 있으면 좋겠어요"
+          },
+          {
+            "value": "benefit",
+            "title": "혜택이 많은 요금제",
+            "description": "멤버십과 제휴 혜택을 많이 받고 싶어요"
+          },
+          {
+            "value": "balanced",
+            "title": "AI가 종합해서 골라주세요",
+            "description": "가격, 데이터, 혜택을 모두 고려해주세요"
+          }
+        ]
+      }
+    ]
+  },
+  "PersonaResult": {
+    "eyebrow": "AI 분석 결과",
+    "title": "{type}이에요",
+    "scoreTitle": "사용 성향",
+    "scoreRange": "0-100",
+    "metrics": {
+      "data": "데이터",
+      "content": "콘텐츠 · OTT",
+      "benefit": "혜택",
+      "price": "가격 민감도"
+    },
+    "directionLabel": "AI가 잡은 추천 방향",
+    "startChat": "이 결과로 AI 상담하기",
+    "types": {
+      "data": {
+        "name": "데이터 헤비형",
+        "description": "데이터 사용량이 많고 넉넉한 데이터 제공량을 중요하게 생각하는 유형이에요.",
+        "summary": "데이터 중심 / 사용량 넉넉하게",
+        "direction": "충분한 데이터 + 합리적인 요금",
+        "directionDescription": "현재 사용량을 충분히 커버하면서 불필요하게 비싼 요금제는 피하는 방향으로 추천해드릴게요."
+      },
+      "content": {
+        "name": "콘텐츠 몰입형",
+        "description": "영상과 OTT 같은 콘텐츠를 자주 이용하고 관련 혜택의 활용도가 높은 유형이에요.",
+        "summary": "영상 · OTT 중심 / 콘텐츠 혜택 선호",
+        "direction": "넉넉한 데이터 + OTT 혜택",
+        "directionDescription": "콘텐츠 사용량과 구독 혜택을 함께 고려해 실질적인 만족도가 높은 요금제를 찾아드릴게요."
+      },
+      "benefit": {
+        "name": "혜택 알뜰형",
+        "description": "멤버십과 제휴 할인 등 통신사에서 제공하는 혜택을 적극적으로 활용하는 유형이에요.",
+        "summary": "멤버십 · 쿠폰 중심 / 혜택 활용",
+        "direction": "실생활 혜택 + 적절한 데이터",
+        "directionDescription": "자주 이용하는 멤버십과 제휴 혜택을 최대한 활용할 수 있는 요금제를 찾아드릴게요."
+      },
+      "saving": {
+        "name": "실속 절약형",
+        "description": "필요한 만큼의 데이터는 확보하면서 월 통신비를 줄이는 것을 중요하게 생각하는 유형이에요.",
+        "summary": "가격 중심 / 필요한 만큼만",
+        "direction": "필요한 데이터 + 낮은 월 요금",
+        "directionDescription": "사용하지 않는 데이터와 혜택은 줄이고 실제 사용량에 맞는 경제적인 요금제를 찾아드릴게요."
+      },
+      "balanced": {
+        "name": "콘텐츠 밸런스형",
+        "description": "데이터, 혜택, 가격 중 한쪽에 치우치지 않고 전체적인 균형을 중요하게 생각하는 유형이에요.",
+        "summary": "데이터 · 혜택 · 가격의 균형",
+        "direction": "충분한 데이터 + 실속 있는 혜택",
+        "directionDescription": "가격, 데이터, 혜택을 종합해서 현재 사용 패턴에 가장 균형 잡힌 요금제를 찾아드릴게요."
+      }
+    }
+  },
   "Common": {
     "serviceName": "요고다",
     "designSystem": "요고다 디자인 시스템",
