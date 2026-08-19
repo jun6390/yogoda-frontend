@@ -7,6 +7,6 @@ export interface AuthUser {
   isNewUser: boolean;
 }
 
-export interface KakaoLoginResponse extends AuthUser {
+export interface SocialLoginResponse extends AuthUser {
   accessToken: string;
 }

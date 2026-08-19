@@ -6,10 +6,19 @@ import { useSearchParams } from "next/navigation";
 import { useEffect, useRef } from "react";
 
 import { ApiError } from "@/lib/api/client";
-import { loginWithKakao } from "@/lib/api/auth";
+import { loginWithKakao, loginWithNaver } from "@/lib/api/auth";
 import { useRouter } from "@/i18n/navigation";
 import { useAuthStore } from "@/stores/useAuthStore";
-import type { SocialProvider } from "@/types/auth";
+import type { SocialLoginResponse, SocialProvider } from "@/types/auth";
+
+const NAVER_STATE_STORAGE_KEY = "naver_oauth_state";
+
+const loginFns: Partial<
+  Record<SocialProvider, (code: string) => Promise<SocialLoginResponse>>
+> = {
+  kakao: loginWithKakao,
+  naver: loginWithNaver,
+};
 
 interface CallbackHandlerProps {
   provider: SocialProvider;
@@ -23,9 +32,22 @@ export function CallbackHandler({ provider }: CallbackHandlerProps) {
   const requestedRef = useRef(false);
 
   const code = searchParams.get("code");
+  const state = searchParams.get("state");
+  const loginFn = loginFns[provider];
 
   const { mutate, error } = useMutation({
-    mutationFn: (authCode: string) => loginWithKakao(authCode),
+    mutationFn: (authCode: string) => {
+      if (provider === "naver") {
+        const savedState = sessionStorage.getItem(NAVER_STATE_STORAGE_KEY);
+        sessionStorage.removeItem(NAVER_STATE_STORAGE_KEY);
+
+        if (!savedState || savedState !== state) {
+          return Promise.reject(new Error(t("authFailed")));
+        }
+      }
+
+      return loginFn!(authCode);
+    },
     onSuccess: ({ accessToken, userId, name, isNewUser, role }) => {
       setAuth(accessToken, { userId, name, isNewUser, role });
       router.replace("/");
@@ -33,15 +55,15 @@ export function CallbackHandler({ provider }: CallbackHandlerProps) {
   });
 
   useEffect(() => {
-    if (requestedRef.current || provider !== "kakao" || !code) {
+    if (requestedRef.current || !loginFn || !code) {
       return;
     }
 
     requestedRef.current = true;
     mutate(code);
-  }, [code, mutate, provider]);
+  }, [code, loginFn, mutate]);
 
-  if (provider !== "kakao") {
+  if (!loginFn) {
     return <div>{t("unsupportedProvider")}</div>;
   }
 
