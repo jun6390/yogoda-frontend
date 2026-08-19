@@ -1,8 +1,10 @@
 import { notFound } from "next/navigation";
 
-const SOCIAL_PROVIDERS = ["google", "naver", "kakao"] as const;
+import type { SocialProvider } from "@/types/auth";
 
-type SocialProvider = (typeof SOCIAL_PROVIDERS)[number];
+import { CallbackHandler } from "./CallbackHandler";
+
+const SOCIAL_PROVIDERS = ["google", "naver", "kakao"] as const;
 
 function isSocialProvider(value: string): value is SocialProvider {
   return SOCIAL_PROVIDERS.includes(value as SocialProvider);
@@ -21,5 +23,5 @@ export default async function CallbackPage({ params }: CallbackPageProps) {
     notFound();
   }
 
-  return <div>{provider} 로그인 처리 중...</div>;
+  return <CallbackHandler provider={provider} />;
 }

@@ -46,6 +46,12 @@
     "continueWithKakao": "Continue with Kakao",
     "legalNotice": "By signing in, you agree to U+ AI LIFE's <terms>Terms of Service</terms> and <privacy>Privacy Policy</privacy>."
   },
+  "Callback": {
+    "processing": "Signing in...",
+    "invalidAccess": "Invalid access.",
+    "unsupportedProvider": "This login method isn't supported yet.",
+    "authFailed": "Authentication failed."
+  },
   "Home": {
     "bannerAriaLabel": "Recommended benefit banners",
     "bannerPrevious": "View previous banner",
