@@ -11,27 +11,27 @@ import { cn } from "@/lib/utils";
 const bannerSlides = [
   {
     href: "/benefits",
-    src: "/yogoda-banners/uplus-benefit-v4.png",
+    src: "/yogoda-banners/uplus-benefit.png",
     altKey: "bannerBenefitAlt",
   },
   {
     href: "/my",
-    src: "/yogoda-banners/plan-compare-v5.png",
+    src: "/yogoda-banners/plan-compare.png",
     altKey: "bannerPlanAlt",
   },
   {
     href: "/mission",
-    src: "/yogoda-banners/mission-point-v6.png",
+    src: "/yogoda-banners/mission-point.png",
     altKey: "bannerMissionAlt",
   },
   {
     href: "/benefits",
-    src: "/yogoda-banners/uplus-special-v7.png",
+    src: "/yogoda-banners/uplus-special.png",
     altKey: "bannerSpecialAlt",
   },
   {
     href: "/benefits",
-    src: "/yogoda-banners/coupon-partner-v9.png",
+    src: "/yogoda-banners/coupon-partner.png",
     altKey: "bannerCouponAlt",
   },
 ] as const;
