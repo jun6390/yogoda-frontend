@@ -5,10 +5,10 @@ import { useTranslations } from "next-intl";
 import { useSearchParams } from "next/navigation";
 import { useEffect, useRef } from "react";
 
-import { ApiError } from "@/api/client";
-import { loginWithKakao } from "@/api/auth";
+import { ApiError } from "@/lib/api/client";
+import { loginWithKakao } from "@/lib/api/auth";
 import { useRouter } from "@/i18n/navigation";
-import { useAuthStore } from "@/store/useAuthStore";
+import { useAuthStore } from "@/stores/useAuthStore";
 import type { SocialProvider } from "@/types/auth";
 
 interface CallbackHandlerProps {
