@@ -14,3 +14,10 @@ export function loginWithNaver(code: string) {
     body: { code },
   });
 }
+
+export function loginWithGoogle(code: string) {
+  return apiFetch<SocialLoginResponse>("/api/auth/google", {
+    method: "POST",
+    body: { code },
+  });
+}

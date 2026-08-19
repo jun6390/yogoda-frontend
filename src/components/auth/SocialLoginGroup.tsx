@@ -5,7 +5,8 @@ import type { SocialProvider } from "@/types/auth";
 
 const KAKAO_AUTH_URL = "https://kauth.kakao.com/oauth/authorize";
 const NAVER_AUTH_URL = "https://nid.naver.com/oauth2.0/authorize";
-const NAVER_STATE_STORAGE_KEY = "naver_oauth_state";
+const GOOGLE_AUTH_URL = "https://accounts.google.com/o/oauth2/v2/auth";
+const OAUTH_STATE_STORAGE_KEY = "oauth_state";
 
 interface SocialLoginGroupProps {
   labels: Record<SocialProvider, string>;
@@ -40,7 +41,7 @@ export function SocialLoginGroup({ labels }: SocialLoginGroupProps) {
     }
 
     const state = crypto.randomUUID();
-    sessionStorage.setItem(NAVER_STATE_STORAGE_KEY, state);
+    sessionStorage.setItem(OAUTH_STATE_STORAGE_KEY, state);
 
     const authorizeUrl = new URL(NAVER_AUTH_URL);
     authorizeUrl.searchParams.set("client_id", clientId);
@@ -54,9 +55,37 @@ export function SocialLoginGroup({ labels }: SocialLoginGroupProps) {
     window.location.href = authorizeUrl.toString();
   };
 
+  const handleGoogleLogin = () => {
+    const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
+
+    if (!clientId) {
+      console.error("NEXT_PUBLIC_GOOGLE_CLIENT_ID가 설정되지 않았어요.");
+      return;
+    }
+
+    const state = crypto.randomUUID();
+    sessionStorage.setItem(OAUTH_STATE_STORAGE_KEY, state);
+
+    const authorizeUrl = new URL(GOOGLE_AUTH_URL);
+    authorizeUrl.searchParams.set("client_id", clientId);
+    authorizeUrl.searchParams.set(
+      "redirect_uri",
+      `${window.location.origin}/auth/google/callback`,
+    );
+    authorizeUrl.searchParams.set("response_type", "code");
+    authorizeUrl.searchParams.set("scope", "email profile");
+    authorizeUrl.searchParams.set("state", state);
+
+    window.location.href = authorizeUrl.toString();
+  };
+
   return (
     <div className="flex flex-col gap-md">
-      <SocialLoginButton provider="google" label={labels.google} />
+      <SocialLoginButton
+        provider="google"
+        label={labels.google}
+        onClick={handleGoogleLogin}
+      />
       <SocialLoginButton
         provider="naver"
         label={labels.naver}

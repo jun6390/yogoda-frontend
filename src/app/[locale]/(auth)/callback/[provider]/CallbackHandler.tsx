@@ -6,18 +6,24 @@ import { useSearchParams } from "next/navigation";
 import { useEffect, useRef } from "react";
 
 import { ApiError } from "@/lib/api/client";
-import { loginWithKakao, loginWithNaver } from "@/lib/api/auth";
+import {
+  loginWithGoogle,
+  loginWithKakao,
+  loginWithNaver,
+} from "@/lib/api/auth";
 import { useRouter } from "@/i18n/navigation";
 import { useAuthStore } from "@/stores/useAuthStore";
 import type { SocialLoginResponse, SocialProvider } from "@/types/auth";
 
-const NAVER_STATE_STORAGE_KEY = "naver_oauth_state";
+const OAUTH_STATE_STORAGE_KEY = "oauth_state";
+const STATE_VERIFIED_PROVIDERS: SocialProvider[] = ["naver", "google"];
 
 const loginFns: Partial<
   Record<SocialProvider, (code: string) => Promise<SocialLoginResponse>>
 > = {
   kakao: loginWithKakao,
   naver: loginWithNaver,
+  google: loginWithGoogle,
 };
 
 interface CallbackHandlerProps {
@@ -37,9 +43,9 @@ export function CallbackHandler({ provider }: CallbackHandlerProps) {
 
   const { mutate, error } = useMutation({
     mutationFn: (authCode: string) => {
-      if (provider === "naver") {
-        const savedState = sessionStorage.getItem(NAVER_STATE_STORAGE_KEY);
-        sessionStorage.removeItem(NAVER_STATE_STORAGE_KEY);
+      if (STATE_VERIFIED_PROVIDERS.includes(provider)) {
+        const savedState = sessionStorage.getItem(OAUTH_STATE_STORAGE_KEY);
+        sessionStorage.removeItem(OAUTH_STATE_STORAGE_KEY);
 
         if (!savedState || savedState !== state) {
           return Promise.reject(new Error(t("authFailed")));
