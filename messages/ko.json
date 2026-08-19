@@ -273,6 +273,7 @@
     "my": "MY"
   },
   "Login": {
+    "back": "뒤로가기",
     "title": "로그인",
     "serviceName": "U+ AI LIFE",
     "heading": "지금 바로 시작해보세요",
