@@ -262,7 +262,8 @@
     "korean": "한국어",
     "english": "English",
     "lightMode": "Light mode",
-    "darkMode": "Dark mode"
+    "darkMode": "Dark mode",
+    "logout": "Log out"
   },
   "Pages": {
     "home": "Home",
@@ -272,6 +273,7 @@
     "my": "MY"
   },
   "Login": {
+    "back": "Back",
     "title": "Login",
     "serviceName": "Yogoda",
     "heading": "Get started right away",
