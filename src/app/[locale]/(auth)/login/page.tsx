@@ -1,6 +1,6 @@
 import { getTranslations } from "next-intl/server";
 
-import { SocialLoginButton } from "@/components/auth/SocialLoginButton";
+import { SocialLoginGroup } from "@/components/auth/SocialLoginGroup";
 import { FigmaImage } from "@/components/ui/FigmaImage/FigmaImage";
 import { Link } from "@/i18n/navigation";
 
@@ -28,11 +28,13 @@ export default async function LoginPage() {
         </p>
       </div>
 
-      <div className="flex flex-col gap-md">
-        <SocialLoginButton provider="google" label={t("continueWithGoogle")} />
-        <SocialLoginButton provider="naver" label={t("continueWithNaver")} />
-        <SocialLoginButton provider="kakao" label={t("continueWithKakao")} />
-      </div>
+      <SocialLoginGroup
+        labels={{
+          google: t("continueWithGoogle"),
+          naver: t("continueWithNaver"),
+          kakao: t("continueWithKakao"),
+        }}
+      />
 
       <p className="whitespace-pre-line text-center font-sans text-caption-12-regular text-text-tertiary">
         {t.rich("legalNotice", {
