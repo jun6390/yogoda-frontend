@@ -48,8 +48,8 @@ export function HomeBannerCarousel() {
      * 컴포넌트가 사라지면 타이머도 같이 정리함
      */
     const timerId = window.setInterval(() => {
-      setActiveIndex((currentIndex) =>
-        (currentIndex + 1) % bannerSlides.length,
+      setActiveIndex(
+        (currentIndex) => (currentIndex + 1) % bannerSlides.length,
       );
     }, autoSlideDelay);
 
@@ -59,9 +59,7 @@ export function HomeBannerCarousel() {
   }, [activeIndex]);
 
   const moveTo = (nextIndex: number) => {
-    setActiveIndex(
-      (nextIndex + bannerSlides.length) % bannerSlides.length,
-    );
+    setActiveIndex((nextIndex + bannerSlides.length) % bannerSlides.length);
   };
 
   return (

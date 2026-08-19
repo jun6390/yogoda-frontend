@@ -29,7 +29,9 @@ export function Modal({
   const common = useTranslations("Common");
   const modal = useTranslations("Modal");
   const resolvedSecondaryLabel =
-    secondaryLabel === undefined ? modal("defaultSecondaryLabel") : secondaryLabel;
+    secondaryLabel === undefined
+      ? modal("defaultSecondaryLabel")
+      : secondaryLabel;
 
   return (
     <div
