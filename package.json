@@ -7,8 +7,11 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
     "storybook": "storybook dev -p 6006",
-    "build-storybook": "storybook build"
+    "build-storybook": "storybook build",
+    "prepare": "husky"
   },
   "dependencies": {
     "@tanstack/react-query": "^5.101.4",
@@ -36,12 +39,23 @@
     "@vitest/coverage-v8": "latest",
     "eslint": "^9",
     "eslint-config-next": "16.3.1",
+    "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-storybook": "^10.5.8",
+    "husky": "^9.1.7",
+    "lint-staged": "^16.4.0",
     "playwright": "latest",
+    "prettier": "^3.9.6",
     "storybook": "^10.5.8",
     "tailwindcss": "^4",
     "typescript": "^5",
     "vite": "latest",
     "vitest": "latest"
+  },
+  "lint-staged": {
+    "*.{js,jsx,ts,tsx}": [
+      "eslint --fix",
+      "prettier --write"
+    ],
+    "*.{json,md,css}": "prettier --write"
   }
 }

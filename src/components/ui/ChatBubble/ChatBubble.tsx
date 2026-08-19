@@ -21,7 +21,7 @@ export function UserChatBubble({ children, className }: UserChatBubbleProps) {
         className={cn(
           "rounded-[12px] rounded-tr-[4px] px-lg py-md font-sans text-body-14-regular whitespace-pre-line break-words shadow-sm",
           "bg-action-primary text-text-on-primary max-w-[80%]",
-          className
+          className,
         )}
       >
         {children}
@@ -46,7 +46,7 @@ export function AIChatBubble({
           !noBackground &&
             "rounded-[12px] rounded-tl-[4px] px-lg py-md bg-surface text-text-primary border border-border-default shadow-sm",
           "font-sans text-body-14-regular whitespace-pre-line break-words max-w-[85%]",
-          className
+          className,
         )}
       >
         {children}

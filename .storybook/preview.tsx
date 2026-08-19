@@ -10,14 +10,14 @@ import "../src/app/globals.css";
 // 일부 story args는 컴포넌트 props 샘플이라 messages/*.json을 거치지 않음
 // Storybook Locale 툴바에서만 영문 preview가 필요해 전역 데코레이터에서 치환함
 const storyTextTranslations: Record<string, string> = {
-  "무료": "Free",
+  무료: "Free",
   "3,000원": "KRW 3,000",
   "혜택 이름": "Benefit name",
   "혜택 설명": "Benefit description",
   "데이터 부족": "Not enough data",
   "요금 낮추기": "Lower my bill",
-  "계속하기": "Continue",
-  "비교하기": "Compare",
+  계속하기: "Continue",
+  비교하기: "Compare",
   "자세히 보기": "View details",
   "아직 내용이 없어요": "Nothing here yet",
   "새로운 항목이 생기면 이곳에서 확인할 수 있어요.":
@@ -30,10 +30,10 @@ const storyTextTranslations: Record<string, string> = {
   "비로그인 상태에서는 AI 상담을\n5회까지 이용할 수 있어요.\n로그인하면 상담을 계속하고\n추천 내역도 저장할 수 있어요.":
     "Without logging in, you can use AI chat\nup to 5 times.\nLog in to keep chatting\nand save your recommendations.",
   "로그인하고 계속하기": "Log in and continue",
-  "나중에": "Later",
+  나중에: "Later",
   "항목 이름": "Item name",
   "알림 설정": "Notification settings",
-  "켜짐": "On",
+  켜짐: "On",
   "5G 데이터 플러스": "5G Data Plus",
   "59,000원 / 월": "KRW 59,000 / month",
   "80GB · 통화 무제한 · OTT 선택": "80GB · Unlimited calls · OTT option",
@@ -44,7 +44,7 @@ const storyTextTranslations: Record<string, string> = {
   "전체 보기": "View all",
   "혜택 알림 받기": "Benefit notifications",
   "저장한 혜택에 추가했어요": "Added to saved benefits",
-  "보러가기": "View",
+  보러가기: "View",
 };
 
 function translateStoryValue(value: unknown): unknown {

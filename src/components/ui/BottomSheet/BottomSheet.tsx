@@ -66,7 +66,13 @@ function CloseButton({
   );
 }
 
-function SheetIcon({ src, tone = "soft" }: { src: string; tone?: "soft" | "gray" }) {
+function SheetIcon({
+  src,
+  tone = "soft",
+}: {
+  src: string;
+  tone?: "soft" | "gray";
+}) {
   return (
     <span
       className={cn(

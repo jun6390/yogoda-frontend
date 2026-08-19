@@ -2,7 +2,10 @@ import type { InputHTMLAttributes, ReactNode } from "react";
 
 import { cn } from "@/lib/utils";
 
-interface RadioProps extends Omit<InputHTMLAttributes<HTMLInputElement>, "type"> {
+interface RadioProps extends Omit<
+  InputHTMLAttributes<HTMLInputElement>,
+  "type"
+> {
   label?: ReactNode;
 }
 

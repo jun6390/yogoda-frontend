@@ -47,5 +47,4 @@ export function AITypingIndicator({
   );
 }
 
-export type AITypingRetryButtonProps =
-  ButtonHTMLAttributes<HTMLButtonElement>;
+export type AITypingRetryButtonProps = ButtonHTMLAttributes<HTMLButtonElement>;
