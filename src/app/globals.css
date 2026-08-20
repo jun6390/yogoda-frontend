@@ -5,10 +5,29 @@
  * 앱 전체의 기본 배경과 글자색은 Semantic Token을 사용함
  * 테마 변경 시 페이지마다 별도 스타일을 수정하지 않도록 전역에서 관리함
  */
+html,
+body {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+}
 
 body {
+  overflow: hidden;
   background: var(--semantic-background);
   color: var(--semantic-text-primary);
+}
+
+/*
+ * 모든 활성 버튼은 터치/클릭 가능한 요소임을 커서로 표시함
+ * disabled 버튼은 비활성 상태가 드러나도록 별도 커서 유지함
+ */
+button:not(:disabled) {
+  cursor: pointer;
+}
+
+button:disabled {
+  cursor: not-allowed;
 }
 
 /*

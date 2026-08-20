@@ -29,14 +29,16 @@ export function Modal({
   const common = useTranslations("Common");
   const modal = useTranslations("Modal");
   const resolvedSecondaryLabel =
-    secondaryLabel === undefined ? modal("defaultSecondaryLabel") : secondaryLabel;
+    secondaryLabel === undefined
+      ? modal("defaultSecondaryLabel")
+      : secondaryLabel;
 
   return (
     <div
       role="dialog"
       aria-modal="true"
       className={cn(
-        "relative flex w-[350px] flex-col items-center rounded-2xl bg-surface p-2xl text-center shadow-md",
+        "relative flex w-[calc(100vw-40px)] max-w-[350px] flex-col items-center rounded-2xl bg-surface p-2xl text-center shadow-md",
         className,
       )}
       {...props}

@@ -1,4 +1,239 @@
 {
+  "Onboarding": {
+    "title": "Get a personalized plan recommendation",
+    "description": "Answer a few questions and we'll recommend\na plan that fits your usage pattern.",
+    "primaryAction": "Get a plan recommendation",
+    "loginPrompt": "Already have an account?",
+    "loginAction": "Log in",
+    "guestCaption": "Guests can try some AI recommendation features first."
+  },
+  "Permission": {
+    "back": "Go back",
+    "title": "We need a few permissions\nto give you better recommendations",
+    "description": "We'll only request what we need,\nand you can change it anytime in settings.",
+    "locationTitle": "Location (Optional)",
+    "locationDescription": "Get recommendations for nearby U+ benefits",
+    "notificationTitle": "Notifications (Optional)",
+    "notificationDescription": "Get alerts for benefits and missions you might miss",
+    "primaryAction": "Set permissions",
+    "skipAction": "Maybe later"
+  },
+  "Persona": {
+    "skip": "Skip",
+    "back": "Go back",
+    "optionGroup": "Select your mobile usage type",
+    "next": "Next",
+    "analyze": "Start AI analysis",
+    "questions": [
+      {
+        "title": "Which type best matches\nyour mobile usage style?",
+        "description": "There's no right answer. Choose the one closest to you.",
+        "options": [
+          {
+            "value": "data",
+            "title": "I use a lot of data",
+            "description": "I often watch videos, use social media, and stream content"
+          },
+          {
+            "value": "benefit",
+            "title": "I make the most of benefits",
+            "description": "I often use membership and discount benefits"
+          },
+          {
+            "value": "saving",
+            "title": "I want to lower my mobile bill",
+            "description": "I want to use only what I need and save money"
+          },
+          {
+            "value": "ai",
+            "title": "I'd like AI to recommend for me",
+            "description": "I want recommendations based on my usage patterns"
+          }
+        ]
+      },
+      {
+        "title": "How much mobile data\ndo you usually use each month?",
+        "description": "Choose the range closest to your typical usage.",
+        "options": [
+          {
+            "value": "light",
+            "title": "Less than 10GB",
+            "description": "I mainly use messaging and web browsing"
+          },
+          {
+            "value": "normal",
+            "title": "10GB – 50GB",
+            "description": "I regularly use social media and watch videos"
+          },
+          {
+            "value": "heavy",
+            "title": "More than 50GB",
+            "description": "I frequently watch videos and stream content"
+          },
+          {
+            "value": "unlimited",
+            "title": "I need unlimited data",
+            "description": "I don't want to worry about how much data I use"
+          }
+        ]
+      },
+      {
+        "title": "What kind of content do you\nenjoy most on your phone?",
+        "description": "Choose the service you use most often.",
+        "options": [
+          {
+            "value": "video",
+            "title": "Video · OTT",
+            "description": "I often watch YouTube, Netflix, and other video services"
+          },
+          {
+            "value": "sns",
+            "title": "Social media · Communities",
+            "description": "I often use social media and online communities"
+          },
+          {
+            "value": "game",
+            "title": "Games",
+            "description": "I often play mobile games"
+          },
+          {
+            "value": "basic",
+            "title": "Messaging · Web browsing",
+            "description": "I mainly use basic smartphone features"
+          }
+        ]
+      },
+      {
+        "title": "Which carrier benefit\nmatters most to you?",
+        "description": "Choose the benefit that appeals to you most.",
+        "options": [
+          {
+            "value": "membership",
+            "title": "Membership discounts",
+            "description": "I value discounts for cafés, movies, and dining"
+          },
+          {
+            "value": "ott",
+            "title": "OTT · Content",
+            "description": "I prefer video and content subscription benefits"
+          },
+          {
+            "value": "coupon",
+            "title": "Coupons · Partner benefits",
+            "description": "I like benefits I can use in everyday life"
+          },
+          {
+            "value": "none",
+            "title": "Benefits aren't that important",
+            "description": "Price and data conditions matter more to me"
+          }
+        ]
+      },
+      {
+        "title": "What matters most when\nyou choose a mobile plan?",
+        "description": "Tell us what you usually prioritize when choosing a plan.",
+        "options": [
+          {
+            "value": "price",
+            "title": "Low price",
+            "description": "I want to keep my monthly mobile bill as low as possible"
+          },
+          {
+            "value": "balance",
+            "title": "Balance of price and data",
+            "description": "I want enough data at a reasonable price"
+          },
+          {
+            "value": "benefits",
+            "title": "More benefits",
+            "description": "The benefits I receive matter more than the price"
+          },
+          {
+            "value": "premium",
+            "title": "The best overall conditions",
+            "description": "I prioritize data and services over price"
+          }
+        ]
+      },
+      {
+        "title": "Lastly, what kind of plan\nwould you like us to recommend?",
+        "description": "We'll prioritize this when generating your AI recommendation.",
+        "options": [
+          {
+            "value": "cheap",
+            "title": "The most affordable plan",
+            "description": "I want the cheapest plan that fits my usage"
+          },
+          {
+            "value": "data",
+            "title": "A plan with plenty of data",
+            "description": "I want to use data without worrying about running out"
+          },
+          {
+            "value": "benefit",
+            "title": "A plan with lots of benefits",
+            "description": "I want plenty of membership and partner benefits"
+          },
+          {
+            "value": "balanced",
+            "title": "Let AI choose for me",
+            "description": "Consider price, data, and benefits together"
+          }
+        ]
+      }
+    ]
+  },
+  "PersonaResult": {
+    "eyebrow": "AI Analysis Result",
+    "title": "You're a {type}",
+    "scoreTitle": "Usage Profile",
+    "scoreRange": "0-100",
+    "metrics": {
+      "data": "Data",
+      "content": "Content · OTT",
+      "benefit": "Benefits",
+      "price": "Price sensitivity"
+    },
+    "directionLabel": "AI Recommendation Direction",
+    "startChat": "Chat with AI using this result",
+    "types": {
+      "data": {
+        "name": "Data Heavy Type",
+        "description": "You use a lot of data and value having plenty of data available.",
+        "summary": "Data focused / plenty of usage",
+        "direction": "Plenty of data + reasonable price",
+        "directionDescription": "We'll look for a plan that comfortably covers your usage without unnecessarily increasing your monthly cost."
+      },
+      "content": {
+        "name": "Content Lover Type",
+        "description": "You frequently enjoy video and OTT services and get strong value from content-related benefits.",
+        "summary": "Video · OTT focused / content benefits",
+        "direction": "Plenty of data + OTT benefits",
+        "directionDescription": "We'll consider both your content usage and subscription benefits to find a plan that gives you better overall value."
+      },
+      "benefit": {
+        "name": "Benefit Saver Type",
+        "description": "You actively use carrier benefits such as memberships, discounts, and partner offers.",
+        "summary": "Membership · coupons / benefit focused",
+        "direction": "Practical benefits + enough data",
+        "directionDescription": "We'll look for plans that maximize the membership and partner benefits you are most likely to use."
+      },
+      "saving": {
+        "name": "Smart Saver Type",
+        "description": "You want enough data for your needs while keeping your monthly mobile bill as low as possible.",
+        "summary": "Price focused / only what you need",
+        "direction": "Enough data + lower monthly cost",
+        "directionDescription": "We'll reduce unnecessary data and benefits and focus on economical plans that fit your actual usage."
+      },
+      "balanced": {
+        "name": "Balanced Content Type",
+        "description": "You value an overall balance between data, benefits, and monthly price rather than focusing on just one.",
+        "summary": "Balance of data · benefits · price",
+        "direction": "Enough data + practical benefits",
+        "directionDescription": "We'll consider price, data, and benefits together to find the plan that best matches your overall usage pattern."
+      }
+    }
+  },
   "Common": {
     "serviceName": "Yogoda",
     "designSystem": "Yogoda Design System",
@@ -24,10 +259,11 @@
     "title": "Menu",
     "language": "Language",
     "theme": "Theme",
-    "korean": "Korean",
+    "korean": "한국어",
     "english": "English",
     "lightMode": "Light mode",
-    "darkMode": "Dark mode"
+    "darkMode": "Dark mode",
+    "logout": "Log out"
   },
   "Pages": {
     "home": "Home",
@@ -36,7 +272,27 @@
     "mission": "Mission",
     "my": "MY"
   },
+  "Login": {
+    "back": "Back",
+    "title": "Login",
+    "serviceName": "Yogoda",
+    "heading": "Get started right away",
+    "description": "We analyze your usage patterns\nto recommend the plan and benefits that fit you best.",
+    "continueWithGoogle": "Continue with Google",
+    "continueWithNaver": "Continue with Naver",
+    "continueWithKakao": "Continue with Kakao",
+    "legalNotice": "By signing in, you agree to Yogoda's <terms>Terms of Service</terms> and <privacy>Privacy Policy</privacy>."
+  },
+  "Callback": {
+    "processing": "Signing in...",
+    "invalidAccess": "Invalid access.",
+    "unsupportedProvider": "This login method isn't supported yet.",
+    "authFailed": "Authentication failed."
+  },
   "Home": {
+    "myPlan": "My Plan",
+    "planExplore": "Explore Plans",
+    "planTabsAriaLabel": "Plan menu",
     "bannerAriaLabel": "Recommended benefit banners",
     "bannerPrevious": "View previous banner",
     "bannerNext": "View next banner",
@@ -77,6 +333,93 @@
     "personalBenefitDescription": "Don't miss OTT and cafe benefits",
     "view": "View"
   },
+  "Plans": {
+    "titleLine1": "Find a plan that fits",
+    "titleLine2": "your needs",
+    "filterPopular": "Popular",
+    "filterAll": "All",
+    "filterUnlimited": "Unlimited",
+    "filterPriceHigh": "Price: High to Low",
+    "filterPriceLow": "Price: Low to High",
+    "loading": "Loading plans.",
+    "error": "Unable to load plans.",
+    "monthlyPrice": "{amount} KRW/month"
+  },
+  "PlanDetail": {
+    "discountAmount": "Discount ₩{amount}/month",
+    "selectedBenefitAmount": "Value of my selected benefits",
+    "benefitValueUnknown": "Value unavailable",
+
+    "back": "Go back",
+    "loading": "Loading plan information.",
+    "error": "Unable to load plan information.",
+    "maxBenefit": "Up to ₩{amount}/month in benefits",
+    "effectivePrice": "Effective price",
+    "wonPerMonth": " KRW/month",
+    "upTo": "Up to ₩{amount}",
+    "monthlyValue": "Worth ₩{amount}/month",
+    "joining": "Joining...",
+    "joinError": "An error occurred while joining the plan.",
+    "joinSuccess": {
+      "title": "Plan activated!",
+      "description": "You've successfully joined the {planName} plan.",
+      "confirm": "OK"
+    },
+    "changePlan": "Change plan",
+    "currentPlan": "Your current plan",
+    "changing": "Changing...",
+    "changeError": "An error occurred while changing your plan.",
+    "changeSuccess": {
+      "title": "Plan changed!",
+      "description": "Your plan has been changed to {planName}.",
+      "confirm": "OK"
+    },
+
+    "unlimited": "무제한",
+    "data": "Data",
+    "voice": "Calls",
+    "sms": "Messages",
+    "tethering": "Tethering & sharing",
+    "additionalVoice": "Additional calls",
+    "familyData": "Family data",
+
+    "goToBenefits": "Ready to choose your benefits?",
+    "selectCount": "Select {count}",
+    "vipInstruction": "Use this benefit in U+one.",
+    "addonInstruction": "Apply separately in U+one.",
+
+    "selectedBenefits": "Selected benefits",
+    "estimatedPayment": "Estimated monthly payment",
+    "join": "Join plan",
+
+    "sections": {
+      "plus": "Fill your plan with the benefits you want",
+      "premium": "Time to choose your special benefit",
+      "couponChoice": "Choose your Nerget-only benefit",
+      "couponInfo": "Nerget-only benefits",
+      "membership": "Benefits included with Nerget"
+    },
+
+    "steps": {
+      "plusBenefit": "Plus Benefits",
+      "samsungDevice": "Samsung Devices",
+      "appleDevice": "Apple Devices",
+      "maniaDevice": "Mania Devices",
+      "netflix": "Netflix",
+      "dailyPlus": "Daily Plus",
+      "nergetCoupon": "Nerget Coupon",
+      "vipMembership": "VIP Membership Benefits",
+      "addonBenefit": "Additional Benefits",
+      "promotion": "Promotional Benefits"
+    },
+
+    "exitModal": {
+      "title": "Go back to the previous page?",
+      "description": "Your selected benefits will be reset.",
+      "cancel": "Cancel",
+      "confirm": "Confirm"
+    }
+  },
   "NotFound": {
     "label": "404",
     "title": "Page not found",
@@ -97,7 +440,11 @@
   "Rows": {
     "aiRecommended": "AI recommended",
     "free": "Free",
-    "defaultPrice": "KRW 3,000"
+    "defaultPrice": "KRW 3,000",
+    "benefits": "Key benefits",
+    "effectivePrice": "Effective price",
+    "perMonth": " KRW/month",
+    "maxMonthlyBenefit": "Up to <strong>₩{amount}</strong>/month in benefits"
   },
   "Tabs": {
     "ariaLabel": "Benefits sub navigation",
@@ -125,7 +472,7 @@
     "confirmationKeep": "Cancel and keep it",
     "confirmationDelete": "Delete payment method",
     "permissionTitle": "Device notifications are off",
-    "permissionDescription": "To receive notifications,\nallow U+ AI LIFE notifications in device settings.",
+    "permissionDescription": "To receive notifications,\nallow Yogoda notifications in device settings.",
     "permissionCaption": "Your selected notification types\nand preferences will stay saved.",
     "permissionOpenSettings": "Open notification settings",
     "permissionLater": "Later",
@@ -138,5 +485,11 @@
     "placePrimary": "View benefit",
     "placeSave": "Save benefit",
     "placeMore": "View 4 more nearby benefits"
+  },
+  "AIChat": {
+    "headerTitle": "AI Plan Consultation",
+    "selectBtn": "Select this plan",
+    "explorePlans": "Explore other plans",
+    "inputPlaceholder": "Enter a message"
   }
 }

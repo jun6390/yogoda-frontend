@@ -11,27 +11,27 @@ import { cn } from "@/lib/utils";
 const bannerSlides = [
   {
     href: "/benefits",
-    src: "/yogoda-banners/uplus-benefit-v4.png",
+    src: "/yogoda-banners/uplus-benefit.png",
     altKey: "bannerBenefitAlt",
   },
   {
     href: "/my",
-    src: "/yogoda-banners/plan-compare-v5.png",
+    src: "/yogoda-banners/plan-compare.png",
     altKey: "bannerPlanAlt",
   },
   {
     href: "/mission",
-    src: "/yogoda-banners/mission-point-v6.png",
+    src: "/yogoda-banners/mission-point.png",
     altKey: "bannerMissionAlt",
   },
   {
     href: "/benefits",
-    src: "/yogoda-banners/uplus-special-v7.png",
+    src: "/yogoda-banners/uplus-special.png",
     altKey: "bannerSpecialAlt",
   },
   {
     href: "/benefits",
-    src: "/yogoda-banners/coupon-partner-v9.png",
+    src: "/yogoda-banners/coupon-partner.png",
     altKey: "bannerCouponAlt",
   },
 ] as const;
@@ -48,8 +48,8 @@ export function HomeBannerCarousel() {
      * 컴포넌트가 사라지면 타이머도 같이 정리함
      */
     const timerId = window.setInterval(() => {
-      setActiveIndex((currentIndex) =>
-        (currentIndex + 1) % bannerSlides.length,
+      setActiveIndex(
+        (currentIndex) => (currentIndex + 1) % bannerSlides.length,
       );
     }, autoSlideDelay);
 
@@ -59,9 +59,7 @@ export function HomeBannerCarousel() {
   }, [activeIndex]);
 
   const moveTo = (nextIndex: number) => {
-    setActiveIndex(
-      (nextIndex + bannerSlides.length) % bannerSlides.length,
-    );
+    setActiveIndex((nextIndex + bannerSlides.length) % bannerSlides.length);
   };
 
   return (
@@ -84,7 +82,8 @@ export function HomeBannerCarousel() {
                 src={slide.src}
                 alt={t(slide.altKey)}
                 fill
-                priority={index === 0}
+                loading="eager"
+                fetchPriority={index === activeIndex ? "high" : "auto"}
                 sizes="(max-width: 390px) 350px, 350px"
                 className="object-contain"
               />
