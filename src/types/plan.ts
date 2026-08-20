@@ -14,6 +14,8 @@ export type PlanChoiceBenefitSection =
 
 export type PlanChoiceBenefitDependencyMatch = "any" | "all";
 
+export type SelectedPlanOptions = Record<string, string[]>;
+
 export interface PlanDataAllowance {
   display: string;
   amountMb: number | null;
@@ -109,4 +111,25 @@ export interface Plan {
 
   created_at?: string;
   updated_at?: string;
+}
+
+export interface JoinPlanResponse {
+  message: string;
+  planCode: string;
+  planName: string;
+  currentPlanId: string;
+  selectedOptions: SelectedPlanOptions;
+  joinedAt: string;
+}
+
+export interface CurrentPlan {
+  planCode: string;
+  planName: string;
+  currentPlanId: string;
+  selectedOptions: SelectedPlanOptions;
+  joinedAt: string | null;
+}
+
+export interface PlanSubscriptionResponse extends CurrentPlan {
+  message: string;
 }

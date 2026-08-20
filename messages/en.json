@@ -292,7 +292,6 @@
   "Home": {
     "myPlan": "My Plan",
     "planExplore": "Explore Plans",
-    "planJoin": "Join Plan",
     "planTabsAriaLabel": "Plan menu",
     "bannerAriaLabel": "Recommended benefit banners",
     "bannerPrevious": "View previous banner",
@@ -347,6 +346,10 @@
     "monthlyPrice": "{amount} KRW/month"
   },
   "PlanDetail": {
+    "discountAmount": "Discount ₩{amount}/month",
+    "selectedBenefitAmount": "Value of my selected benefits",
+    "benefitValueUnknown": "Value unavailable",
+
     "back": "Go back",
     "loading": "Loading plan information.",
     "error": "Unable to load plan information.",
@@ -355,8 +358,24 @@
     "wonPerMonth": " KRW/month",
     "upTo": "Up to ₩{amount}",
     "monthlyValue": "Worth ₩{amount}/month",
+    "joining": "Joining...",
+    "joinError": "An error occurred while joining the plan.",
+    "joinSuccess": {
+      "title": "Plan activated!",
+      "description": "You've successfully joined the {planName} plan.",
+      "confirm": "OK"
+    },
+    "changePlan": "Change plan",
+    "currentPlan": "Your current plan",
+    "changing": "Changing...",
+    "changeError": "An error occurred while changing your plan.",
+    "changeSuccess": {
+      "title": "Plan changed!",
+      "description": "Your plan has been changed to {planName}.",
+      "confirm": "OK"
+    },
 
-    "unlimited": "Unlimited",
+    "unlimited": "무제한",
     "data": "Data",
     "voice": "Calls",
     "sms": "Messages",
