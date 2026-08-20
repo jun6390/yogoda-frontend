@@ -87,9 +87,10 @@ function PlanDetailContent({ code }: PlanDetailContentProps) {
    * 비로그인 사용자는 요금제 탐색 자체는 그대로 이용할 수 있음
    */
   const { data: currentPlan, isPending: isCurrentPlanPending } = useQuery({
-    queryKey: ["current-plan"],
+    queryKey: ["plans", "me", "current"],
     queryFn: getCurrentPlan,
     enabled: Boolean(accessToken),
+    retry: false,
   });
 
   /*
@@ -116,7 +117,7 @@ function PlanDetailContent({ code }: PlanDetailContentProps) {
       setCompletedAction(action);
 
       void queryClient.invalidateQueries({
-        queryKey: ["current-plan"],
+        queryKey: ["plans", "me", "current"],
       });
     },
 
@@ -155,6 +156,7 @@ function PlanDetailContent({ code }: PlanDetailContentProps) {
       const triggerTop = trigger.getBoundingClientRect().top;
       const containerRect = scrollContainer.getBoundingClientRect();
 
+      // 혜택 선택 영역에 가까워졌을 때 하단 CTA를 띄워 선택 흐름을 끊지 않음
       const showThreshold = containerRect.top + containerRect.height * 0.6;
 
       setShowStickyCta(triggerTop <= showThreshold);
@@ -180,6 +182,7 @@ function PlanDetailContent({ code }: PlanDetailContentProps) {
       return;
     }
 
+    // 새로 열린 의존 단계가 DOM에 반영된 다음 프레임에 스크롤해야 위치가 정확함
     const frame = window.requestAnimationFrame(() => {
       stepRefs.current[pendingScrollStepCode]?.scrollIntoView({
         behavior: "smooth",
@@ -421,6 +424,7 @@ function PlanDetailContent({ code }: PlanDetailContentProps) {
       [step.code]: nextSelected,
     };
 
+    // 이전 선택 때문에 더 이상 조건을 만족하지 않는 하위 단계 선택값을 제거함
     const sanitizedSelections = sanitizeSelections(
       sortedSteps,
       rawNextSelections,
@@ -483,6 +487,11 @@ function PlanDetailContent({ code }: PlanDetailContentProps) {
 
   const handlePlanAction = () => {
     if (isCurrentPlan) {
+      return;
+    }
+
+    if (!accessToken) {
+      router.push("/login");
       return;
     }
 
@@ -1179,6 +1188,7 @@ function getProgressiveSteps(
 ) {
   const visibleSteps: PlanChoiceBenefit[] = [];
 
+  // 아직 완료되지 않은 선택 단계 이후는 숨겨서 단계형 가입 흐름을 유지함
   for (const step of activeSteps) {
     visibleSteps.push(step);
 
@@ -1196,6 +1206,7 @@ function sanitizeSelections(
 ) {
   const sanitized: SelectedBenefits = {};
 
+  // 앞 단계부터 다시 검증해야 의존성이 끊긴 선택값이 다음 단계에 남지 않음
   for (const step of steps) {
     if (step.stepType !== "choice") {
       continue;

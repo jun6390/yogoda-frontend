@@ -6,13 +6,15 @@ import { useLocale, useTranslations } from "next-intl";
 
 import { Chip } from "@/components/ui/Chip/Chip";
 import { PlanRow } from "@/components/ui/PlanRow/PlanRow";
-import { getPlans } from "@/lib/api/plan";
+import { getCurrentPlan, getPlans } from "@/lib/api/plan";
+import { useAuthStore } from "@/stores/useAuthStore";
 
 type PlanFilter = "popular" | "all" | "unlimited" | "priceHigh" | "priceLow";
 
 export function PlanBrowseContent() {
   const t = useTranslations("Plans");
   const locale = useLocale();
+  const accessToken = useAuthStore((state) => state.accessToken);
 
   const [activeFilter, setActiveFilter] = useState<PlanFilter>("popular");
 
@@ -23,6 +25,14 @@ export function PlanBrowseContent() {
   } = useQuery({
     queryKey: ["plans"],
     queryFn: getPlans,
+  });
+
+  const { data: currentPlan } = useQuery({
+    queryKey: ["plans", "me", "current"],
+    queryFn: getCurrentPlan,
+    // 탐색 화면은 비회원도 볼 수 있으므로 로그인한 경우에만 현재 요금제 배지를 조회함
+    enabled: Boolean(accessToken),
+    retry: false,
   });
 
   const formatNumber = (value: number) =>
@@ -129,6 +139,11 @@ export function PlanBrowseContent() {
               benefits={plan.perks}
               href={`/plans/${plan.code}`}
               promotionBadge={plan.promotion.badge}
+              currentPlanBadge={
+                currentPlan?.planCode === plan.code
+                  ? t("currentPlanBadge")
+                  : undefined
+              }
               effectiveMonthlyFee={plan.promotion.effectiveMonthlyFee}
               maxMonthlyBenefit={plan.promotion.maxMonthlyBenefit}
             />

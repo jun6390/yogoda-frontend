@@ -42,6 +42,7 @@ export function useAIChat() {
   const interactionIdRef = useRef<string | null>(null);
   // 지금까지 대화로 파악된 정보 (모델이 맥락을 놓치는 경우를 대비한 이중 안전장치)
   const collectedInfoRef = useRef<CollectedInfo | null>(null);
+  const initialIsLoggedInRef = useRef(isLoggedIn);
 
   const appendChars = useCallback((messageId: string, chars: string) => {
     setMessages((prev) =>
@@ -54,7 +55,7 @@ export function useAIChat() {
 
   // 마운트 시 이전 대화 내역 복원 (회원은 DB, 비회원은 로컬 스토리지에서)
   useEffect(() => {
-    if (isLoggedIn) {
+    if (initialIsLoggedInRef.current) {
       getLatestChatSession()
         .then(
           ({
@@ -84,8 +85,6 @@ export function useAIChat() {
       collectedInfoRef.current = stored.collectedInfo;
       interactionIdRef.current = stored.lastInteractionId;
     }
-    // 최초 마운트 시 한 번만 복원하면 되므로 의도적으로 의존성 배열을 비워둠
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // 비회원의 대화 내역을 로컬 스토리지에 동기화 (타자기 효과로 인한 잦은 쓰기를 막기 위해 디바운스)
@@ -105,8 +104,7 @@ export function useAIChat() {
       socketRef.current?.close();
       typewriter.stopAll();
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [typewriter]);
 
   const startWebSocketStream = useCallback(
     (text: string, aiMsgId: string) => {

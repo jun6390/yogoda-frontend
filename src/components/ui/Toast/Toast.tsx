@@ -26,7 +26,7 @@ export function Toast({
     <div
       role="status"
       className={cn(
-        "flex h-[48px] w-[342px] items-center justify-between gap-lg rounded-lg bg-[#211524] px-lg shadow-lg",
+        "flex h-[48px] w-[342px] items-center justify-between gap-lg rounded-lg bg-toast-background px-lg shadow-lg",
         className,
       )}
       {...props}
@@ -37,14 +37,14 @@ export function Toast({
           src={checkCircleIcon}
           className="size-[18px] shrink-0"
         />
-        <span className="truncate font-sans text-caption-13-bold text-white">
+        <span className="truncate font-sans text-caption-13-bold text-text-on-primary">
           {message}
         </span>
       </span>
       {resolvedActionLabel ? (
         <button
           type="button"
-          className="shrink-0 rounded-sm bg-white/10 px-md py-sm font-sans text-caption-12-bold text-[#ffb9dd]"
+          className="shrink-0 rounded-sm bg-white/10 px-md py-sm font-sans text-caption-12-bold text-toast-action-text"
         >
           {resolvedActionLabel}
         </button>
