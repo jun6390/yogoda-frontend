@@ -2,19 +2,12 @@ import type { InputHTMLAttributes, ReactNode } from "react";
 
 import { cn } from "@/lib/utils";
 
-interface CheckboxProps extends Omit<
-  InputHTMLAttributes<HTMLInputElement>,
-  "type"
-> {
+interface CheckboxProps
+  extends Omit<InputHTMLAttributes<HTMLInputElement>, "type"> {
   label?: ReactNode;
 }
 
-export function Checkbox({
-  label,
-  className,
-  disabled,
-  ...props
-}: CheckboxProps) {
+export function Checkbox({ label, className, disabled, ...props }: CheckboxProps) {
   return (
     <label
       className={cn(

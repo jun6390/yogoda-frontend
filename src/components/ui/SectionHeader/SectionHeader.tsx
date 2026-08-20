@@ -19,10 +19,7 @@ export function SectionHeader({
 }: SectionHeaderProps) {
   return (
     <div
-      className={cn(
-        "flex w-full items-center justify-between gap-md",
-        className,
-      )}
+      className={cn("flex w-full items-center justify-between gap-md", className)}
       {...props}
     >
       <h2 className="min-w-0 truncate font-sans text-title-16-bold text-text-primary">

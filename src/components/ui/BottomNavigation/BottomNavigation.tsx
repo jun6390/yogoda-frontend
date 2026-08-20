@@ -85,7 +85,7 @@ export function BottomNavigation({
     <nav
       aria-label={t("primaryMenu")}
       className={cn(
-        "flex h-bottom-nav w-full items-center bg-surface py-sm",
+        "flex h-bottom-nav w-[390px] items-center bg-surface py-sm",
         className,
       )}
       {...props}
@@ -94,7 +94,7 @@ export function BottomNavigation({
         const isActive = currentActive === item.value;
 
         const itemClassName = cn(
-          "flex min-w-0 flex-1 flex-col items-center justify-center gap-xs",
+          "flex w-[78px] shrink-0 flex-col items-center justify-center gap-xs",
           "focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-action-primary",
         );
 

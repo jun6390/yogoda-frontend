@@ -17,7 +17,7 @@ export function ListRow({
     <button
       type="button"
       className={cn(
-        "flex w-full max-w-[350px] items-center justify-between gap-lg bg-surface py-md",
+        "flex w-[350px] items-center justify-between gap-lg bg-surface py-md",
         "text-left font-sans text-label-14-medium text-text-primary",
         "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-action-primary",
         className,

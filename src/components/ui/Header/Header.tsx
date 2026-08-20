@@ -3,8 +3,6 @@
 import { Menu } from "lucide-react";
 import { useTranslations } from "next-intl";
 
-import { FigmaImage } from "../FigmaImage/FigmaImage";
-
 import { Link } from "@/i18n/navigation";
 import { cn } from "@/lib/utils";
 
@@ -14,7 +12,6 @@ interface HeaderProps {
 }
 
 const logoText = "Yogoda";
-const logoSrc = "/yogoda-logo.svg";
 
 export function Header({ className, onMenuClick }: HeaderProps) {
   const navigation = useTranslations("Navigation");
@@ -29,9 +26,9 @@ export function Header({ className, onMenuClick }: HeaderProps) {
       <Link
         href="/"
         aria-label={`${logoText} ${navigation("home")}`}
-        className="flex h-touch items-center focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-action-primary"
+        className="text-xl font-bold text-text-brand focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-action-primary"
       >
-        <FigmaImage alt="" src={logoSrc} className="h-[20px] w-auto" />
+        {logoText}
       </Link>
 
       <button

@@ -18,8 +18,7 @@ interface ThemeContextValue {
   theme: ThemePreference;
   resolvedTheme: ResolvedTheme;
   setTheme: (
-    value:
-      ThemePreference | ((currentTheme: ThemePreference) => ThemePreference),
+    value: ThemePreference | ((currentTheme: ThemePreference) => ThemePreference),
   ) => void;
 }
 
@@ -180,9 +179,7 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
   );
 
   return (
-    <ThemeContext.Provider value={contextValue}>
-      {children}
-    </ThemeContext.Provider>
+    <ThemeContext.Provider value={contextValue}>{children}</ThemeContext.Provider>
   );
 }
 

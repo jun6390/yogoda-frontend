@@ -18,7 +18,7 @@ export function MissionRow({
   return (
     <div
       className={cn(
-        "flex w-full max-w-[350px] items-center justify-between gap-lg",
+        "flex w-[350px] items-center justify-between gap-lg",
         complete && "opacity-50",
         className,
       )}

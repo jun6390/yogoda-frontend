@@ -9,18 +9,11 @@ const meta = {
     layout: "centered",
   },
   tags: ["autodocs"],
-  decorators: [
-    (Story) => (
-      <div className="w-mobile px-5">
-        <Story />
-      </div>
-    ),
-  ],
   args: {
     recommended: true,
     name: "5G 데이터 플러스",
     price: "59,000원 / 월",
-    description: "80GB · 통화 무제한 · OTT 선택 혜택",
+    description: "80GB · 통화 무제한 · OTT 선택",
   },
 } satisfies Meta<typeof PlanRow>;
 

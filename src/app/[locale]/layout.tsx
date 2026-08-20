@@ -1,11 +1,7 @@
 import type { Metadata } from "next";
 import { notoSansKr } from "@/styles/fonts";
 import { NextIntlClientProvider, hasLocale } from "next-intl";
-import {
-  getMessages,
-  getTranslations,
-  setRequestLocale,
-} from "next-intl/server";
+import { getTranslations } from "next-intl/server";
 import { notFound } from "next/navigation";
 
 import { routing } from "@/i18n/routing";
@@ -54,18 +50,10 @@ export default async function LocaleLayout({
     notFound();
   }
 
-  /*
-   * /auth/:provider/callback rewrite처럼 next-intl 미들웨어를 거치지 않고
-   * 들어오는 요청도 있어서, URL의 [locale] 세그먼트로 직접 locale을 고정함
-   */
-  setRequestLocale(locale);
-
-  const messages = await getMessages();
-
   return (
     <html lang={locale} suppressHydrationWarning>
       <body className={`${notoSansKr.variable} font-sans`}>
-        <NextIntlClientProvider messages={messages}>
+        <NextIntlClientProvider>
           <AppProviders>{children}</AppProviders>
         </NextIntlClientProvider>
       </body>
