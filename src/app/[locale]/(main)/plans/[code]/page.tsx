@@ -2,14 +2,18 @@
 
 import type { ReactNode } from "react";
 import { useEffect, useRef, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   ArrowLeft,
   Check,
   ChevronDown,
   Database,
+  Gift,
   MessageSquare,
   Phone,
+  ShieldCheck,
+  Smartphone,
+  Users,
 } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { useParams, useRouter } from "next/navigation";
@@ -17,10 +21,17 @@ import { useParams, useRouter } from "next/navigation";
 import { PageContainer } from "@/components/layout/PageContainer";
 import { NergetPlanBadge } from "@/components/plans/NergetPlanBadge";
 import { Button } from "@/components/ui/Button/Button";
-import { getPlanByCode } from "@/lib/api/plan";
+import {
+  changePlan,
+  getCurrentPlan,
+  getPlanByCode,
+  joinPlan,
+} from "@/lib/api/plan";
+import { useAuthStore } from "@/stores/useAuthStore";
 import type { PlanChoiceBenefit, PlanChoiceBenefitOption } from "@/types/plan";
 
 type SelectedBenefits = Record<string, string[]>;
+type PlanAction = "join" | "change";
 
 export default function PlanDetailPage() {
   const { code } = useParams<{ code: string }>();
@@ -34,9 +45,12 @@ interface PlanDetailContentProps {
 
 function PlanDetailContent({ code }: PlanDetailContentProps) {
   const router = useRouter();
+  const queryClient = useQueryClient();
 
   const t = useTranslations("PlanDetail");
   const locale = useLocale();
+
+  const accessToken = useAuthStore((state) => state.accessToken);
 
   const benefitsSectionRef = useRef<HTMLDivElement>(null);
   const benefitsTriggerRef = useRef<HTMLDivElement>(null);
@@ -46,10 +60,17 @@ function PlanDetailContent({ code }: PlanDetailContentProps) {
   const [selectedBenefits, setSelectedBenefits] = useState<SelectedBenefits>(
     {},
   );
+
   const [pendingScrollStepCode, setPendingScrollStepCode] = useState<
     string | null
   >(null);
+
   const [isExitModalOpen, setIsExitModalOpen] = useState(false);
+  const [completedAction, setCompletedAction] = useState<PlanAction | null>(
+    null,
+  );
+
+  const [planActionError, setPlanActionError] = useState<string | null>(null);
 
   const {
     data: plan,
@@ -59,6 +80,55 @@ function PlanDetailContent({ code }: PlanDetailContentProps) {
     queryKey: ["plans", code],
     queryFn: () => getPlanByCode(code),
     enabled: Boolean(code),
+  });
+
+  /*
+   * 로그인한 사용자만 현재 가입 요금제를 조회함
+   * 비로그인 사용자는 요금제 탐색 자체는 그대로 이용할 수 있음
+   */
+  const { data: currentPlan, isPending: isCurrentPlanPending } = useQuery({
+    queryKey: ["current-plan"],
+    queryFn: getCurrentPlan,
+    enabled: Boolean(accessToken),
+  });
+
+  /*
+   * 현재 가입 상태에 따라 최초 가입과 요금제 변경 API를 분기함
+   */
+  const {
+    mutate: requestPlanAction,
+    isPending: isPlanActionPending,
+    variables: pendingAction,
+  } = useMutation({
+    mutationFn: (action: PlanAction) => {
+      if (action === "change") {
+        return changePlan(code, selectedBenefits);
+      }
+
+      return joinPlan(code, selectedBenefits);
+    },
+
+    onMutate: () => {
+      setPlanActionError(null);
+    },
+
+    onSuccess: (_, action) => {
+      setCompletedAction(action);
+
+      void queryClient.invalidateQueries({
+        queryKey: ["current-plan"],
+      });
+    },
+
+    onError: (error, action) => {
+      setPlanActionError(
+        error instanceof Error
+          ? error.message
+          : action === "change"
+            ? t("changeError")
+            : t("joinError"),
+      );
+    },
   });
 
   const formatNumber = (value: number) =>
@@ -162,6 +232,11 @@ function PlanDetailContent({ code }: PlanDetailContentProps) {
     );
   }
 
+  const isCurrentPlan = currentPlan?.planCode === plan.code;
+
+  const isPlanChange =
+    currentPlan !== null && currentPlan !== undefined && !isCurrentPlan;
+
   const isUnlimited = plan.data.amountMb === null;
   const planNumber = plan.code.replace("nerget-", "");
 
@@ -191,10 +266,13 @@ function PlanDetailContent({ code }: PlanDetailContentProps) {
     isStepComplete(step, selectedBenefits),
   );
 
-  // 선택 단계가 없는 요금제는 가입 CTA를 처음부터 바로 노출
+  /*
+   * 선택 단계가 없는 요금제는 별도 선택 과정 없이
+   * 가입/변경 CTA를 처음부터 노출함
+   */
   const shouldShowStickyCta = plan.choiceBenefits.length === 0 || showStickyCta;
 
-  const selectedOptionSummaries = activeSteps.flatMap((step) => {
+  const selectedOptions = activeSteps.flatMap((step) => {
     if (step.stepType !== "choice") {
       return [];
     }
@@ -212,10 +290,25 @@ function PlanDetailContent({ code }: PlanDetailContentProps) {
         {
           key: `${step.code}-${option.code}`,
           title: option.title,
+          monthlyValue: option.monthlyValue,
         },
       ];
     });
   });
+
+  const knownSelectedBenefitTotal = selectedOptions.reduce(
+    (total, option) =>
+      option.monthlyValue !== null ? total + option.monthlyValue : total,
+    0,
+  );
+
+  const hasKnownSelectedBenefitValue = selectedOptions.some(
+    (option) => option.monthlyValue !== null,
+  );
+
+  const hasUnknownSelectedBenefitValue = selectedOptions.some(
+    (option) => option.monthlyValue === null,
+  );
 
   const getSectionTitle = (step: PlanChoiceBenefit) => {
     if (step.sectionTitle === null) {
@@ -346,6 +439,7 @@ function PlanDetailContent({ code }: PlanDetailContentProps) {
     );
 
     setSelectedBenefits(sanitizedSelections);
+    setPlanActionError(null);
 
     if (!isStepComplete(step, sanitizedSelections)) {
       return;
@@ -361,6 +455,7 @@ function PlanDetailContent({ code }: PlanDetailContentProps) {
 
     if (newlyVisibleStep) {
       setPendingScrollStepCode(newlyVisibleStep.code);
+
       return;
     }
 
@@ -384,6 +479,19 @@ function PlanDetailContent({ code }: PlanDetailContentProps) {
   const handleConfirmExit = () => {
     setIsExitModalOpen(false);
     router.back();
+  };
+
+  const handlePlanAction = () => {
+    if (isCurrentPlan) {
+      return;
+    }
+
+    requestPlanAction(isPlanChange ? "change" : "join");
+  };
+
+  const handlePlanSuccessConfirm = () => {
+    setCompletedAction(null);
+    router.replace(`/${locale}`);
   };
 
   return (
@@ -596,9 +704,13 @@ function PlanDetailContent({ code }: PlanDetailContentProps) {
                         instruction={getStepInstruction(step) ?? undefined}
                         formatNumber={formatNumber}
                         monthlyValueLabel={(amount) =>
-                          t("monthlyValue", {
-                            amount,
-                          })
+                          step.code === "addon-benefit"
+                            ? t("discountAmount", {
+                                amount,
+                              })
+                            : t("monthlyValue", {
+                                amount,
+                              })
                         }
                       />
                     )}
@@ -606,49 +718,91 @@ function PlanDetailContent({ code }: PlanDetailContentProps) {
                 );
               })}
 
-              <div aria-hidden="true" className="h-[180px]" />
+              <div aria-hidden="true" className="h-[260px]" />
             </div>
           </PageContainer>
         </div>
       )}
 
       {shouldShowStickyCta && (
-        <div className="fixed bottom-[72px] left-1/2 z-20 w-[calc(100%-2px)] max-w-[446px] -translate-x-1/2 border-t border-border-default bg-surface shadow-[0_-8px_24px_rgb(18_20_31_/_8%)]">
-          <PageContainer className="pb-md pt-md">
-            {selectedOptionSummaries.length > 0 && (
-              <div className="mb-md">
-                <p className="mb-sm font-sans text-micro-11-regular text-text-secondary">
-                  {t("selectedBenefits")}
+        <div className="fixed bottom-[72px] left-1/2 z-20 w-full max-w-[446px] -translate-x-1/2 rounded-t-[20px] bg-surface shadow-[0_-8px_28px_rgb(18_20_31_/_12%)]">
+          <div className="px-lg pb-lg pt-lg">
+            {selectedOptions.length > 0 && (
+              <div className="mb-lg">
+                <p className="mb-sm font-sans text-caption-13-medium text-text-secondary">
+                  {t("selectedBenefitAmount")}
                 </p>
 
-                <div className="flex gap-xs overflow-x-auto">
-                  {selectedOptionSummaries.map((item) => (
-                    <span
-                      key={item.key}
-                      className="shrink-0 rounded-full bg-surface-subtle px-sm py-xs font-sans text-micro-11-bold text-text-secondary"
-                    >
-                      {item.title}
-                    </span>
-                  ))}
+                <div className="flex items-center justify-between gap-md">
+                  <div className="flex min-w-0 items-center gap-xs overflow-hidden">
+                    {selectedOptions.slice(0, 3).map((item) => (
+                      <span
+                        key={item.key}
+                        className="max-w-[92px] truncate rounded-full bg-surface-subtle px-sm py-xs font-sans text-micro-11-bold text-text-secondary"
+                      >
+                        {item.title}
+                      </span>
+                    ))}
+                  </div>
+
+                  <strong className="shrink-0 font-sans text-label-14-bold text-text-secondary">
+                    {hasKnownSelectedBenefitValue ? (
+                      <>
+                        {formatNumber(knownSelectedBenefitTotal)}
+                        {t("wonPerMonth")}
+                        {hasUnknownSelectedBenefitValue && "+"}
+                      </>
+                    ) : (
+                      t("benefitValueUnknown")
+                    )}
+                  </strong>
                 </div>
               </div>
             )}
 
-            <div className="mb-md flex items-center justify-between gap-lg">
-              <span className="font-sans text-label-14-bold text-text-primary">
+            <div className="mb-xl flex items-center justify-between gap-lg">
+              <span className="font-sans text-title-18-bold text-text-primary">
                 {t("estimatedPayment")}
               </span>
 
-              <strong className="font-sans text-label-14-bold text-text-primary">
+              <strong className="shrink-0 font-sans text-title-18-bold text-text-primary">
                 {formatNumber(plan.monthlyFee)}
                 {t("wonPerMonth")}
               </strong>
             </div>
 
-            <Button className="w-full" disabled={!isJoinEnabled}>
-              {t("join")}
+            {planActionError && (
+              <p
+                role="alert"
+                className="mb-md text-center font-sans text-caption-13-medium text-error"
+              >
+                {planActionError}
+              </p>
+            )}
+
+            <Button
+              className="h-[56px] w-full rounded-xl"
+              disabled={
+                !isJoinEnabled ||
+                isPlanActionPending ||
+                isCurrentPlan ||
+                (Boolean(accessToken) && isCurrentPlanPending)
+              }
+              onClick={handlePlanAction}
+            >
+              {Boolean(accessToken) && isCurrentPlanPending
+                ? t("loading")
+                : isPlanActionPending
+                  ? pendingAction === "change"
+                    ? t("changing")
+                    : t("joining")
+                  : isCurrentPlan
+                    ? t("currentPlan")
+                    : isPlanChange
+                      ? t("changePlan")
+                      : t("join")}
             </Button>
-          </PageContainer>
+          </div>
         </div>
       )}
 
@@ -692,6 +846,51 @@ function PlanDetailContent({ code }: PlanDetailContentProps) {
                 {t("exitModal.confirm")}
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {completedAction && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-lg">
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="plan-success-title"
+            className="w-full max-w-[320px] rounded-xl bg-surface p-xl shadow-xl"
+          >
+            <div className="flex justify-center">
+              <div className="flex size-[56px] items-center justify-center rounded-full bg-action-primary/10 text-action-primary">
+                <Check aria-hidden="true" size={28} strokeWidth={2.5} />
+              </div>
+            </div>
+
+            <h2
+              id="plan-success-title"
+              className="mt-lg text-center font-sans text-title-18-bold text-text-primary"
+            >
+              {completedAction === "change"
+                ? t("changeSuccess.title")
+                : t("joinSuccess.title")}
+            </h2>
+
+            <p className="mt-sm text-center font-sans text-caption-13-medium leading-relaxed text-text-secondary">
+              {completedAction === "change"
+                ? t("changeSuccess.description", {
+                    planName: plan.name,
+                  })
+                : t("joinSuccess.description", {
+                    planName: plan.name,
+                  })}
+            </p>
+
+            <Button
+              className="mt-xl h-[52px] w-full rounded-lg"
+              onClick={handlePlanSuccessConfirm}
+            >
+              {completedAction === "change"
+                ? t("changeSuccess.confirm")
+                : t("joinSuccess.confirm")}
+            </Button>
           </div>
         </div>
       )}
@@ -754,7 +953,7 @@ function ChoiceStep({
               disabled={selectionLimitReached}
               aria-pressed={isSelected}
               onClick={() => onSelect(option.code)}
-              className={`min-h-[104px] rounded-lg border p-md text-left transition-colors ${
+              className={`min-h-[104px] rounded-lg border-2 p-md text-left transition-colors ${
                 isSelected
                   ? "border-action-primary bg-surface"
                   : "border-border-default bg-surface"
@@ -784,6 +983,33 @@ interface InfoStepProps {
   monthlyValueLabel: (amount: string) => string;
 }
 
+function getBenefitIcon(option: PlanChoiceBenefitOption) {
+  if (
+    option.code === "smart-device-discount" ||
+    option.title.includes("스마트기기")
+  ) {
+    return <Smartphone aria-hidden="true" size={18} />;
+  }
+
+  if (option.code === "family-bundle" || option.title.includes("가족")) {
+    return <Users aria-hidden="true" size={18} />;
+  }
+
+  if (
+    option.title.includes("피싱") ||
+    option.title.includes("해킹") ||
+    option.title.includes("안심")
+  ) {
+    return <ShieldCheck aria-hidden="true" size={18} />;
+  }
+
+  if (option.title.includes("데이터")) {
+    return <Database aria-hidden="true" size={18} />;
+  }
+
+  return <Gift aria-hidden="true" size={18} />;
+}
+
 function InfoStep({
   step,
   title,
@@ -803,17 +1029,39 @@ function InfoStep({
         </p>
       )}
 
-      <div className="mt-md flex flex-col gap-sm">
-        {step.options.map((option) => (
+      <div className="mt-md overflow-hidden rounded-xl bg-surface-subtle px-lg">
+        {step.options.map((option, index) => (
           <div
             key={option.code}
-            className="rounded-lg border border-border-default bg-surface p-lg"
+            className={`py-lg ${
+              index !== step.options.length - 1
+                ? "border-b border-border-default"
+                : ""
+            }`}
           >
-            <BenefitOptionContent
-              option={option}
-              formatNumber={formatNumber}
-              monthlyValueLabel={monthlyValueLabel}
-            />
+            <div className="flex items-start justify-between gap-md">
+              <div className="min-w-0 flex-1">
+                <p className="font-sans text-label-14-bold text-text-primary">
+                  {option.title}
+                </p>
+
+                {option.monthlyValue !== null && (
+                  <p className="mt-xs font-sans text-micro-11-bold text-action-primary">
+                    {monthlyValueLabel(formatNumber(option.monthlyValue))}
+                  </p>
+                )}
+              </div>
+
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-action-primary/10 text-action-primary">
+                {getBenefitIcon(option)}
+              </div>
+            </div>
+
+            {option.description && (
+              <p className="mt-sm font-sans text-micro-11-regular leading-relaxed text-text-secondary">
+                {option.description}
+              </p>
+            )}
           </div>
         ))}
       </div>

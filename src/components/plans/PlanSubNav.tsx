@@ -21,10 +21,6 @@ export function PlanSubNav() {
       value: "explore",
       label: t("planExplore"),
     },
-    {
-      value: "join",
-      label: t("planJoin"),
-    },
   ] as const;
 
   const activeMenu: PlanMenu =
