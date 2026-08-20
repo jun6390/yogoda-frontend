@@ -133,3 +133,8 @@ export interface CurrentPlan {
 export interface PlanSubscriptionResponse extends CurrentPlan {
   message: string;
 }
+
+export interface PlanCancelResult {
+  message?: string;
+  canceledPlanId?: string;
+}

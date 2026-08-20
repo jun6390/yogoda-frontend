@@ -74,7 +74,7 @@ export function PlanRecommendationCards({
               </span>
 
               <button className="flex items-center gap-xs font-sans text-caption-12-medium text-text-secondary hover:text-text-primary">
-                내 요금제와 비교 <ChevronRight size={14} />
+                {t("comparePlan")} <ChevronRight size={14} />
               </button>
 
               <button className="w-full h-[40px] rounded-lg bg-action-primary text-text-on-primary font-sans text-caption-13-bold hover:bg-action-primary-hover transition-colors">

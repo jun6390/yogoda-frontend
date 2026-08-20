@@ -1,4 +1,4 @@
-import { useCallback, useRef } from "react";
+import { useCallback, useMemo, useRef } from "react";
 
 type AppendChars = (messageId: string, chars: string) => void;
 
@@ -50,5 +50,5 @@ export function useTypewriter(appendChars: AppendChars) {
     [appendChars],
   );
 
-  return { push, stop, stopAll };
+  return useMemo(() => ({ push, stop, stopAll }), [push, stop, stopAll]);
 }

@@ -5,6 +5,7 @@ import { ChevronDown, ChevronRight } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 
 import { NergetPlanBadge } from "@/components/plans/NergetPlanBadge";
+import { Badge } from "@/components/ui/Badge/Badge";
 import { Link } from "@/i18n/navigation";
 import { cn } from "@/lib/utils";
 
@@ -18,6 +19,7 @@ interface PlanRowProps extends HTMLAttributes<HTMLDivElement> {
   benefits?: string[];
   href?: string;
   promotionBadge?: string | null;
+  currentPlanBadge?: string | null;
   effectiveMonthlyFee?: number | null;
   maxMonthlyBenefit?: number | null;
 }
@@ -32,6 +34,7 @@ export function PlanRow({
   benefits = [],
   href,
   promotionBadge,
+  currentPlanBadge,
   effectiveMonthlyFee,
   maxMonthlyBenefit,
   className,
@@ -47,10 +50,20 @@ export function PlanRow({
     <div className="px-lg pb-md pt-lg">
       <div className="flex items-start justify-between gap-lg">
         <div className="min-w-0 flex-1">
-          {promotionBadge && (
-            <span className="mb-sm flex h-[22px] w-fit items-center rounded-xs bg-background px-sm font-sans text-micro-11-bold leading-none text-text-secondary">
-              {promotionBadge}
-            </span>
+          {(currentPlanBadge || promotionBadge) && (
+            <div className="mb-sm flex flex-wrap items-center gap-xs">
+              {currentPlanBadge && (
+                <Badge variant="accent" className="h-[22px] py-0 leading-none">
+                  {currentPlanBadge}
+                </Badge>
+              )}
+
+              {promotionBadge && (
+                <Badge variant="default" className="h-[22px] py-0 leading-none">
+                  {promotionBadge}
+                </Badge>
+              )}
+            </div>
           )}
 
           {effectiveMonthlyFee !== null &&

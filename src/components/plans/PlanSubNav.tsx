@@ -5,7 +5,7 @@ import { useTranslations } from "next-intl";
 import { Tabs } from "@/components/ui/Tabs/Tabs";
 import { usePathname, useRouter } from "@/i18n/navigation";
 
-type PlanMenu = "myPlan" | "explore" | "join";
+type PlanMenu = "myPlan" | "explore";
 
 export function PlanSubNav() {
   const t = useTranslations("Home");
@@ -23,12 +23,7 @@ export function PlanSubNav() {
     },
   ] as const;
 
-  const activeMenu: PlanMenu =
-    pathname === "/plans/join"
-      ? "join"
-      : pathname === "/plans"
-        ? "explore"
-        : "myPlan";
+  const activeMenu: PlanMenu = pathname === "/plans" ? "explore" : "myPlan";
 
   const handleChange = (value: PlanMenu) => {
     if (value === "myPlan") {
@@ -36,12 +31,7 @@ export function PlanSubNav() {
       return;
     }
 
-    if (value === "explore") {
-      router.push("/plans");
-      return;
-    }
-
-    router.push("/plans/join");
+    router.push("/plans");
   };
 
   return (

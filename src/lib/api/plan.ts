@@ -3,6 +3,7 @@ import { apiFetch } from "@/lib/api/client";
 import type {
   CurrentPlan,
   Plan,
+  PlanCancelResult,
   PlanSubscriptionResponse,
   SelectedPlanOptions,
 } from "@/types/plan";
@@ -41,5 +42,11 @@ export function changePlan(code: string, selectedOptions: SelectedPlanOptions) {
     body: {
       selectedOptions,
     },
+  });
+}
+
+export function cancelCurrentPlan() {
+  return apiFetch<PlanCancelResult | null>("/api/plans/me/current", {
+    method: "DELETE",
   });
 }
