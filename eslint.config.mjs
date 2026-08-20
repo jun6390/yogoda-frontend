@@ -5,7 +5,6 @@ import { defineConfig, globalIgnores } from "eslint/config";
 import nextVitals from "eslint-config-next/core-web-vitals";
 import nextTs from "eslint-config-next/typescript";
 import pluginQuery from "@tanstack/eslint-plugin-query";
-import eslintConfigPrettier from "eslint-config-prettier/flat";
 
 const eslintConfig = defineConfig([
   ...nextVitals,
@@ -23,9 +22,6 @@ const eslintConfig = defineConfig([
   ]),
 
   ...storybook.configs["flat/recommended"],
-
-  // Prettier와 충돌하는 ESLint 스타일 규칙을 비활성화함
-  eslintConfigPrettier,
 ]);
 
 export default eslintConfig;

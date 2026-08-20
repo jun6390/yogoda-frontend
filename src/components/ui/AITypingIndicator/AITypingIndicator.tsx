@@ -1,13 +1,25 @@
 import type { ButtonHTMLAttributes, HTMLAttributes } from "react";
 import { useTranslations } from "next-intl";
 
+import { FigmaImage } from "../FigmaImage/FigmaImage";
+
 import { cn } from "@/lib/utils";
 
 type AITypingIndicatorState = "typing" | "error";
 
 interface AITypingIndicatorProps extends HTMLAttributes<HTMLDivElement> {
-  // 타이핑 중(typing) 또는 에러 발생(error) 상태를 수신
   state?: AITypingIndicatorState;
+}
+
+const sparklesIcon = "/figma-assets/icon-sparkles.svg";
+const typingBubble = "/figma-assets/typing-bubble.svg";
+
+function AIAvatar() {
+  return (
+    <span className="flex size-[28px] shrink-0 items-center justify-center rounded-md bg-ai-soft">
+      <FigmaImage alt="" src={sparklesIcon} className="size-[24px]" />
+    </span>
+  );
 }
 
 export function AITypingIndicator({
@@ -24,12 +36,13 @@ export function AITypingIndicator({
       aria-live="polite"
       {...props}
     >
+      <AIAvatar />
       {state === "typing" ? (
-        <div className="flex items-center gap-[4px] rounded-lg bg-surface border border-border-default px-md h-[32px]">
-          <span className="size-[6px] rounded-full bg-text-secondary animate-bounce [animation-delay:-0.3s]" />
-          <span className="size-[6px] rounded-full bg-text-secondary animate-bounce [animation-delay:-0.15s]" />
-          <span className="size-[6px] rounded-full bg-text-secondary animate-bounce" />
-        </div>
+        <FigmaImage
+          alt={t("typingAlt")}
+          src={typingBubble}
+          className="h-[32px] w-[68px]"
+        />
       ) : (
         <div className="flex flex-col gap-sm rounded-bl-lg rounded-br-lg rounded-tl-xs rounded-tr-lg bg-surface-subtle px-lg py-md">
           <p className="font-sans text-body-14-regular text-text-secondary">
@@ -47,4 +60,5 @@ export function AITypingIndicator({
   );
 }
 
-export type AITypingRetryButtonProps = ButtonHTMLAttributes<HTMLButtonElement>;
+export type AITypingRetryButtonProps =
+  ButtonHTMLAttributes<HTMLButtonElement>;
