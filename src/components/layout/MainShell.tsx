@@ -4,11 +4,12 @@ import type { ReactNode } from "react";
 import { useEffect, useState, useSyncExternalStore } from "react";
 
 import { useMutation } from "@tanstack/react-query";
-import { LogOut, Moon, Sun, X } from "lucide-react";
+import { Moon, Sun, X } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 
 import { AppLayout } from "./AppLayout";
 
+import { LogoutButton } from "@/components/auth/LogoutButton";
 import { BottomNavigation } from "@/components/ui/BottomNavigation/BottomNavigation";
 import { Header } from "@/components/ui/Header/Header";
 import { usePathname, useRouter } from "@/i18n/navigation";
@@ -99,7 +100,7 @@ export function MainShell({ children }: MainShellProps) {
     setTheme(isDark ? "light" : "dark");
   };
 
-  const { mutate: requestLogout } = useMutation({
+  const { mutate: requestLogout, isPending: isPendingLogout } = useMutation({
     mutationFn: logout,
     onSettled: () => {
       // 서버 로그아웃 요청 성공/실패와 무관하게 로컬 로그인 상태는 정리함
@@ -234,18 +235,13 @@ export function MainShell({ children }: MainShellProps) {
             </section>
 
             {accessToken && (
-              <button
-                type="button"
+              <LogoutButton
+                label={menu("logout")}
+                loadingLabel={menu("loggingOut")}
+                loading={isPendingLogout}
                 onClick={() => requestLogout()}
-                className={cn(
-                  "mt-auto flex h-[48px] w-full items-center justify-center gap-sm rounded-lg bg-error-soft",
-                  "font-sans text-label-14-bold text-error transition-colors",
-                  "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-action-primary",
-                )}
-              >
-                <LogOut size={18} />
-                {menu("logout")}
-              </button>
+                className="mt-auto"
+              />
             )}
           </div>
         </aside>

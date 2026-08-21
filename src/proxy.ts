@@ -31,7 +31,15 @@ export default function proxy(request: NextRequest) {
     PROTECTED_PATHS.some((path) => {
       const localizedPath =
         path === "/" ? `/${pathLocale}` : `/${pathLocale}${path}`;
-      return pathname === localizedPath || pathname === `${localizedPath}/`;
+
+      if (path === "/") {
+        return pathname === localizedPath || pathname === `${localizedPath}/`;
+      }
+
+      // MY 같은 보호 경로의 하위 관리 화면도 동일하게 로그인 검사함
+      return (
+        pathname === localizedPath || pathname.startsWith(`${localizedPath}/`)
+      );
     });
 
   const hasCompletedOnboarding =
