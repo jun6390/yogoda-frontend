@@ -19,6 +19,7 @@ import { useLocale, useTranslations } from "next-intl";
 
 import { HomeBannerCarousel } from "@/components/home/HomeBannerCarousel";
 import { PageContainer } from "@/components/layout/PageContainer";
+import { ErrorState } from "@/components/ui/ErrorState/ErrorState";
 import { ApiError } from "@/lib/api/client";
 import { getCurrentPlan, getPlanByCode } from "@/lib/api/plan";
 import { Link, useRouter } from "@/i18n/navigation";
@@ -457,21 +458,12 @@ function CurrentPlanError({ onRetry }: { onRetry: () => void }) {
   const t = useTranslations("Home");
 
   return (
-    <section className="rounded-lg bg-surface p-lg shadow-sm">
-      <p className="font-sans text-title-16-bold text-text-primary">
-        {t("currentPlanErrorTitle")}
-      </p>
-      <p className="mt-xs font-sans text-caption-13-regular text-text-secondary">
-        {t("currentPlanErrorDescription")}
-      </p>
-      <button
-        type="button"
-        onClick={onRetry}
-        className="mt-lg font-sans text-label-14-bold text-action-primary"
-      >
-        {t("currentPlanRetry")}
-      </button>
-    </section>
+    <ErrorState
+      title={t("currentPlanErrorTitle")}
+      description={t("currentPlanErrorDescription")}
+      retryLabel={t("currentPlanRetry")}
+      onRetry={onRetry}
+    />
   );
 }
 

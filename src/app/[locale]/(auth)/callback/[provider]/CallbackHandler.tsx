@@ -55,7 +55,8 @@ export function CallbackHandler({ provider }: CallbackHandlerProps) {
       return loginFn!(authCode);
     },
     onSuccess: ({ accessToken, userId, name, isNewUser, role }) => {
-      setAuth(accessToken, { userId, name, isNewUser, role });
+      // API 응답과 무관하게 실제 OAuth 콜백 경로의 제공자를 인증 상태에 보관함
+      setAuth(accessToken, { userId, name, isNewUser, role, provider });
       router.replace("/");
     },
   });

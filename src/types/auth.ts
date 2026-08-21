@@ -5,6 +5,7 @@ export interface AuthUser {
   name: string;
   role: string;
   isNewUser: boolean;
+  provider?: SocialProvider;
 }
 
 export interface SocialLoginResponse extends AuthUser {
