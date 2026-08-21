@@ -20,7 +20,6 @@ const WELCOME_MESSAGE: ChatMessage = {
   type: "text",
   text: "안녕하세요! 사용자님에게 딱 맞는 베스트 요금제를 추천해 드릴게요. 평소 데이터 사용량이나 선호하시는 혜택(OTT 등)에 대해 편하게 말씀해 주세요!",
 };
-
 /**
  * AI 상담 채팅의 상태와 소켓 통신을 담당하는 훅.
  * - 로그인 여부에 따라 회원은 DB, 비회원은 로컬 스토리지에서 이전 대화를 복원함
@@ -62,9 +61,6 @@ export function useAIChat() {
   const typewriter = useTypewriter(appendChars);
 
   // 마운트 시 이전 대화 내역 복원 (회원은 DB, 비회원은 로컬 스토리지에서)
-  // 비동기 함수로 감싸서 실행하는 이유: 로그인 여부와 무관하게 항상 "외부 데이터를
-  // 비동기로 가져와 반영"하는 흐름으로 통일해, effect 본문에서 setState를 동기
-  // 호출할 때 발생하는 cascading render 경고(react-hooks/set-state-in-effect)를 피함
   useEffect(() => {
     async function restoreHistory() {
       if (initialIsLoggedInRef.current) {
@@ -253,8 +249,7 @@ export function useAIChat() {
         useChatHistoryStore.getState().incrementGuestChatCount();
         setGuestChatCount(nextCount);
 
-        // 방금 보낸 메시지로 무료 횟수를 모두 채웠다면, 이번 응답까지는 정상적으로
-        // 받아본 뒤 로그인 유도 팝업을 띄움
+        // 이번 메시지로 무료 횟수를 모두 채웠다면, 응답은 받아본 뒤 로그인 유도 팝업을 띄움
         if (nextCount >= GUEST_CHAT_LIMIT) {
           setShowGuestLimitModal(true);
         }

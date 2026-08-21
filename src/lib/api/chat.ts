@@ -1,21 +1,5 @@
 import { apiFetch } from "./client";
 
-export interface GuestQuotaResponse {
-  remainingQuota: number;
-  maxQuota: number;
-  isExceeded: boolean;
-}
-
-/**
- * 비회원 무료 상담 잔여 횟수를 조회합니다.
- */
-export async function getGuestQuota(
-  guestId?: string,
-): Promise<GuestQuotaResponse> {
-  const query = guestId ? `?guestId=${encodeURIComponent(guestId)}` : "";
-  return apiFetch<GuestQuotaResponse>(`/api/chats/guest-quota${query}`);
-}
-
 export interface ChatSessionMessage {
   id: string;
   role: "user" | "admin";
