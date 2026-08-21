@@ -1,13 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import {
-  ArrowLeft,
-  Settings,
-  Send,
-  ChevronRight,
-  AlertCircle,
-} from "lucide-react";
+import { ArrowLeft, Settings, Send, ChevronRight } from "lucide-react";
 import { useTranslations } from "next-intl";
 
 import { PlanRecommendationCards } from "@/components/chat/PlanRecommendationCards";
@@ -103,22 +97,12 @@ export default function AIConsultationPage() {
                 </button>
               )}
 
-              {/* 에러 발생 말풍선 */}
+              {/* 에러 발생 시 재시도 배너 */}
               {msg.type === "error" && (
-                <div className="flex flex-col gap-sm rounded-lg bg-error-soft border border-error/20 p-lg shadow-sm">
-                  <div className="flex items-center gap-sm text-error">
-                    <AlertCircle size={18} />
-                    <span className="font-sans text-body-14-medium">
-                      응답을 불러오지 못했어요.
-                    </span>
-                  </div>
-                  <button
-                    onClick={() => retryMessage(msg.id)}
-                    className="self-start font-sans text-caption-13-bold text-text-brand underline hover:text-action-primary-hover"
-                  >
-                    다시 시도
-                  </button>
-                </div>
+                <AITypingIndicator
+                  state="error"
+                  onRetry={() => retryMessage(msg.id)}
+                />
               )}
             </AIChatBubble>
           );

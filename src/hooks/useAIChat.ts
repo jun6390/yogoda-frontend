@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { io, Socket } from "socket.io-client";
 
 import { getLatestChatSession } from "@/lib/api/chat";
 import { useAuthStore } from "@/stores/useAuthStore";
@@ -18,7 +19,7 @@ const WELCOME_MESSAGE: ChatMessage = {
 };
 
 /**
- * AI 상담 채팅의 상태와 웹소켓 통신을 담당하는 훅.
+ * AI 상담 채팅의 상태와 소켓 통신을 담당하는 훅.
  * - 로그인 여부에 따라 회원은 DB, 비회원은 로컬 스토리지에서 이전 대화를 복원함
  * - Gemini Interactions API는 interactionId만 이어서 보내면 서버가 대화 맥락을 기억하므로,
  *   프론트에서 대화 기록을 직접 조립해서 보낼 필요가 없음
@@ -28,14 +29,13 @@ export function useAIChat() {
   const accessToken = useAuthStore((state) => state.accessToken);
   const isLoggedIn = !!accessToken;
 
-  const [messages, setMessages] = useState<ChatMessage[]>(() => {
-    if (isLoggedIn) return [WELCOME_MESSAGE];
-    const stored = useChatHistoryStore.getState();
-    return stored.messages.length > 0 ? stored.messages : [WELCOME_MESSAGE];
-  });
+  // 로컬 스토리지(zustand persist)는 클라이언트에만 존재하므로, 초기 렌더는
+  // 서버/클라이언트 모두 동일하게 웰컴 메시지로 시작하고, 실제 복원은 마운트 후
+  // useEffect에서 처리해 하이드레이션 불일치를 방지함
+  const [messages, setMessages] = useState<ChatMessage[]>([WELCOME_MESSAGE]);
   const [isTyping, setIsTyping] = useState(false);
 
-  const socketRef = useRef<WebSocket | null>(null);
+  const socketRef = useRef<Socket | null>(null);
   // 회원의 경우 대화가 이어질 채팅 세션 id (최초 메시지 전송 시 서버가 발급, 화면 표시/기록용)
   const sessionIdRef = useRef<string | null>(null);
   // Gemini Interactions API가 서버 쪽에서 관리하는 대화 맥락을 이어가기 위한 토큰
@@ -54,37 +54,48 @@ export function useAIChat() {
   const typewriter = useTypewriter(appendChars);
 
   // 마운트 시 이전 대화 내역 복원 (회원은 DB, 비회원은 로컬 스토리지에서)
+  // 비동기 함수로 감싸서 실행하는 이유: 로그인 여부와 무관하게 항상 "외부 데이터를
+  // 비동기로 가져와 반영"하는 흐름으로 통일해, effect 본문에서 setState를 동기
+  // 호출할 때 발생하는 cascading render 경고(react-hooks/set-state-in-effect)를 피함
   useEffect(() => {
-    if (initialIsLoggedInRef.current) {
-      getLatestChatSession()
-        .then(
-          ({
+    async function restoreHistory() {
+      if (initialIsLoggedInRef.current) {
+        try {
+          const {
             session,
             messages: dbMessages,
             collectedInfo,
             previousInteractionId,
-          }) => {
-            if (!session || dbMessages.length === 0) return;
+          } = await getLatestChatSession();
 
-            sessionIdRef.current = session.id;
-            collectedInfoRef.current = collectedInfo;
-            interactionIdRef.current = previousInteractionId;
-            setMessages(
-              dbMessages.map((m) => ({
-                id: m.id,
-                sender: m.role === "user" ? "user" : "ai",
-                type: "text",
-                text: m.content,
-              })),
-            );
-          },
-        )
-        .catch((err) => console.error("채팅 내역 조회 실패:", err));
-    } else {
+          if (!session || dbMessages.length === 0) return;
+
+          sessionIdRef.current = session.id;
+          collectedInfoRef.current = collectedInfo;
+          interactionIdRef.current = previousInteractionId;
+          setMessages(
+            dbMessages.map((m) => ({
+              id: m.id,
+              sender: m.role === "user" ? "user" : "ai",
+              type: "text",
+              text: m.content,
+            })),
+          );
+        } catch (err) {
+          console.error("채팅 내역 조회 실패:", err);
+        }
+        return;
+      }
+
       const stored = useChatHistoryStore.getState();
       collectedInfoRef.current = stored.collectedInfo;
       interactionIdRef.current = stored.lastInteractionId;
+      if (stored.messages.length > 0) {
+        setMessages(stored.messages);
+      }
     }
+
+    void restoreHistory();
   }, []);
 
   // 비회원의 대화 내역을 로컬 스토리지에 동기화 (타자기 효과로 인한 잦은 쓰기를 막기 위해 디바운스)
@@ -98,97 +109,87 @@ export function useAIChat() {
     return () => clearTimeout(timer);
   }, [messages, isLoggedIn]);
 
-  // 언마운트 시 웹소켓/타자기 인터벌 리소스 정리
+  // 언마운트 시 소켓/타자기 인터벌 리소스 정리
   useEffect(() => {
     return () => {
-      socketRef.current?.close();
+      socketRef.current?.disconnect();
       typewriter.stopAll();
     };
   }, [typewriter]);
 
-  const startWebSocketStream = useCallback(
+  const startSocketStream = useCallback(
     (text: string, aiMsgId: string) => {
       const apiBase =
         process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000";
-      const wsUrl = apiBase.replace(/^http/, "ws") + "/api/chats/stream";
 
-      const socket = new WebSocket(wsUrl);
+      const socket = io(`${apiBase}/chat`, { transports: ["websocket"] });
       socketRef.current = socket;
 
-      socket.onopen = () => {
+      socket.on("connect", () => {
         // 비로그인 사용자는 설문 결과가 로컬 스토리지(zustand persist)에만 있으므로
         // 매 요청마다 함께 실어 보내서 AI가 이미 아는 정보를 다시 묻지 않게 함
         const persona = usePersonaStore.getState();
         const { accessToken: token } = useAuthStore.getState();
 
-        socket.send(
-          JSON.stringify({
-            message: text,
-            surveyContext: {
-              answers: persona.answers,
-              analysisResult: persona.analysisResult,
-              isSkipped: persona.isSkipped,
-            },
-            collectedInfo: collectedInfoRef.current ?? undefined,
-            previousInteractionId: interactionIdRef.current ?? undefined,
-            token: token ?? undefined,
-            sessionId: sessionIdRef.current ?? undefined,
-          }),
-        );
-      };
+        socket.emit("message", {
+          message: text,
+          surveyContext: {
+            answers: persona.answers,
+            analysisResult: persona.analysisResult,
+            isSkipped: persona.isSkipped,
+          },
+          collectedInfo: collectedInfoRef.current ?? undefined,
+          previousInteractionId: interactionIdRef.current ?? undefined,
+          token: token ?? undefined,
+          sessionId: sessionIdRef.current ?? undefined,
+        });
+      });
 
-      socket.onmessage = (event) => {
-        try {
-          const data = JSON.parse(event.data);
+      socket.on("session", (data: { sessionId: string }) => {
+        // 회원의 첫 메시지 전송 시 서버가 새로 발급한 세션 id를 기억해둠
+        sessionIdRef.current = data.sessionId;
+      });
 
-          if (data.event === "session") {
-            // 회원의 첫 메시지 전송 시 서버가 새로 발급한 세션 id를 기억해둠
-            sessionIdRef.current = data.data.sessionId;
-          } else if (data.event === "interaction") {
-            // 다음 턴에도 대화가 이어지도록, 이번 응답의 interaction id를 저장해둠
-            interactionIdRef.current = data.data.interactionId;
-            if (!isLoggedIn) {
-              useChatHistoryStore
-                .getState()
-                .setLastInteractionId(data.data.interactionId);
-            }
-          } else if (data.event === "info") {
-            // AI가 갱신한 "지금까지 파악된 정보"를 저장해뒀다가 다음 요청에 그대로 다시 실어 보냄
-            collectedInfoRef.current = data.data;
-            if (!isLoggedIn) {
-              useChatHistoryStore.getState().setCollectedInfo(data.data);
-            }
-          } else if (data.event === "chunk") {
-            setIsTyping(false);
-            typewriter.push(aiMsgId, data.data);
-          } else if (data.event === "plans") {
-            setMessages((prev) => [
-              ...prev,
-              {
-                id: `${aiMsgId}-plans`,
-                sender: "ai",
-                type: "plans",
-                plans: data.data,
-              },
-            ]);
-          } else if (data.event === "done") {
-            socket.close();
-          } else if (data.event === "error") {
-            typewriter.stop(aiMsgId);
-            setMessages((prev) =>
-              prev.map((msg) =>
-                msg.id === aiMsgId ? { ...msg, type: "error" } : msg,
-              ),
-            );
-            setIsTyping(false);
-            socket.close();
-          }
-        } catch (err) {
-          console.error("웹소켓 데이터 파싱 실패:", err);
+      socket.on("interaction", (data: { interactionId: string }) => {
+        // 다음 턴에도 대화가 이어지도록, 이번 응답의 interaction id를 저장해둠
+        interactionIdRef.current = data.interactionId;
+        if (!isLoggedIn) {
+          useChatHistoryStore
+            .getState()
+            .setLastInteractionId(data.interactionId);
         }
-      };
+      });
 
-      socket.onerror = () => {
+      socket.on("info", (data: CollectedInfo) => {
+        // AI가 갱신한 "지금까지 파악된 정보"를 저장해뒀다가 다음 요청에 그대로 다시 실어 보냄
+        collectedInfoRef.current = data;
+        if (!isLoggedIn) {
+          useChatHistoryStore.getState().setCollectedInfo(data);
+        }
+      });
+
+      socket.on("chunk", (data: string) => {
+        setIsTyping(false);
+        typewriter.push(aiMsgId, data);
+      });
+
+      socket.on("plans", (data: ChatMessage["plans"]) => {
+        setMessages((prev) => [
+          ...prev,
+          {
+            id: `${aiMsgId}-plans`,
+            sender: "ai",
+            type: "plans",
+            plans: data,
+          },
+        ]);
+      });
+
+      socket.on("done", () => {
+        socket.disconnect();
+      });
+
+      socket.on("error", () => {
         typewriter.stop(aiMsgId);
         setMessages((prev) =>
           prev.map((msg) =>
@@ -196,12 +197,23 @@ export function useAIChat() {
           ),
         );
         setIsTyping(false);
-      };
+        socket.disconnect();
+      });
 
-      socket.onclose = () => {
+      socket.on("connect_error", () => {
+        typewriter.stop(aiMsgId);
+        setMessages((prev) =>
+          prev.map((msg) =>
+            msg.id === aiMsgId ? { ...msg, type: "error" } : msg,
+          ),
+        );
+        setIsTyping(false);
+      });
+
+      socket.on("disconnect", () => {
         setIsTyping(false);
         socketRef.current = null;
-      };
+      });
     },
     [isLoggedIn, typewriter],
   );
@@ -220,9 +232,9 @@ export function useAIChat() {
       ]);
       setIsTyping(true);
 
-      startWebSocketStream(text, aiMsgId);
+      startSocketStream(text, aiMsgId);
     },
-    [startWebSocketStream],
+    [startSocketStream],
   );
 
   // interactionIdRef는 마지막으로 "성공"한 응답 기준으로만 갱신되므로, 실패한 턴을 다시 보내도
@@ -243,9 +255,9 @@ export function useAIChat() {
       );
       setIsTyping(true);
 
-      startWebSocketStream(userMsg.text, failedAiMsgId);
+      startSocketStream(userMsg.text, failedAiMsgId);
     },
-    [messages, startWebSocketStream, typewriter],
+    [messages, startSocketStream, typewriter],
   );
 
   return { messages, isTyping, sendMessage, retryMessage };

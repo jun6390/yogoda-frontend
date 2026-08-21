@@ -1,9 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { ChevronRight } from "lucide-react";
 import { useTranslations } from "next-intl";
 
+import { Badge } from "@/components/ui/Badge/Badge";
+import { Link } from "@/i18n/navigation";
 import { cn } from "@/lib/utils";
 import type { ChatPlanCard } from "@/types/chat";
 
@@ -20,6 +22,7 @@ export function PlanRecommendationCards({
 }: PlanRecommendationCardsProps) {
   const t = useTranslations("AIChat");
   const [activeIdx, setActiveIdx] = useState(0);
+  const cardRefs = useRef<(HTMLDivElement | null)[]>([]);
 
   const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
     const { scrollLeft, clientWidth } = e.currentTarget;
@@ -28,9 +31,18 @@ export function PlanRecommendationCards({
     }
   };
 
+  // 하단 캐러셀 인디케이터 점을 클릭하면 해당 카드로 이동
+  const goToCard = (idx: number) => {
+    cardRefs.current[idx]?.scrollIntoView({
+      behavior: "smooth",
+      block: "nearest",
+      inline: "start",
+    });
+  };
+
   return (
     <div className="flex flex-col gap-sm w-[290px] overflow-hidden">
-      {/* 가로 스크롤 카드 리스트 (양옆 카드 피크 효과 적용) */}
+      {/*  카드 리스트 */}
       <div
         onScroll={handleScroll}
         className="flex gap-md overflow-x-auto snap-x snap-mandatory scrollbar-none pb-xs w-full"
@@ -38,19 +50,16 @@ export function PlanRecommendationCards({
         {plans.map((plan, idx) => (
           <div
             key={idx}
+            ref={(el) => {
+              cardRefs.current[idx] = el;
+            }}
             className="flex flex-col gap-sm rounded-lg bg-surface border border-border-default p-lg shadow-sm w-[250px] shrink-0 snap-start"
           >
             <div className="flex items-center justify-between">
-              <span
-                className={cn(
-                  "rounded-full px-md py-sm font-sans text-micro-11-bold",
-                  idx === 0
-                    ? "bg-action-primary text-text-on-primary"
-                    : "bg-surface-subtle text-text-secondary border border-border-default",
-                )}
-              >
+              {/* 순위 뱃지 */}
+              <Badge variant={idx === 0 ? "accent" : "default"}>
                 {plan.badge}
-              </span>
+              </Badge>
               <span className="font-sans text-caption-12-bold text-text-brand">
                 {plan.matchRate}
               </span>
@@ -63,7 +72,7 @@ export function PlanRecommendationCards({
               <span className="block font-sans text-caption-13-bold text-text-primary">
                 {plan.price}
               </span>
-              <p className="font-sans text-micro-11-regular text-text-secondary">
+              <p className="font-sans text-[10px] leading-[13px] text-text-secondary">
                 {plan.specs}
               </p>
             </div>
@@ -88,15 +97,32 @@ export function PlanRecommendationCards({
       {/* 캐러셀 인디케이터 도트 */}
       <div className="flex justify-center gap-xs pt-xs">
         {plans.map((_, idx) => (
-          <span
+          <button
             key={idx}
-            className={cn(
-              "size-xs rounded-full transition-all duration-300",
-              activeIdx === idx ? "bg-action-primary w-md" : "bg-border-strong",
-            )}
-          />
+            type="button"
+            aria-label={t("carouselDotAriaLabel", { index: idx + 1 })}
+            onClick={() => goToCard(idx)}
+            className="p-xs -m-xs"
+          >
+            <span
+              className={cn(
+                "block size-xs rounded-full transition-all duration-300",
+                activeIdx === idx
+                  ? "bg-action-primary w-md"
+                  : "bg-border-strong",
+              )}
+            />
+          </button>
         ))}
       </div>
+
+      {/* 다른 요금제 탐색하기: 요금제 전체 목록 페이지로 이동 */}
+      <Link
+        href="/plans"
+        className="flex items-center gap-xs font-sans text-caption-13-bold text-text-secondary hover:text-text-primary"
+      >
+        {t("explorePlans")} <ChevronRight size={16} />
+      </Link>
     </div>
   );
 }
