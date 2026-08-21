@@ -58,7 +58,8 @@ export function CallbackHandler({ provider }: CallbackHandlerProps) {
       return loginFn!(authCode);
     },
     onSuccess: async ({ accessToken, userId, name, isNewUser, role }) => {
-      setAuth(accessToken, { userId, name, isNewUser, role });
+      // API 응답과 무관하게 실제 OAuth 콜백 경로의 제공자를 인증 상태에 보관함
+      setAuth(accessToken, { userId, name, isNewUser, role, provider });
 
       // 비회원(게스트) 상태에서 나눈 대화가 있으면 방금 로그인한 회원 세션으로 이관함
       // (요금제 추천 카드는 화면에서처럼 직전 AI 텍스트 메시지에 함께 실어서 보냄)
