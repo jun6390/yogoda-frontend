@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/ChatBubble/ChatBubble";
 import { ChatMarkdown } from "@/components/ui/ChatMarkdown/ChatMarkdown";
 import { Input } from "@/components/ui/Input/Input";
+import { Modal } from "@/components/ui/Modal/Modal";
 import { useAIChat } from "@/hooks/useAIChat";
 import { useRouter } from "@/i18n/navigation";
 
@@ -19,7 +20,14 @@ export default function AIConsultationPage() {
   const router = useRouter();
   const t = useTranslations("AIChat");
 
-  const { messages, isTyping, sendMessage, retryMessage } = useAIChat();
+  const {
+    messages,
+    isTyping,
+    sendMessage,
+    retryMessage,
+    showGuestLimitModal,
+    closeGuestLimitModal,
+  } = useAIChat();
   const [inputText, setInputText] = useState("");
 
   // 메시지 추가 시 자동 스크롤을 위한 ref
@@ -36,6 +44,11 @@ export default function AIConsultationPage() {
     e.preventDefault();
     sendMessage(inputText);
     setInputText("");
+  };
+
+  const handleGuestLimitLogin = () => {
+    closeGuestLimitModal();
+    router.push("/login");
   };
 
   return (
@@ -138,6 +151,25 @@ export default function AIConsultationPage() {
           </button>
         </form>
       </div>
+
+      {/* 비회원 무료 상담 소진 안내 팝업 */}
+      {showGuestLimitModal && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-lg"
+          onMouseDown={closeGuestLimitModal}
+        >
+          <Modal
+            onMouseDown={(e) => e.stopPropagation()}
+            heading={t("guestLimitModal.heading")}
+            description={t("guestLimitModal.description")}
+            primaryLabel={t("guestLimitModal.primaryLabel")}
+            secondaryLabel={t("guestLimitModal.secondaryLabel")}
+            onClose={closeGuestLimitModal}
+            onPrimaryClick={handleGuestLimitLogin}
+            onSecondaryClick={closeGuestLimitModal}
+          />
+        </div>
+      )}
     </div>
   );
 }

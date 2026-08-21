@@ -521,6 +521,12 @@
     "comparePlan": "Compare with my plan",
     "explorePlans": "Explore other plans",
     "inputPlaceholder": "Enter a message",
-    "carouselDotAriaLabel": "Go to plan card {index}"
+    "carouselDotAriaLabel": "Go to plan card {index}",
+    "guestLimitModal": {
+      "heading": "You've used all your free AI consultations",
+      "description": "As a guest, you can use AI consultation\nup to 3 times.\nLog in to keep chatting and\nsave your recommendations.",
+      "primaryLabel": "Log in to continue",
+      "secondaryLabel": "Later"
+    }
   }
 }

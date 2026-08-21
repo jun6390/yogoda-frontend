@@ -5,7 +5,10 @@ import { io, Socket } from "socket.io-client";
 
 import { getLatestChatSession } from "@/lib/api/chat";
 import { useAuthStore } from "@/stores/useAuthStore";
-import { useChatHistoryStore } from "@/stores/chatHistoryStore";
+import {
+  GUEST_CHAT_LIMIT,
+  useChatHistoryStore,
+} from "@/stores/chatHistoryStore";
 import { usePersonaStore } from "@/stores/personaStore";
 import type { ChatMessage, CollectedInfo } from "@/types/chat";
 
@@ -34,6 +37,11 @@ export function useAIChat() {
   // useEffect에서 처리해 하이드레이션 불일치를 방지함
   const [messages, setMessages] = useState<ChatMessage[]>([WELCOME_MESSAGE]);
   const [isTyping, setIsTyping] = useState(false);
+  // 초기값은 항상 0으로 시작(SSR-세이프)하고, 마운트 후 useEffect에서
+  // localStorage에 저장된 실제 값으로 동기화함
+  const [guestChatCount, setGuestChatCount] = useState(0);
+  // 비회원이 무료 상담 횟수를 모두 소진한 직후 로그인 유도 팝업을 띄우기 위한 상태
+  const [showGuestLimitModal, setShowGuestLimitModal] = useState(false);
 
   const socketRef = useRef<Socket | null>(null);
   // 회원의 경우 대화가 이어질 채팅 세션 id (최초 메시지 전송 시 서버가 발급, 화면 표시/기록용)
@@ -90,6 +98,7 @@ export function useAIChat() {
       const stored = useChatHistoryStore.getState();
       collectedInfoRef.current = stored.collectedInfo;
       interactionIdRef.current = stored.lastInteractionId;
+      setGuestChatCount(stored.guestChatCount);
       if (stored.messages.length > 0) {
         setMessages(stored.messages);
       }
@@ -222,6 +231,13 @@ export function useAIChat() {
     (text: string) => {
       if (!text.trim()) return;
 
+      // 비회원이 무료 상담 횟수(GUEST_CHAT_LIMIT)를 이미 다 썼다면, 메시지를
+      // 보내지 않고(소켓 연결도 시작하지 않고) 로그인 유도 팝업만 다시 띄움
+      if (!isLoggedIn && guestChatCount >= GUEST_CHAT_LIMIT) {
+        setShowGuestLimitModal(true);
+        return;
+      }
+
       const userMsgId = Date.now().toString();
       const aiMsgId = (Date.now() + 1).toString();
 
@@ -232,10 +248,26 @@ export function useAIChat() {
       ]);
       setIsTyping(true);
 
+      if (!isLoggedIn) {
+        const nextCount = guestChatCount + 1;
+        useChatHistoryStore.getState().incrementGuestChatCount();
+        setGuestChatCount(nextCount);
+
+        // 방금 보낸 메시지로 무료 횟수를 모두 채웠다면, 이번 응답까지는 정상적으로
+        // 받아본 뒤 로그인 유도 팝업을 띄움
+        if (nextCount >= GUEST_CHAT_LIMIT) {
+          setShowGuestLimitModal(true);
+        }
+      }
+
       startSocketStream(text, aiMsgId);
     },
-    [startSocketStream],
+    [isLoggedIn, guestChatCount, startSocketStream],
   );
+
+  const closeGuestLimitModal = useCallback(() => {
+    setShowGuestLimitModal(false);
+  }, []);
 
   // interactionIdRef는 마지막으로 "성공"한 응답 기준으로만 갱신되므로, 실패한 턴을 다시 보내도
   // 자동으로 그 직전까지의 대화에 이어붙게 됨 (별도로 히스토리를 잘라낼 필요 없음)
@@ -260,5 +292,13 @@ export function useAIChat() {
     [messages, startSocketStream, typewriter],
   );
 
-  return { messages, isTyping, sendMessage, retryMessage };
+  return {
+    messages,
+    isTyping,
+    sendMessage,
+    retryMessage,
+    guestChatCount,
+    showGuestLimitModal,
+    closeGuestLimitModal,
+  };
 }
