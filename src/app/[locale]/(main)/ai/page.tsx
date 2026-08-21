@@ -15,6 +15,7 @@ import { Input } from "@/components/ui/Input/Input";
 import { Modal } from "@/components/ui/Modal/Modal";
 import { useAIChat } from "@/hooks/useAIChat";
 import { useRouter } from "@/i18n/navigation";
+import { LOGIN_REDIRECT_STORAGE_KEY } from "@/lib/auth/loginRedirect";
 
 export default function AIConsultationPage() {
   const router = useRouter();
@@ -48,6 +49,8 @@ export default function AIConsultationPage() {
 
   const handleGuestLimitLogin = () => {
     closeGuestLimitModal();
+    // 로그인 콜백 완료 후 이 화면(AI 채팅)으로 돌아오기 위한 표시
+    sessionStorage.setItem(LOGIN_REDIRECT_STORAGE_KEY, "/ai");
     router.push("/login");
   };
 

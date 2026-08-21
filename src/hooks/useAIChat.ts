@@ -245,14 +245,10 @@ export function useAIChat() {
       setIsTyping(true);
 
       if (!isLoggedIn) {
-        const nextCount = guestChatCount + 1;
+        // 한도를 채우는 이번 메시지도 AI 응답은 정상적으로 받아야 하므로, 카운트만
+        // 올려두고 팝업은 다음 메시지 전송을 시도할 때 함수 상단 가드에서 띄움
         useChatHistoryStore.getState().incrementGuestChatCount();
-        setGuestChatCount(nextCount);
-
-        // 이번 메시지로 무료 횟수를 모두 채웠다면, 응답은 받아본 뒤 로그인 유도 팝업을 띄움
-        if (nextCount >= GUEST_CHAT_LIMIT) {
-          setShowGuestLimitModal(true);
-        }
+        setGuestChatCount((prev) => prev + 1);
       }
 
       startSocketStream(text, aiMsgId);

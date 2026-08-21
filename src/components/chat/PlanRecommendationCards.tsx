@@ -5,7 +5,7 @@ import { ChevronRight } from "lucide-react";
 import { useTranslations } from "next-intl";
 
 import { Badge } from "@/components/ui/Badge/Badge";
-import { Link } from "@/i18n/navigation";
+import { Link, useRouter } from "@/i18n/navigation";
 import { cn } from "@/lib/utils";
 import type { ChatPlanCard } from "@/types/chat";
 
@@ -21,6 +21,7 @@ export function PlanRecommendationCards({
   plans,
 }: PlanRecommendationCardsProps) {
   const t = useTranslations("AIChat");
+  const router = useRouter();
   const [activeIdx, setActiveIdx] = useState(0);
   const cardRefs = useRef<(HTMLDivElement | null)[]>([]);
 
@@ -82,11 +83,19 @@ export function PlanRecommendationCards({
                 {plan.savings}
               </span>
 
-              <button className="flex items-center gap-xs font-sans text-caption-12-medium text-text-secondary hover:text-text-primary">
+              <button
+                type="button"
+                onClick={() => router.push("/ai/compare")}
+                className="flex items-center gap-xs font-sans text-caption-12-medium text-text-secondary hover:text-text-primary"
+              >
                 {t("comparePlan")} <ChevronRight size={14} />
               </button>
 
-              <button className="w-full h-[40px] rounded-lg bg-action-primary text-text-on-primary font-sans text-caption-13-bold hover:bg-action-primary-hover transition-colors">
+              <button
+                type="button"
+                onClick={() => router.push(`/plans/${plan.code}`)}
+                className="w-full h-[40px] rounded-lg bg-action-primary text-text-on-primary font-sans text-caption-13-bold hover:bg-action-primary-hover transition-colors"
+              >
                 {t("selectBtn")}
               </button>
             </div>

@@ -1,5 +1,7 @@
 import { apiFetch } from "./client";
 
+import type { CollectedInfo } from "@/types/chat";
+
 export interface ChatSessionMessage {
   id: string;
   role: "user" | "admin";
@@ -19,4 +21,26 @@ export interface LatestSessionResponse {
  */
 export async function getLatestChatSession(): Promise<LatestSessionResponse> {
   return apiFetch<LatestSessionResponse>("/api/chats/sessions/latest");
+}
+
+export interface ImportGuestChatPayload {
+  messages: { role: "user" | "admin"; content: string }[];
+  collectedInfo?: CollectedInfo;
+  lastInteractionId?: string;
+}
+
+export interface ImportGuestChatResponse {
+  session: { id: string; createdAt: string; updatedAt: string } | null;
+}
+
+/**
+ * 비회원(게스트) 상태에서 로컬 스토리지에 쌓인 대화 내역을 로그인 직후 회원 세션으로 이관합니다.
+ */
+export async function importGuestChatSession(
+  payload: ImportGuestChatPayload,
+): Promise<ImportGuestChatResponse> {
+  return apiFetch<ImportGuestChatResponse>("/api/chats/sessions/import", {
+    method: "POST",
+    body: payload,
+  });
 }
