@@ -1,11 +1,13 @@
 import { apiFetch } from "./client";
 
-import type { CollectedInfo } from "@/types/chat";
+import type { ChatPlanCard, CollectedInfo } from "@/types/chat";
 
 export interface ChatSessionMessage {
   id: string;
   role: "user" | "admin";
   content: string;
+  // AI가 요금제를 추천한 메시지에만 존재함 (재접속 시 카드를 그대로 복원하기 위함)
+  plans?: ChatPlanCard[];
   createdAt: string;
 }
 
@@ -24,7 +26,11 @@ export async function getLatestChatSession(): Promise<LatestSessionResponse> {
 }
 
 export interface ImportGuestChatPayload {
-  messages: { role: "user" | "admin"; content: string }[];
+  messages: {
+    role: "user" | "admin";
+    content: string;
+    plans?: ChatPlanCard[];
+  }[];
   collectedInfo?: CollectedInfo;
   lastInteractionId?: string;
 }

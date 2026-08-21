@@ -78,12 +78,28 @@ export function useAIChat() {
           collectedInfoRef.current = collectedInfo;
           interactionIdRef.current = previousInteractionId;
           setMessages(
-            dbMessages.map((m) => ({
-              id: m.id,
-              sender: m.role === "user" ? "user" : "ai",
-              type: "text",
-              text: m.content,
-            })),
+            dbMessages.flatMap((m) => {
+              const textMsg: ChatMessage = {
+                id: m.id,
+                sender: m.role === "user" ? "user" : "ai",
+                type: "text",
+                text: m.content,
+              };
+
+              // 요금제 추천 카드가 저장된 메시지는, 실시간 대화 때와 동일하게
+              // 텍스트 말풍선 뒤에 카드 메시지를 이어붙여 함께 복원함
+              if (m.plans && m.plans.length > 0) {
+                const plansMsg: ChatMessage = {
+                  id: `${m.id}-plans`,
+                  sender: "ai",
+                  type: "plans",
+                  plans: m.plans,
+                };
+                return [textMsg, plansMsg];
+              }
+
+              return [textMsg];
+            }),
           );
         } catch (err) {
           console.error("채팅 내역 조회 실패:", err);

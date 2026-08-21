@@ -61,13 +61,30 @@ export function CallbackHandler({ provider }: CallbackHandlerProps) {
       setAuth(accessToken, { userId, name, isNewUser, role });
 
       // 비회원(게스트) 상태에서 나눈 대화가 있으면 방금 로그인한 회원 세션으로 이관함
+      // (요금제 추천 카드는 화면에서처럼 직전 AI 텍스트 메시지에 함께 실어서 보냄)
       const guestHistory = useChatHistoryStore.getState();
-      const guestMessages = guestHistory.messages
-        .filter((m) => m.type === "text" && m.text && m.id !== "welcome")
-        .map((m) => ({
-          role: (m.sender === "user" ? "user" : "admin") as "user" | "admin",
-          content: m.text!,
-        }));
+      const guestMessages: {
+        role: "user" | "admin";
+        content: string;
+        plans?: (typeof guestHistory.messages)[number]["plans"];
+      }[] = [];
+
+      guestHistory.messages.forEach((m) => {
+        if (m.type === "text" && m.text && m.id !== "welcome") {
+          guestMessages.push({
+            role: m.sender === "user" ? "user" : "admin",
+            content: m.text,
+          });
+          return;
+        }
+
+        if (m.type === "plans" && m.plans?.length) {
+          const lastMessage = guestMessages[guestMessages.length - 1];
+          if (lastMessage && lastMessage.role === "admin") {
+            lastMessage.plans = m.plans;
+          }
+        }
+      });
 
       if (guestMessages.length > 0) {
         try {
