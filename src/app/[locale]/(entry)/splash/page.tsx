@@ -5,7 +5,7 @@ import { useTranslations } from "next-intl";
 import { useEffect } from "react";
 
 import { useRouter } from "@/i18n/navigation";
-import { useAuthStore } from "@/stores/useAuthStore";
+import { verifySession } from "@/lib/api/client";
 
 const SPLASH_DURATION = 1500;
 
@@ -14,13 +14,20 @@ export default function SplashPage() {
   const t = useTranslations("Splash");
 
   useEffect(() => {
-    const timer = window.setTimeout(() => {
-      // 로그인 상태면 온보딩을 건너뛰고 바로 홈으로 이동함
-      const { accessToken } = useAuthStore.getState();
-      router.replace(accessToken ? "/" : "/onboarding");
-    }, SPLASH_DURATION);
+    let cancelled = false;
 
-    return () => window.clearTimeout(timer);
+    const timer = new Promise<void>((resolve) =>
+      window.setTimeout(resolve, SPLASH_DURATION),
+    );
+
+    Promise.all([verifySession(), timer]).then(([isValidSession]) => {
+      if (cancelled) return;
+      router.replace(isValidSession ? "/" : "/onboarding");
+    });
+
+    return () => {
+      cancelled = true;
+    };
   }, [router]);
 
   return (

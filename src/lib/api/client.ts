@@ -72,6 +72,19 @@ async function refreshAccessToken(): Promise<string> {
   return refreshPromise;
 }
 
+/*
+ * accessToken 유무와 무관하게 refreshToken 쿠키로 서버에 세션 유효성을 직접 확인함
+ * (스플래시 등에서 로컬 상태만 보고 로그인 여부를 잘못 판단하지 않도록 사용)
+ */
+export async function verifySession(): Promise<boolean> {
+  try {
+    await refreshAccessToken();
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 async function request(
   path: string,
   accessToken: string | null,
