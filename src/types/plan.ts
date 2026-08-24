@@ -113,6 +113,12 @@ export interface Plan {
   updated_at?: string;
 }
 
+export interface PlanSavings {
+  amount: number;
+  previousMonthlyFee: number;
+  newMonthlyFee: number;
+}
+
 export interface JoinPlanResponse {
   message: string;
   planCode: string;
@@ -120,6 +126,8 @@ export interface JoinPlanResponse {
   currentPlanId: string;
   selectedOptions: SelectedPlanOptions;
   joinedAt: string;
+  monthlyFee: number;
+  savings: PlanSavings | null;
 }
 
 export interface CurrentPlan {
@@ -128,6 +136,8 @@ export interface CurrentPlan {
   currentPlanId: string;
   selectedOptions: SelectedPlanOptions;
   joinedAt: string | null;
+  monthlyFee: number;
+  savings: PlanSavings | null;
 }
 
 export interface PlanSubscriptionResponse extends CurrentPlan {
