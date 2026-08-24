@@ -70,6 +70,8 @@
   --semantic-error: var(--primitive-error);
   --semantic-error-soft: var(--primitive-error-soft);
   --semantic-info: var(--primitive-info);
+  --semantic-carousel-dot-active: var(--primitive-brand-magenta);
+  --semantic-carousel-dot-inactive: var(--primitive-gray-300);
 
   --semantic-icon-default: var(--primitive-gray-900);
   --semantic-icon-secondary: var(--primitive-gray-500);
@@ -114,6 +116,8 @@
   --semantic-error: var(--primitive-error-light);
   --semantic-error-soft: #3a2229;
   --semantic-info: var(--primitive-info-light);
+  --semantic-carousel-dot-active: var(--primitive-brand-magenta);
+  --semantic-carousel-dot-inactive: var(--primitive-gray-300);
 
   --semantic-icon-default: var(--primitive-white);
   --semantic-icon-secondary: var(--primitive-gray-300);
@@ -169,6 +173,8 @@
   --color-error: var(--semantic-error);
   --color-error-soft: var(--semantic-error-soft);
   --color-info: var(--semantic-info);
+  --color-carousel-dot-active: var(--semantic-carousel-dot-active);
+  --color-carousel-dot-inactive: var(--semantic-carousel-dot-inactive);
 
   --color-icon-default: var(--semantic-icon-default);
   --color-icon-secondary: var(--semantic-icon-secondary);

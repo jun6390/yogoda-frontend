@@ -1,5 +1,5 @@
-import { MissionContent } from "@/components/missions/MissionContent";
+import { AttendanceContent } from "@/components/missions/AttendanceContent";
 
 export default function MissionPage() {
-  return <MissionContent />;
+  return <AttendanceContent />;
 }

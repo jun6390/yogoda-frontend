@@ -39,3 +39,26 @@ export interface BenefitListResponse {
   eligibleCount: number;
   benefits: Benefit[];
 }
+
+export interface NearbyBenefitLocation {
+  id: string;
+  code: string;
+  name: string;
+  category: "food" | "culture" | "shopping";
+  address: string;
+  phone: string | null;
+  coordinates: { latitude: number; longitude: number };
+  distanceKm: number | null;
+  benefit: {
+    code: string;
+    brand: string | null;
+    title: string;
+    summary: string;
+    value: string;
+    saved: boolean;
+  };
+}
+
+export interface NearbyBenefitResponse {
+  locations: NearbyBenefitLocation[];
+}

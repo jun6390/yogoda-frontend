@@ -1,0 +1,324 @@
+"use client";
+
+import { useEffect, useMemo, useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { ChevronRight, Heart, List, LocateFixed, Map, X } from "lucide-react";
+import { useTranslations } from "next-intl";
+
+import { BenefitsSubNav } from "./BenefitsSubNav";
+import { BrandLogo } from "@/components/ui/BrandLogo/BrandLogo";
+import { Chip } from "@/components/ui/Chip/Chip";
+import { EmptyState } from "@/components/ui/EmptyState/EmptyState";
+import { ErrorState } from "@/components/ui/ErrorState/ErrorState";
+import { NaverMap } from "@/components/ui/NaverMap/NaverMap";
+import { Toast } from "@/components/ui/Toast/Toast";
+import { getNearbyBenefits, setBenefitSaved } from "@/lib/api/benefit";
+import { cn } from "@/lib/utils";
+
+export function NearbyBenefitsContent() {
+  const t = useTranslations("NearbyBenefits");
+  const queryClient = useQueryClient();
+  const [selectedId, setSelectedId] = useState<string>();
+  const [userLocation, setUserLocation] = useState<{
+    latitude: number;
+    longitude: number;
+  }>();
+  const [locationError, setLocationError] = useState(false);
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [view, setView] = useState<"map" | "list">("map");
+  const [category, setCategory] = useState<
+    "all" | "food" | "culture" | "shopping"
+  >("all");
+  const [detailOpen, setDetailOpen] = useState(false);
+  const query = useQuery({
+    queryKey: ["nearby-benefits", userLocation],
+    queryFn: () => getNearbyBenefits(userLocation),
+    retry: false,
+  });
+  const locations = query.data?.locations ?? [];
+  const filteredLocations = locations.filter(
+    (location) => category === "all" || location.category === category,
+  );
+  const mapLocations = useMemo(
+    () =>
+      filteredLocations.map((location) => ({
+        id: location.id,
+        name: location.name,
+        latitude: location.coordinates.latitude,
+        longitude: location.coordinates.longitude,
+      })),
+    [filteredLocations],
+  );
+  const selected =
+    filteredLocations.find((item) => item.id === selectedId) ??
+    filteredLocations[0];
+  const saveMutation = useMutation({
+    mutationFn: ({ code, saved }: { code: string; saved: boolean }) =>
+      setBenefitSaved(code, !saved),
+    onSuccess: async (result) => {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["nearby-benefits"] }),
+        queryClient.invalidateQueries({ queryKey: ["benefits"] }),
+      ]);
+      setToastMessage(result.saved ? t("savedToast") : t("removedToast"));
+    },
+  });
+
+  useEffect(() => {
+    if (!toastMessage) return;
+    const timer = window.setTimeout(() => setToastMessage(null), 2500);
+    return () => window.clearTimeout(timer);
+  }, [toastMessage]);
+
+  const requestLocation = () => {
+    setLocationError(false);
+    navigator.geolocation.getCurrentPosition(
+      ({ coords }) =>
+        setUserLocation({
+          latitude: coords.latitude,
+          longitude: coords.longitude,
+        }),
+      () => setLocationError(true),
+      { enableHighAccuracy: false, timeout: 8000 },
+    );
+  };
+
+  return (
+    <div className="min-h-full bg-background pb-3xl">
+      <BenefitsSubNav active="nearby" />
+      <section className="bg-surface px-page py-xl">
+        <h1 className="font-sans text-title-24-bold text-text-primary">
+          {t("title")}
+        </h1>
+        <p className="mt-xs font-sans text-body-14-regular text-text-secondary">
+          {t("description")}
+        </p>
+        <button
+          type="button"
+          onClick={requestLocation}
+          className="mt-lg flex min-h-touch items-center gap-sm rounded-lg border border-border-default px-lg font-sans text-label-14-bold text-text-primary"
+        >
+          <LocateFixed className="text-icon-brand" size={18} />
+          {userLocation ? t("locationApplied") : t("useLocation")}
+        </button>
+        {locationError && (
+          <p className="mt-sm font-sans text-caption-12-regular text-error">
+            {t("locationError")}
+          </p>
+        )}
+      </section>
+
+      <section className="space-y-md border-t border-border-default bg-surface px-page py-md">
+        <div className="flex gap-sm overflow-x-auto">
+          {(["all", "food", "culture", "shopping"] as const).map((item) => (
+            <Chip
+              key={item}
+              selected={category === item}
+              onClick={() => {
+                setCategory(item);
+                setSelectedId(undefined);
+              }}
+            >
+              {t(`categories.${item}`)}
+            </Chip>
+          ))}
+        </div>
+        <div className="grid grid-cols-2 rounded-lg bg-surface-subtle p-xs">
+          {(["map", "list"] as const).map((item) => {
+            const Icon = item === "map" ? Map : List;
+            return (
+              <button
+                key={item}
+                type="button"
+                onClick={() => setView(item)}
+                className={cn(
+                  "flex min-h-[40px] items-center justify-center gap-sm rounded-sm font-sans text-caption-13-bold",
+                  view === item
+                    ? "bg-surface text-text-primary shadow-sm"
+                    : "text-text-secondary",
+                )}
+              >
+                <Icon size={17} />
+                {t(`views.${item}`)}
+              </button>
+            );
+          })}
+        </div>
+      </section>
+
+      {query.isPending ? (
+        <div className="h-[430px] animate-pulse bg-surface-subtle" />
+      ) : query.isError ? (
+        <div className="px-page py-xl">
+          <ErrorState
+            title={t("loadError")}
+            description={t("loadErrorDescription")}
+            retryLabel={t("retry")}
+            onRetry={() => query.refetch()}
+          />
+        </div>
+      ) : filteredLocations.length === 0 ? (
+        <div className="px-page py-xl">
+          <EmptyState
+            heading={t("empty")}
+            description={t("emptyDescription")}
+          />
+        </div>
+      ) : view === "map" ? (
+        <section className="relative">
+          <NaverMap
+            locations={mapLocations}
+            selectedId={selected?.id}
+            onSelect={setSelectedId}
+            center={userLocation}
+            className="h-[430px]"
+            errorTitle={t("mapError")}
+            errorDescription={t("mapErrorDescription")}
+          />
+          {selected && (
+            <article className="absolute inset-x-page bottom-lg rounded-lg border border-border-default bg-surface p-lg shadow-lg">
+              <div className="flex items-start gap-md">
+                <BrandLogo brand={selected.benefit.brand} />
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-start justify-between gap-sm">
+                    <div>
+                      <p className="font-sans text-caption-12-regular text-text-secondary">
+                        {t(`categories.${selected.category}`)}
+                        {selected.distanceKm !== null &&
+                          ` · ${t("distance", { distance: selected.distanceKm })}`}
+                      </p>
+                      <h2 className="mt-xs font-sans text-label-14-bold text-text-primary">
+                        {selected.name}
+                      </h2>
+                    </div>
+                    <button
+                      type="button"
+                      aria-label={
+                        selected.benefit.saved ? t("removeSaved") : t("save")
+                      }
+                      disabled={saveMutation.isPending}
+                      onClick={() =>
+                        saveMutation.mutate({
+                          code: selected.benefit.code,
+                          saved: selected.benefit.saved,
+                        })
+                      }
+                      className={cn(
+                        "flex size-touch items-center justify-center",
+                        selected.benefit.saved
+                          ? "text-icon-brand"
+                          : "text-icon-secondary",
+                      )}
+                    >
+                      <Heart
+                        size={20}
+                        fill={selected.benefit.saved ? "currentColor" : "none"}
+                      />
+                    </button>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setDetailOpen(true)}
+                    className="mt-sm flex w-full items-center justify-between text-left font-sans text-caption-13-bold text-text-brand"
+                  >
+                    {selected.benefit.value}
+                    <ChevronRight size={17} />
+                  </button>
+                </div>
+              </div>
+            </article>
+          )}
+        </section>
+      ) : (
+        <section className="space-y-sm px-page py-lg">
+          {filteredLocations.map((location) => (
+            <button
+              key={location.id}
+              type="button"
+              onClick={() => {
+                setSelectedId(location.id);
+                setDetailOpen(true);
+              }}
+              className="flex w-full items-center gap-md rounded-lg border border-border-default bg-surface p-lg text-left shadow-sm"
+            >
+              <BrandLogo brand={location.benefit.brand} />
+              <span className="min-w-0 flex-1">
+                <strong className="block font-sans text-label-14-bold text-text-primary">
+                  {location.name}
+                </strong>
+                <span className="mt-xs block font-sans text-caption-12-regular text-text-secondary">
+                  {location.address}
+                </span>
+                <span className="mt-sm block font-sans text-caption-13-bold text-text-brand">
+                  {location.benefit.value}
+                </span>
+              </span>
+              <ChevronRight className="text-icon-secondary" size={18} />
+            </button>
+          ))}
+        </section>
+      )}
+      {detailOpen && selected && (
+        <div
+          className="fixed inset-0 z-[80] flex items-end justify-center bg-black/40 sm:items-center sm:p-xl"
+          onClick={() => setDetailOpen(false)}
+        >
+          <article
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="nearby-benefit-title"
+            onClick={(event) => event.stopPropagation()}
+            className="w-full max-w-mobile rounded-t-xl bg-surface p-page sm:rounded-xl"
+          >
+            <div className="flex items-start justify-between">
+              <BrandLogo
+                brand={selected.benefit.brand}
+                className="size-[52px]"
+              />
+              <button
+                type="button"
+                aria-label={t("close")}
+                onClick={() => setDetailOpen(false)}
+                className="flex size-touch items-center justify-center text-icon-default"
+              >
+                <X size={22} />
+              </button>
+            </div>
+            <p className="mt-lg font-sans text-caption-12-regular text-text-secondary">
+              {selected.name}
+            </p>
+            <h2
+              id="nearby-benefit-title"
+              className="mt-xs font-sans text-title-20-bold text-text-primary"
+            >
+              {selected.benefit.title}
+            </h2>
+            <p className="mt-md font-sans text-body-14-regular text-text-secondary">
+              {selected.benefit.summary}
+            </p>
+            <div className="mt-xl rounded-lg bg-surface-subtle p-lg">
+              <strong className="font-sans text-label-14-bold text-text-brand">
+                {selected.benefit.value}
+              </strong>
+              <p className="mt-sm font-sans text-caption-12-regular text-text-secondary">
+                {selected.address}
+              </p>
+              {selected.phone && (
+                <p className="mt-xs font-sans text-caption-12-regular text-text-secondary">
+                  {selected.phone}
+                </p>
+              )}
+            </div>
+          </article>
+        </div>
+      )}
+      {toastMessage && (
+        <Toast
+          message={toastMessage}
+          actionLabel={null}
+          className="fixed bottom-[88px] left-1/2 z-[70] -translate-x-1/2"
+        />
+      )}
+    </div>
+  );
+}

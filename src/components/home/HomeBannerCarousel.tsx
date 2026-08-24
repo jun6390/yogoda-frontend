@@ -129,8 +129,8 @@ export function HomeBannerCarousel() {
                 className={cn(
                   "h-[6px] rounded-full transition-all",
                   isActive
-                    ? "w-[18px] bg-action-primary"
-                    : "w-[6px] bg-border-strong",
+                    ? "w-[18px] bg-carousel-dot-active"
+                    : "w-[6px] bg-carousel-dot-inactive",
                 )}
               />
             );

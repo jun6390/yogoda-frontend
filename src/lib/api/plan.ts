@@ -12,6 +12,10 @@ export function getPlans() {
   return apiFetch<Plan[]>("/api/plans");
 }
 
+export function getComparedPlans() {
+  return apiFetch<Plan[]>("/api/plans/me/compare");
+}
+
 export function getPlanByCode(code: string) {
   return apiFetch<Plan>(`/api/plans/${code}`);
 }

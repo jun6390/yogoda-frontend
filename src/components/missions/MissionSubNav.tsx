@@ -6,8 +6,8 @@ import { cn } from "@/lib/utils";
 
 type MissionTab = "attendance" | "progress" | "completed";
 const tabs: { value: MissionTab; href: string }[] = [
-  { value: "attendance", href: "/mission/attendance" },
-  { value: "progress", href: "/mission" },
+  { value: "attendance", href: "/mission" },
+  { value: "progress", href: "/mission/progress" },
   { value: "completed", href: "/mission/completed" },
 ];
 

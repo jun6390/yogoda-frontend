@@ -5,7 +5,23 @@ import type {
   BenefitCalendarEvent,
   BenefitFilter,
   BenefitListResponse,
+  NearbyBenefitResponse,
 } from "@/types/benefit";
+
+export function getNearbyBenefits(coordinates?: {
+  latitude: number;
+  longitude: number;
+}) {
+  const params = new URLSearchParams();
+  if (coordinates) {
+    params.set("latitude", String(coordinates.latitude));
+    params.set("longitude", String(coordinates.longitude));
+  }
+  const search = params.toString();
+  return apiFetch<NearbyBenefitResponse>(
+    `/api/benefits/nearby${search ? `?${search}` : ""}`,
+  );
+}
 
 export function getBenefits(category: BenefitFilter = "all") {
   return apiFetch<BenefitListResponse>(`/api/benefits?category=${category}`);
