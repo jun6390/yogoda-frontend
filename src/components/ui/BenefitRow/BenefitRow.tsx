@@ -10,6 +10,7 @@ type BenefitRowType = "default" | "free" | "price";
 interface BenefitRowProps extends HTMLAttributes<HTMLDivElement> {
   type?: BenefitRowType;
   iconLabel?: ReactNode;
+  iconClassName?: string;
   name: ReactNode;
   description: ReactNode;
   value?: ReactNode;
@@ -18,6 +19,7 @@ interface BenefitRowProps extends HTMLAttributes<HTMLDivElement> {
 export function BenefitRow({
   type = "default",
   iconLabel = "N",
+  iconClassName,
   name,
   description,
   value,
@@ -45,7 +47,12 @@ export function BenefitRow({
       {...props}
     >
       <div className="flex min-w-0 items-center gap-md">
-        <span className="flex size-[32px] shrink-0 items-center justify-center rounded-sm bg-brand-soft font-sans text-label-14-bold text-icon-brand">
+        <span
+          className={cn(
+            "flex size-[32px] shrink-0 items-center justify-center rounded-sm bg-brand-soft font-sans text-label-14-bold text-icon-brand",
+            iconClassName,
+          )}
+        >
           {iconLabel}
         </span>
         <span className="min-w-0">

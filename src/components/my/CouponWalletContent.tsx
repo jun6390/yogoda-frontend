@@ -3,12 +3,16 @@
 import { useState, useSyncExternalStore } from "react";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { CheckCircle2, Clock3, Ticket, X } from "lucide-react";
+import { CheckCircle2, Clock3, X } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import Barcode from "react-barcode";
 
 import { MySubpageHeader } from "@/components/my/MySubpageHeader";
 import { Button } from "@/components/ui/Button/Button";
+import {
+  BrandLogo,
+  resolveBrandLogoName,
+} from "@/components/ui/BrandLogo/BrandLogo";
 import { EmptyState } from "@/components/ui/EmptyState/EmptyState";
 import { ErrorState } from "@/components/ui/ErrorState/ErrorState";
 import { Modal } from "@/components/ui/Modal/Modal";
@@ -63,6 +67,13 @@ export function CouponWalletContent() {
     }
     return coupon.status === filter;
   });
+  const selectedCouponBrand = selectedCoupon
+    ? (resolveBrandLogoName(
+        selectedCoupon.brand,
+        selectedCoupon.partner,
+        selectedCoupon.title,
+      ) ?? "U+")
+    : null;
 
   return (
     <div className="min-h-full bg-background pb-3xl">
@@ -171,11 +182,12 @@ export function CouponWalletContent() {
         <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/40 px-lg">
           <Modal
             icon={
-              <Ticket
-                aria-hidden="true"
-                className="text-icon-brand"
-                size={22}
-              />
+              selectedCouponBrand ? (
+                <BrandLogo
+                  brand={selectedCouponBrand}
+                  className="size-[32px] rounded-full"
+                />
+              ) : null
             }
             heading={t("useConfirmTitle")}
             description={
@@ -206,6 +218,8 @@ function CouponCard({
   onSelect: () => void;
 }) {
   const t = useTranslations("MyCoupons");
+  const brand =
+    resolveBrandLogoName(coupon.brand, coupon.partner, coupon.title) ?? "U+";
 
   return (
     <button
@@ -213,9 +227,7 @@ function CouponCard({
       onClick={onSelect}
       className="flex w-full items-start gap-lg rounded-lg border border-border-default bg-surface p-lg text-left focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-action-primary"
     >
-      <span className="flex size-[40px] shrink-0 items-center justify-center rounded-sm bg-brand-soft text-icon-brand">
-        <Ticket aria-hidden="true" size={22} />
-      </span>
+      <BrandLogo brand={brand} className="size-[40px]" />
       <span className="min-w-0 flex-1">
         <span className="flex items-start justify-between gap-md">
           <strong className="font-sans text-label-14-bold text-text-primary">
@@ -269,6 +281,8 @@ function CouponDetail({
 }) {
   const t = useTranslations("MyCoupons");
   const canUse = coupon.status === "available";
+  const brand =
+    resolveBrandLogoName(coupon.brand, coupon.partner, coupon.title) ?? "U+";
 
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 sm:items-center sm:p-xl">
@@ -279,16 +293,19 @@ function CouponDetail({
         className="max-h-[88dvh] w-full max-w-mobile overflow-y-auto rounded-t-xl bg-background p-page sm:rounded-xl"
       >
         <div className="flex items-start justify-between gap-lg">
-          <div>
-            <p className="font-sans text-caption-13-regular text-text-secondary">
-              {coupon.brand || coupon.partner || t("coupon")}
-            </p>
-            <h2
-              id="coupon-detail-title"
-              className="mt-xs font-sans text-title-20-bold text-text-primary"
-            >
-              {coupon.title}
-            </h2>
+          <div className="flex min-w-0 items-start gap-md">
+            <BrandLogo brand={brand} />
+            <div className="min-w-0">
+              <p className="font-sans text-caption-13-regular text-text-secondary">
+                {coupon.brand || coupon.partner || t("coupon")}
+              </p>
+              <h2
+                id="coupon-detail-title"
+                className="mt-xs font-sans text-title-20-bold text-text-primary"
+              >
+                {coupon.title}
+              </h2>
+            </div>
           </div>
           <button
             type="button"

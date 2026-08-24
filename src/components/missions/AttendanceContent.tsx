@@ -3,10 +3,12 @@
 import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { CalendarCheck, Flame } from "lucide-react";
+import Image from "next/image";
 import { useTranslations } from "next-intl";
 import { MissionSubNav } from "./MissionSubNav";
 import { Button } from "@/components/ui/Button/Button";
 import { ErrorState } from "@/components/ui/ErrorState/ErrorState";
+import { PageIntro } from "@/components/ui/PageIntro/PageIntro";
 import { RewardCalendar } from "@/components/ui/RewardCalendar/RewardCalendar";
 import { checkIn, getAttendance, getPointWallet } from "@/lib/api/reward";
 
@@ -47,20 +49,16 @@ export function AttendanceContent() {
   return (
     <div className="min-h-full bg-background pb-xl">
       <MissionSubNav active="attendance" />
-      <div className="space-y-xl px-page py-xl">
-        <div className="flex items-start justify-between gap-lg">
-          <div>
-            <h1 className="font-sans text-title-24-bold text-text-primary">
-              {t("title")}
-            </h1>
-            <p className="mt-sm font-sans text-body-14-regular text-text-secondary">
-              {t("description")}
-            </p>
-          </div>
-          <span className="shrink-0 rounded-full bg-brand-soft px-lg py-xs font-sans text-label-14-bold text-text-brand">
+      <PageIntro
+        title={t("title")}
+        description={t("description")}
+        action={
+          <span className="rounded-full bg-brand-soft px-lg py-xs font-sans text-label-14-bold text-text-brand">
             {(wallet.data?.balance ?? 0).toLocaleString()}P
           </span>
-        </div>
+        }
+      />
+      <div className="space-y-xl px-page py-xl">
         {attendance.isError ? (
           <ErrorState
             title={t("error")}
@@ -70,8 +68,16 @@ export function AttendanceContent() {
           />
         ) : (
           <>
-            <section className="rounded-lg bg-surface p-lg shadow-sm">
-              <div className="flex items-start gap-md">
+            <section className="relative overflow-hidden rounded-lg border border-[#f1dfc8] bg-[#fff6ea] p-lg shadow-sm">
+              <Image
+                src="/yogoda-characters/attendance-special.webp"
+                alt=""
+                width={640}
+                height={640}
+                sizes="180px"
+                className="pointer-events-none absolute -bottom-xs -right-sm size-[clamp(150px,36vw,180px)] object-contain [mask-image:linear-gradient(to_right,transparent_0%,black_16%)]"
+              />
+              <div className="relative z-[1] flex max-w-[68%] items-start gap-md">
                 <span className="flex size-[44px] items-center justify-center rounded-lg bg-brand-soft text-icon-brand">
                   <CalendarCheck size={23} />
                 </span>
@@ -88,12 +94,12 @@ export function AttendanceContent() {
                   </p>
                 </div>
               </div>
-              <div className="mt-lg flex items-center gap-sm font-sans text-caption-13-bold text-text-brand">
+              <div className="relative z-[1] mt-lg flex max-w-[68%] items-center gap-sm font-sans text-caption-13-bold text-text-brand">
                 <Flame size={17} />
                 {t("streak", { count: attendance.data?.streak ?? 0 })}
               </div>
               <Button
-                className="mt-lg h-[48px] w-full"
+                className="relative z-[1] mt-lg h-[42px] min-w-[144px] px-lg"
                 disabled={attendance.data?.checkedInToday}
                 loading={mutation.isPending}
                 onClick={() => mutation.mutate()}
@@ -106,6 +112,8 @@ export function AttendanceContent() {
               markedDates={marked}
               selectedDate={attendance.data?.today}
               onMonthChange={setMonth}
+              markVariant="stamp"
+              stampSrc="/yogoda-characters/attendance-green.webp"
             />
             <p className="text-center font-sans text-caption-13-regular text-text-secondary">
               {t("monthly", { count: attendance.data?.monthlyCount ?? 0 })}

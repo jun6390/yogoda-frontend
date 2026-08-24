@@ -3,7 +3,20 @@
 import { useEffect, useState, useSyncExternalStore } from "react";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { CheckCircle2, ChevronRight, Gift, Target, X } from "lucide-react";
+import {
+  CalendarCheck,
+  CheckCircle2,
+  ChevronRight,
+  Crown,
+  Gift,
+  Heart,
+  Scale,
+  Sparkles,
+  Target,
+  Ticket,
+  X,
+} from "lucide-react";
+import Image from "next/image";
 import { useTranslations } from "next-intl";
 
 import { MissionSubNav } from "./MissionSubNav";
@@ -13,6 +26,7 @@ import { Button } from "@/components/ui/Button/Button";
 import { EmptyState } from "@/components/ui/EmptyState/EmptyState";
 import { ErrorState } from "@/components/ui/ErrorState/ErrorState";
 import { ProgressBar } from "@/components/ui/ProgressBar/ProgressBar";
+import { PageIntro } from "@/components/ui/PageIntro/PageIntro";
 import { Toast } from "@/components/ui/Toast/Toast";
 import {
   claimMissionReward,
@@ -48,11 +62,16 @@ export function MissionContent({ view = "active" }: { view?: MissionView }) {
     retry: false,
   });
 
-  const missions = missionQuery.data?.missions.filter((mission) =>
-    view === "active"
-      ? mission.status === "available" || mission.status === "in_progress"
-      : mission.status === "completed" || mission.status === "claimed",
-  );
+  const missions = missionQuery.data?.missions
+    .filter((mission) =>
+      view === "active"
+        ? mission.status === "available" || mission.status === "in_progress"
+        : mission.status === "completed" || mission.status === "claimed",
+    )
+    .sort((a, b) => {
+      if (view !== "done") return 0;
+      return Number(a.status === "claimed") - Number(b.status === "claimed");
+    });
 
   useEffect(() => {
     if (claimedPoints === null) return;
@@ -63,16 +82,15 @@ export function MissionContent({ view = "active" }: { view?: MissionView }) {
   return (
     <div className="min-h-full bg-background pb-xl">
       <MissionSubNav active={view === "active" ? "progress" : "completed"} />
-      <section className="bg-surface px-page pb-xl pt-lg">
-        <div className="flex items-start justify-between gap-lg">
-          <h1 className="max-w-[280px] font-sans text-title-24-bold text-text-primary">
-            {t("headline")}
-          </h1>
-          <span className="shrink-0 rounded-full bg-brand-soft px-lg py-xs font-sans text-label-14-bold text-text-brand">
+      <PageIntro
+        title={t("headline")}
+        description={t("description")}
+        action={
+          <span className="rounded-full bg-brand-soft px-lg py-xs font-sans text-label-14-bold text-text-brand">
             {(missionQuery.data?.totalPoints ?? 0).toLocaleString()}P
           </span>
-        </div>
-      </section>
+        }
+      />
 
       <div className="space-y-xl px-page py-xl">
         {!hydrated || (isLoggedIn && missionQuery.isPending) ? (
@@ -91,8 +109,8 @@ export function MissionContent({ view = "active" }: { view?: MissionView }) {
           />
         ) : (
           <>
-            <section className="flex items-center justify-between rounded-lg border border-border-default bg-surface px-lg py-md">
-              <div>
+            <section className="relative min-h-[152px] overflow-hidden rounded-lg border border-[#e7def5] bg-[#f5f1fc] px-lg py-xl">
+              <div className="relative z-[1] max-w-[58%]">
                 <p className="font-sans text-caption-12-regular text-text-secondary">
                   {t("progressSummary")}
                 </p>
@@ -103,9 +121,13 @@ export function MissionContent({ view = "active" }: { view?: MissionView }) {
                   })}
                 </strong>
               </div>
-              <span className="flex size-[40px] items-center justify-center rounded-full bg-brand-soft text-icon-brand">
-                <Target aria-hidden="true" size={21} />
-              </span>
+              <Image
+                src="/yogoda-characters/mission-purple.webp"
+                alt=""
+                width={168}
+                height={168}
+                className="pointer-events-none absolute -bottom-sm -right-xs size-[156px] object-contain [mask-image:linear-gradient(to_right,transparent_0%,black_12%)]"
+              />
             </section>
 
             {missions?.length ? (
@@ -118,7 +140,7 @@ export function MissionContent({ view = "active" }: { view?: MissionView }) {
                     className="flex min-h-[74px] w-full items-center gap-md py-md text-left"
                   >
                     <span className="flex size-[36px] shrink-0 items-center justify-center rounded-sm bg-brand-soft text-icon-brand">
-                      <Target aria-hidden="true" size={19} />
+                      <MissionIcon mission={mission} />
                     </span>
                     <span className="min-w-0 flex-1">
                       <span className="block truncate font-sans text-label-14-medium text-text-primary">
@@ -164,6 +186,32 @@ export function MissionContent({ view = "active" }: { view?: MissionView }) {
       )}
     </div>
   );
+}
+
+function MissionIcon({ mission }: { mission: Mission }) {
+  const key =
+    `${mission.code} ${mission.category} ${mission.title}`.toLowerCase();
+
+  if (/attendance|check.?in|출석/.test(key)) {
+    return <CalendarCheck aria-hidden="true" size={19} />;
+  }
+  if (/coupon|쿠폰/.test(key)) {
+    return <Ticket aria-hidden="true" size={19} />;
+  }
+  if (/(^|[_\s-])ai($|[_\s-])|diagnosis|진단/.test(key)) {
+    return <Sparkles aria-hidden="true" size={19} />;
+  }
+  if (/plan|compare|요금제|비교/.test(key)) {
+    return <Scale aria-hidden="true" size={19} />;
+  }
+  if (/membership|grade|멤버십|등급/.test(key)) {
+    return <Crown aria-hidden="true" size={19} />;
+  }
+  if (/benefit|interest|혜택|관심/.test(key)) {
+    return <Heart aria-hidden="true" size={19} />;
+  }
+
+  return <Target aria-hidden="true" size={19} />;
 }
 
 function MissionDetail({

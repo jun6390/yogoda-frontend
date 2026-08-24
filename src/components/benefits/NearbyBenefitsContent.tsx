@@ -11,6 +11,7 @@ import { Chip } from "@/components/ui/Chip/Chip";
 import { EmptyState } from "@/components/ui/EmptyState/EmptyState";
 import { ErrorState } from "@/components/ui/ErrorState/ErrorState";
 import { NaverMap } from "@/components/ui/NaverMap/NaverMap";
+import { PageIntro } from "@/components/ui/PageIntro/PageIntro";
 import { Toast } from "@/components/ui/Toast/Toast";
 import { getNearbyBenefits, setBenefitSaved } from "@/lib/api/benefit";
 import { cn } from "@/lib/utils";
@@ -86,17 +87,13 @@ export function NearbyBenefitsContent() {
   return (
     <div className="min-h-full bg-background pb-3xl">
       <BenefitsSubNav active="nearby" />
-      <section className="bg-surface px-page py-xl">
-        <h1 className="font-sans text-title-24-bold text-text-primary">
-          {t("title")}
-        </h1>
-        <p className="mt-xs font-sans text-body-14-regular text-text-secondary">
-          {t("description")}
-        </p>
+      <PageIntro title={t("title")} description={t("description")} />
+
+      <section className="space-y-md px-page py-xl">
         <button
           type="button"
           onClick={requestLocation}
-          className="mt-lg flex min-h-touch items-center gap-sm rounded-lg border border-border-default px-lg font-sans text-label-14-bold text-text-primary"
+          className="flex min-h-touch w-full items-center gap-sm rounded-lg border border-border-default bg-surface px-lg font-sans text-label-14-bold text-text-primary"
         >
           <LocateFixed className="text-icon-brand" size={18} />
           {userLocation ? t("locationApplied") : t("useLocation")}
@@ -106,9 +103,6 @@ export function NearbyBenefitsContent() {
             {t("locationError")}
           </p>
         )}
-      </section>
-
-      <section className="space-y-md border-t border-border-default bg-surface px-page py-md">
         <div className="flex gap-sm overflow-x-auto">
           {(["all", "food", "culture", "shopping"] as const).map((item) => (
             <Chip
@@ -147,7 +141,9 @@ export function NearbyBenefitsContent() {
       </section>
 
       {query.isPending ? (
-        <div className="h-[430px] animate-pulse bg-surface-subtle" />
+        <div className="px-page pb-xl">
+          <div className="h-[440px] animate-pulse rounded-lg border border-border-default bg-surface-subtle shadow-sm" />
+        </div>
       ) : query.isError ? (
         <div className="px-page py-xl">
           <ErrorState
@@ -165,69 +161,73 @@ export function NearbyBenefitsContent() {
           />
         </div>
       ) : view === "map" ? (
-        <section className="relative">
-          <NaverMap
-            locations={mapLocations}
-            selectedId={selected?.id}
-            onSelect={setSelectedId}
-            center={userLocation}
-            className="h-[430px]"
-            errorTitle={t("mapError")}
-            errorDescription={t("mapErrorDescription")}
-          />
-          {selected && (
-            <article className="absolute inset-x-page bottom-lg rounded-lg border border-border-default bg-surface p-lg shadow-lg">
-              <div className="flex items-start gap-md">
-                <BrandLogo brand={selected.benefit.brand} />
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-start justify-between gap-sm">
-                    <div>
-                      <p className="font-sans text-caption-12-regular text-text-secondary">
-                        {t(`categories.${selected.category}`)}
-                        {selected.distanceKm !== null &&
-                          ` · ${t("distance", { distance: selected.distanceKm })}`}
-                      </p>
-                      <h2 className="mt-xs font-sans text-label-14-bold text-text-primary">
-                        {selected.name}
-                      </h2>
+        <section className="px-page pb-xl">
+          <div className="relative overflow-hidden rounded-lg border border-border-default bg-surface shadow-sm">
+            <NaverMap
+              locations={mapLocations}
+              selectedId={selected?.id}
+              onSelect={setSelectedId}
+              center={userLocation}
+              className="h-[440px]"
+              errorTitle={t("mapError")}
+              errorDescription={t("mapErrorDescription")}
+            />
+            {selected && (
+              <article className="absolute inset-x-md bottom-md rounded-lg border border-border-default bg-surface p-lg shadow-lg">
+                <div className="flex items-start gap-md">
+                  <BrandLogo brand={selected.benefit.brand} />
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-start justify-between gap-sm">
+                      <div>
+                        <p className="font-sans text-caption-12-regular text-text-secondary">
+                          {t(`categories.${selected.category}`)}
+                          {selected.distanceKm !== null &&
+                            ` · ${t("distance", { distance: selected.distanceKm })}`}
+                        </p>
+                        <h2 className="mt-xs font-sans text-label-14-bold text-text-primary">
+                          {selected.name}
+                        </h2>
+                      </div>
+                      <button
+                        type="button"
+                        aria-label={
+                          selected.benefit.saved ? t("removeSaved") : t("save")
+                        }
+                        disabled={saveMutation.isPending}
+                        onClick={() =>
+                          saveMutation.mutate({
+                            code: selected.benefit.code,
+                            saved: selected.benefit.saved,
+                          })
+                        }
+                        className={cn(
+                          "flex size-touch items-center justify-center",
+                          selected.benefit.saved
+                            ? "text-icon-brand"
+                            : "text-icon-secondary",
+                        )}
+                      >
+                        <Heart
+                          size={20}
+                          fill={
+                            selected.benefit.saved ? "currentColor" : "none"
+                          }
+                        />
+                      </button>
                     </div>
                     <button
                       type="button"
-                      aria-label={
-                        selected.benefit.saved ? t("removeSaved") : t("save")
-                      }
-                      disabled={saveMutation.isPending}
-                      onClick={() =>
-                        saveMutation.mutate({
-                          code: selected.benefit.code,
-                          saved: selected.benefit.saved,
-                        })
-                      }
-                      className={cn(
-                        "flex size-touch items-center justify-center",
-                        selected.benefit.saved
-                          ? "text-icon-brand"
-                          : "text-icon-secondary",
-                      )}
+                      onClick={() => setDetailOpen(true)}
+                      className="mt-sm flex w-full items-center justify-between text-left font-sans text-caption-13-bold text-text-brand"
                     >
-                      <Heart
-                        size={20}
-                        fill={selected.benefit.saved ? "currentColor" : "none"}
-                      />
+                      {selected.benefit.value}
+                      <ChevronRight size={17} />
                     </button>
                   </div>
-                  <button
-                    type="button"
-                    onClick={() => setDetailOpen(true)}
-                    className="mt-sm flex w-full items-center justify-between text-left font-sans text-caption-13-bold text-text-brand"
-                  >
-                    {selected.benefit.value}
-                    <ChevronRight size={17} />
-                  </button>
                 </div>
-              </div>
-            </article>
-          )}
+              </article>
+            )}
+          </div>
         </section>
       ) : (
         <section className="space-y-sm px-page py-lg">

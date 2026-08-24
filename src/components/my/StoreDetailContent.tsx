@@ -13,7 +13,6 @@ import { useTranslations } from "next-intl";
 
 import { MySubpageHeader } from "./MySubpageHeader";
 
-import { EmptyState } from "@/components/ui/EmptyState/EmptyState";
 import { ErrorState } from "@/components/ui/ErrorState/ErrorState";
 import { getStore } from "@/lib/api/store";
 

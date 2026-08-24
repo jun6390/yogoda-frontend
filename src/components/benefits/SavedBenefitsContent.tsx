@@ -2,13 +2,18 @@
 
 import { useEffect, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Heart, Trash2 } from "lucide-react";
+import { Trash2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 
 import { BenefitsSubNav } from "./BenefitsSubNav";
+import {
+  BrandLogo,
+  resolveBrandLogoName,
+} from "@/components/ui/BrandLogo/BrandLogo";
 import { EmptyState } from "@/components/ui/EmptyState/EmptyState";
 import { ErrorState } from "@/components/ui/ErrorState/ErrorState";
 import { Modal } from "@/components/ui/Modal/Modal";
+import { PageIntro } from "@/components/ui/PageIntro/PageIntro";
 import { Toast } from "@/components/ui/Toast/Toast";
 import { getSavedBenefits, setBenefitSaved } from "@/lib/api/benefit";
 import type { Benefit } from "@/types/benefit";
@@ -39,15 +44,8 @@ export function SavedBenefitsContent() {
   return (
     <div className="min-h-full bg-background pb-xl">
       <BenefitsSubNav active="saved" />
+      <PageIntro title={t("title")} description={t("description")} />
       <div className="space-y-xl px-page py-xl">
-        <div>
-          <h1 className="font-sans text-title-24-bold text-text-primary">
-            {t("title")}
-          </h1>
-          <p className="mt-sm font-sans text-body-14-regular text-text-secondary">
-            {t("description")}
-          </p>
-        </div>
         {query.isPending ? (
           <div className="h-[120px] animate-pulse rounded-lg bg-surface-subtle" />
         ) : query.isError ? (
@@ -62,11 +60,18 @@ export function SavedBenefitsContent() {
             {query.data.benefits.map((benefit) => (
               <div
                 key={benefit.code}
-                className="flex items-center gap-md rounded-lg bg-surface p-lg"
+                className="flex items-center gap-md rounded-lg border border-border-default bg-surface p-lg shadow-sm"
               >
-                <span className="flex size-[40px] items-center justify-center rounded-sm bg-brand-soft text-icon-brand">
-                  <Heart size={20} fill="currentColor" />
-                </span>
+                <BrandLogo
+                  brand={
+                    resolveBrandLogoName(
+                      benefit.brand,
+                      benefit.partner,
+                      benefit.title,
+                    ) ?? "U+"
+                  }
+                  className="size-[40px]"
+                />
                 <div className="min-w-0 flex-1">
                   <strong className="block truncate font-sans text-label-14-bold text-text-primary">
                     {benefit.title}

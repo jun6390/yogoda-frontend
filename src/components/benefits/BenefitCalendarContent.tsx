@@ -2,12 +2,17 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { CalendarDays, Heart, Ticket, X } from "lucide-react";
+import { Heart, X } from "lucide-react";
 import { useTranslations } from "next-intl";
 
 import { BenefitsSubNav } from "./BenefitsSubNav";
+import {
+  BrandLogo,
+  resolveBrandLogoName,
+} from "@/components/ui/BrandLogo/BrandLogo";
 import { EmptyState } from "@/components/ui/EmptyState/EmptyState";
 import { ErrorState } from "@/components/ui/ErrorState/ErrorState";
+import { PageIntro } from "@/components/ui/PageIntro/PageIntro";
 import { RewardCalendar } from "@/components/ui/RewardCalendar/RewardCalendar";
 import { Toast } from "@/components/ui/Toast/Toast";
 import { getBenefitCalendar, setBenefitSaved } from "@/lib/api/benefit";
@@ -72,15 +77,8 @@ export function BenefitCalendarContent() {
   return (
     <div className="min-h-full bg-background pb-xl">
       <BenefitsSubNav active="calendar" />
+      <PageIntro title={t("title")} description={t("description")} />
       <div className="space-y-xl px-page py-xl">
-        <div>
-          <h1 className="font-sans text-title-24-bold text-text-primary">
-            {t("title")}
-          </h1>
-          <p className="mt-sm font-sans text-body-14-regular text-text-secondary">
-            {t("description")}
-          </p>
-        </div>
         <div
           role="tablist"
           aria-label={t("filterLabel")}
@@ -144,13 +142,15 @@ export function BenefitCalendarContent() {
                           type="button"
                           aria-label={t("viewDetail")}
                           onClick={() => setSelectedDate(event.date)}
-                          className="flex size-[40px] items-center justify-center rounded-sm bg-brand-soft text-icon-brand"
+                          className="flex size-[40px] items-center justify-center rounded-sm"
                         >
-                          {event.type === "coupon" ? (
-                            <Ticket size={20} />
-                          ) : (
-                            <CalendarDays size={20} />
-                          )}
+                          <BrandLogo
+                            brand={
+                              resolveBrandLogoName(event.brand, event.title) ??
+                              "U+"
+                            }
+                            className="size-[40px]"
+                          />
                         </button>
                         <button
                           type="button"
@@ -256,13 +256,10 @@ function CalendarEventModal({
         <div className="mt-lg divide-y divide-border-default">
           {events.map((event) => (
             <div key={event.id} className="flex items-start gap-md py-lg">
-              <span className="flex size-[40px] shrink-0 items-center justify-center rounded-sm bg-brand-soft text-icon-brand">
-                {event.type === "coupon" ? (
-                  <Ticket size={20} />
-                ) : (
-                  <CalendarDays size={20} />
-                )}
-              </span>
+              <BrandLogo
+                brand={resolveBrandLogoName(event.brand, event.title) ?? "U+"}
+                className="size-[40px]"
+              />
               <div className="min-w-0 flex-1">
                 <strong className="block font-sans text-label-14-bold text-text-primary">
                   {event.title}

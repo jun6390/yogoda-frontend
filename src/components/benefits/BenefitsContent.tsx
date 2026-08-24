@@ -3,31 +3,21 @@
 import { useEffect, useState, useSyncExternalStore } from "react";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import {
-  BadgePercent,
-  Check,
-  ChevronRight,
-  Crown,
-  Gift,
-  Handshake,
-  Heart,
-  MapPin,
-  MonitorPlay,
-  ShieldCheck,
-  Smartphone,
-  Sparkles,
-  Ticket,
-  X,
-} from "lucide-react";
+import { Check, ChevronRight, Heart, MapPin, X } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 
 import { BenefitRow } from "@/components/ui/BenefitRow/BenefitRow";
+import {
+  BrandLogo,
+  resolveBrandLogoName,
+} from "@/components/ui/BrandLogo/BrandLogo";
 import { Button } from "@/components/ui/Button/Button";
 import { Toast } from "@/components/ui/Toast/Toast";
 import { BenefitsSubNav } from "./BenefitsSubNav";
 import { EmptyState } from "@/components/ui/EmptyState/EmptyState";
 import { ErrorState } from "@/components/ui/ErrorState/ErrorState";
+import { PageIntro } from "@/components/ui/PageIntro/PageIntro";
 import { getBenefits, setBenefitSaved } from "@/lib/api/benefit";
 import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/stores/useAuthStore";
@@ -69,18 +59,16 @@ export function BenefitsContent() {
   return (
     <div className="min-h-full bg-background pb-xl">
       <BenefitsSubNav active="all" />
-      <section className="border-b border-border-default bg-surface px-page pb-xl pt-lg">
-        <h1 className="font-sans text-title-24-bold text-text-primary">
-          {t("headline")}
-        </h1>
-        <p className="mt-sm font-sans text-body-14-regular text-text-secondary">
-          {benefitQuery.data
+      <PageIntro
+        title={t("headline")}
+        description={
+          benefitQuery.data
             ? t("eligibleSummary", { count: benefitQuery.data.eligibleCount })
-            : t("description")}
-        </p>
-      </section>
+            : t("description")
+        }
+      />
 
-      <div className="space-y-2xl px-page py-xl">
+      <div className="space-y-xl px-page py-xl">
         <div
           role="tablist"
           aria-label={t("filterLabel")}
@@ -146,7 +134,19 @@ export function BenefitsContent() {
                   className="block w-full text-left"
                 >
                   <BenefitRow
-                    iconLabel={<BenefitIcon benefit={benefit} />}
+                    iconClassName="size-[40px] bg-transparent"
+                    iconLabel={
+                      <BrandLogo
+                        brand={
+                          resolveBrandLogoName(
+                            benefit.brand,
+                            benefit.partner,
+                            benefit.title,
+                          ) ?? "U+"
+                        }
+                        className="size-[40px]"
+                      />
+                    }
                     name={benefit.title}
                     description={benefit.summary}
                     value={
@@ -244,9 +244,15 @@ function BenefitDetail({
         className="w-full max-w-mobile rounded-t-xl bg-background p-page sm:rounded-xl"
       >
         <div className="flex items-start justify-between gap-lg">
-          <span className="flex size-[44px] items-center justify-center rounded-sm bg-brand-soft text-icon-brand">
-            <BenefitIcon benefit={benefit} size={23} />
-          </span>
+          <BrandLogo
+            brand={
+              resolveBrandLogoName(
+                benefit.brand,
+                benefit.partner,
+                benefit.title,
+              ) ?? "U+"
+            }
+          />
           <button
             type="button"
             aria-label={t("close")}
@@ -303,44 +309,6 @@ function BenefitDetail({
         </Button>
       </section>
     </div>
-  );
-}
-
-function BenefitIcon({
-  benefit,
-  size = 18,
-}: {
-  benefit: Pick<Benefit, "category" | "benefitType">;
-  size?: number;
-}) {
-  const iconProps = { "aria-hidden": true, size } as const;
-
-  if (benefit.benefitType === "coupon") {
-    return <Ticket {...iconProps} />;
-  }
-  if (benefit.benefitType === "device") {
-    return <Smartphone {...iconProps} />;
-  }
-  if (benefit.benefitType === "subscription") {
-    return <MonitorPlay {...iconProps} />;
-  }
-  if (benefit.benefitType === "insurance") {
-    return <ShieldCheck {...iconProps} />;
-  }
-  if (benefit.category === "membership") {
-    return <Crown {...iconProps} />;
-  }
-  if (benefit.category === "partner") {
-    return <Handshake {...iconProps} />;
-  }
-  if (benefit.category === "discount") {
-    return <BadgePercent {...iconProps} />;
-  }
-
-  return benefit.benefitType === "reward" ? (
-    <Gift {...iconProps} />
-  ) : (
-    <Sparkles {...iconProps} />
   );
 }
 

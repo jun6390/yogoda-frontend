@@ -1,20 +1,30 @@
 "use client";
 
-import { useDeferredValue, useMemo, useState } from "react";
+import {
+  useDeferredValue,
+  useEffect,
+  useId,
+  useMemo,
+  useRef,
+  useState,
+  type ReactNode,
+} from "react";
 import { useQuery } from "@tanstack/react-query";
 import {
+  Check,
+  ChevronDown,
   ChevronRight,
   List,
   LocateFixed,
   Map,
   MapPin,
   Search,
+  SlidersHorizontal,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
 
 import { MySubpageHeader } from "./MySubpageHeader";
 
-import { Chip } from "@/components/ui/Chip/Chip";
 import { EmptyState } from "@/components/ui/EmptyState/EmptyState";
 import { ErrorState } from "@/components/ui/ErrorState/ErrorState";
 import { Input } from "@/components/ui/Input/Input";
@@ -73,6 +83,8 @@ export function StoreListContent() {
   const selectedStore = storesQuery.data?.stores.find(
     (store) => store.code === selectedStoreCode,
   );
+  const regions = storesQuery.data?.regions ?? [];
+  const showRegionFilter = regions.length > 1;
 
   const requestLocation = () => {
     setLocationError(false);
@@ -136,31 +148,29 @@ export function StoreListContent() {
             );
           })}
         </div>
-        <div className="flex items-center gap-sm overflow-x-auto pb-xs">
-          <Chip selected={!region} onClick={() => setRegion("")}>
-            {t("allRegions")}
-          </Chip>
-          {storesQuery.data?.regions.map((item) => (
-            <Chip
-              key={item}
-              selected={region === item}
-              onClick={() => setRegion(item)}
-            >
-              {item}
-            </Chip>
-          ))}
-        </div>
-
-        <div className="flex gap-sm overflow-x-auto pb-xs">
-          {services.map((item) => (
-            <Chip
-              key={item}
-              selected={service === item}
-              onClick={() => setService(item)}
-            >
-              {t(`services.${item}`)}
-            </Chip>
-          ))}
+        <div className={cn("grid gap-sm", showRegionFilter && "grid-cols-2")}>
+          {showRegionFilter && (
+            <FilterSelect
+              icon={<MapPin size={18} />}
+              label={t("regionFilterLabel")}
+              value={region}
+              onChange={setRegion}
+              options={[
+                { value: "", label: t("allRegions") },
+                ...regions.map((item) => ({ value: item, label: item })),
+              ]}
+            />
+          )}
+          <FilterSelect
+            icon={<SlidersHorizontal size={18} />}
+            label={t("serviceFilterLabel")}
+            value={service}
+            onChange={(value) => setService(value as "all" | StoreService)}
+            options={services.map((item) => ({
+              value: item,
+              label: t(`services.${item}`),
+            }))}
+          />
         </div>
 
         <button
@@ -267,6 +277,124 @@ export function StoreListContent() {
           </div>
         )}
       </section>
+    </div>
+  );
+}
+
+interface FilterSelectProps {
+  icon: ReactNode;
+  label: string;
+  value: string;
+  options: Array<{ value: string; label: string }>;
+  onChange: (value: string) => void;
+}
+
+function FilterSelect({
+  icon,
+  label,
+  value,
+  options,
+  onChange,
+}: FilterSelectProps) {
+  const [isOpen, setIsOpen] = useState(false);
+  const menuId = useId();
+  const containerRef = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const selectedOption = options.find((option) => option.value === value);
+
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const closeOnOutsideClick = (event: MouseEvent) => {
+      if (!containerRef.current?.contains(event.target as Node)) {
+        setIsOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", closeOnOutsideClick);
+    return () => document.removeEventListener("mousedown", closeOnOutsideClick);
+  }, [isOpen]);
+
+  const closeMenu = () => {
+    setIsOpen(false);
+    triggerRef.current?.focus();
+  };
+
+  return (
+    <div
+      ref={containerRef}
+      className={cn("relative", isOpen && "z-[20]")}
+      onKeyDown={(event) => {
+        if (event.key === "Escape" && isOpen) {
+          event.preventDefault();
+          closeMenu();
+        }
+      }}
+    >
+      <button
+        ref={triggerRef}
+        type="button"
+        aria-haspopup="menu"
+        aria-expanded={isOpen}
+        aria-controls={menuId}
+        aria-label={label}
+        onClick={() => setIsOpen((open) => !open)}
+        className={cn(
+          "flex min-h-[48px] w-full items-center rounded-lg border bg-surface px-md text-left text-text-primary transition-colors",
+          "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-action-primary",
+          isOpen ? "border-action-primary" : "border-border-default",
+        )}
+      >
+        <span aria-hidden="true" className="shrink-0 text-icon-brand">
+          {icon}
+        </span>
+        <span className="min-w-0 flex-1 truncate px-sm font-sans text-label-14-bold">
+          {selectedOption?.label}
+        </span>
+        <ChevronDown
+          aria-hidden="true"
+          className={cn(
+            "shrink-0 text-icon-secondary transition-transform",
+            isOpen && "rotate-180",
+          )}
+          size={18}
+        />
+      </button>
+
+      {isOpen && (
+        <div
+          id={menuId}
+          role="menu"
+          aria-label={label}
+          className="absolute inset-x-0 top-[calc(100%+8px)] overflow-hidden rounded-lg border border-border-default bg-surface p-xs shadow-lg"
+        >
+          {options.map((option) => {
+            const isSelected = option.value === value;
+            return (
+              <button
+                key={option.value}
+                type="button"
+                role="menuitemradio"
+                aria-checked={isSelected}
+                onClick={() => {
+                  onChange(option.value);
+                  closeMenu();
+                }}
+                className={cn(
+                  "flex min-h-[42px] w-full items-center justify-between gap-sm rounded-sm px-md text-left font-sans text-body-14-regular",
+                  "focus-visible:outline-2 focus-visible:outline-action-primary",
+                  isSelected
+                    ? "bg-brand-soft font-bold text-text-brand"
+                    : "text-text-primary hover:bg-surface-subtle",
+                )}
+              >
+                <span>{option.label}</span>
+                {isSelected && <Check aria-hidden="true" size={17} />}
+              </button>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }
