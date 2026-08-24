@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { ArrowLeft, Settings, Send, ChevronRight } from "lucide-react";
+import { ArrowLeft, LogOut, Send, ChevronRight } from "lucide-react";
 import { useTranslations } from "next-intl";
 
 import { PlanRecommendationCards } from "@/components/chat/PlanRecommendationCards";
@@ -28,8 +28,13 @@ export default function AIConsultationPage() {
     retryMessage,
     showGuestLimitModal,
     closeGuestLimitModal,
+    isLoggedIn,
+    endCurrentChat,
+    quickReplies,
   } = useAIChat();
   const [inputText, setInputText] = useState("");
+  // 회원 전용 "채팅 끝내기" 확인 팝업 표시 여부
+  const [showEndChatModal, setShowEndChatModal] = useState(false);
 
   // 메시지 추가 시 자동 스크롤을 위한 ref
   const chatEndRef = useRef<HTMLDivElement>(null);
@@ -47,11 +52,20 @@ export default function AIConsultationPage() {
     setInputText("");
   };
 
+  const handleQuickReplyClick = (reply: string) => {
+    sendMessage(reply);
+  };
+
   const handleGuestLimitLogin = () => {
     closeGuestLimitModal();
     // 로그인 콜백 완료 후 이 화면(AI 채팅)으로 돌아오기 위한 표시
     sessionStorage.setItem(LOGIN_REDIRECT_STORAGE_KEY, "/ai");
     router.push("/login");
+  };
+
+  const handleEndChatConfirm = () => {
+    setShowEndChatModal(false);
+    void endCurrentChat();
   };
 
   return (
@@ -66,16 +80,26 @@ export default function AIConsultationPage() {
           >
             <ArrowLeft size={24} />
           </button>
-          <h1 className="font-sans text-title-16-bold text-text-primary">
+          <h1 className="select-none font-sans text-title-16-bold text-text-primary">
             {t("headerTitle")}
           </h1>
         </div>
 
-        <div className="flex items-center gap-md">
-          <button className="text-text-secondary hover:text-text-primary">
-            <Settings size={20} />
-          </button>
-        </div>
+        {isLoggedIn && (
+          <div className="flex items-center gap-md">
+            <button
+              type="button"
+              aria-label={t("endChatModal.trigger")}
+              onClick={() => setShowEndChatModal(true)}
+              className="flex items-center gap-2xs text-text-secondary hover:text-text-primary"
+            >
+              <LogOut size={18} />
+              <span className="font-sans text-caption-13-medium">
+                {t("endChatModal.trigger")}
+              </span>
+            </button>
+          </div>
+        )}
       </header>
 
       {/* 대화 메세지 스크롤 영역 */}
@@ -133,6 +157,22 @@ export default function AIConsultationPage() {
         <div ref={chatEndRef} />
       </div>
 
+      {/* AI의 질문에 바로 탭해서 답할 수 있는 빠른 답변 후보 (입력창 바로 위, 흰 배경 없이 고정) */}
+      {quickReplies.length > 0 && (
+        <div className="flex flex-wrap gap-xs px-lg pt-lg pb-md shrink-0">
+          {quickReplies.map((reply) => (
+            <button
+              key={reply}
+              type="button"
+              onClick={() => handleQuickReplyClick(reply)}
+              className="rounded-full border border-border-default bg-surface px-md py-xs font-sans text-caption-13-medium text-text-secondary transition-colors hover:border-action-primary hover:text-action-primary"
+            >
+              {reply}
+            </button>
+          ))}
+        </div>
+      )}
+
       {/* 하단 입력 폼 영역 */}
       <div className="border-t border-border-default bg-surface p-lg shrink-0">
         <form
@@ -170,6 +210,25 @@ export default function AIConsultationPage() {
             onClose={closeGuestLimitModal}
             onPrimaryClick={handleGuestLimitLogin}
             onSecondaryClick={closeGuestLimitModal}
+          />
+        </div>
+      )}
+
+      {/* 회원 전용 채팅 끝내기 확인 팝업 */}
+      {showEndChatModal && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-lg"
+          onMouseDown={() => setShowEndChatModal(false)}
+        >
+          <Modal
+            onMouseDown={(e) => e.stopPropagation()}
+            heading={t("endChatModal.heading")}
+            description={t("endChatModal.description")}
+            primaryLabel={t("endChatModal.primaryLabel")}
+            secondaryLabel={t("endChatModal.secondaryLabel")}
+            onClose={() => setShowEndChatModal(false)}
+            onPrimaryClick={handleEndChatConfirm}
+            onSecondaryClick={() => setShowEndChatModal(false)}
           />
         </div>
       )}
