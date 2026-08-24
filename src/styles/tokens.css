@@ -24,6 +24,7 @@
   --primitive-gray-600: #4b5563;
   --primitive-gray-700: #373741;
   --primitive-gray-800: #1f2937;
+  --primitive-gray-850: #1d2430;
   --primitive-gray-900: #17171c;
 
   --primitive-success: #199e63;
@@ -45,6 +46,7 @@
   --semantic-surface-subtle: var(--primitive-gray-100);
   --semantic-brand-soft: var(--primitive-brand-pink-50);
   --semantic-ai-soft: var(--primitive-ai-soft);
+  --semantic-glow-accent: var(--primitive-brand-pink-50);
 
   --semantic-text-on-primary: var(--primitive-white);
   --semantic-text-primary: var(--primitive-gray-900);
@@ -83,11 +85,12 @@
  * 컴포넌트 내부에 dark:bg-..., dark:text-...를 반복 작성하지 않음
  */
 .dark {
-  --semantic-background: var(--primitive-gray-900);
+  --semantic-background: var(--primitive-gray-850);
   --semantic-surface: var(--primitive-gray-800);
   --semantic-surface-subtle: var(--primitive-gray-700);
   --semantic-brand-soft: var(--primitive-brand-deep);
   --semantic-ai-soft: #2f2438;
+  --semantic-glow-accent: #2f3d5c;
 
   --semantic-text-on-primary: var(--primitive-white);
   --semantic-text-primary: var(--primitive-white);
@@ -142,6 +145,7 @@
   --color-surface-subtle: var(--semantic-surface-subtle);
   --color-brand-soft: var(--semantic-brand-soft);
   --color-ai-soft: var(--semantic-ai-soft);
+  --color-glow-accent: var(--semantic-glow-accent);
 
   --color-text-on-primary: var(--semantic-text-on-primary);
   --color-text-primary: var(--semantic-text-primary);
