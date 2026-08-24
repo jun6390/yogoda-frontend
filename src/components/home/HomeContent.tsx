@@ -4,7 +4,7 @@ import { useEffect, useSyncExternalStore } from "react";
 import { useQuery } from "@tanstack/react-query";
 import {
   BarChart3,
-  Barcode,
+  BadgeCheck,
   Bell,
   CalendarDays,
   ChevronRight,
@@ -21,11 +21,20 @@ import { HomeBannerCarousel } from "@/components/home/HomeBannerCarousel";
 import { PageContainer } from "@/components/layout/PageContainer";
 import { ErrorState } from "@/components/ui/ErrorState/ErrorState";
 import { ApiError } from "@/lib/api/client";
+import { getMyCoupons } from "@/lib/api/coupon";
 import { getCurrentPlan, getPlanByCode } from "@/lib/api/plan";
 import { Link, useRouter } from "@/i18n/navigation";
 import { useAuthStore } from "@/stores/useAuthStore";
 
-type HomeLinkHref = "/" | "/ai" | "/benefits" | "/my" | "/plans";
+type HomeLinkHref =
+  | "/"
+  | "/ai"
+  | "/benefits"
+  | "/my"
+  | "/my/benefits"
+  | "/my/coupons"
+  | "/my/usage"
+  | "/plans";
 
 interface TodoItem {
   href: HomeLinkHref;
@@ -59,6 +68,26 @@ function useAuthHydrated() {
     subscribeToAuthHydration,
     () => useAuthStore.persist.hasHydrated(),
     () => false,
+  );
+}
+
+function getDaysUntilExpiration(expiresAt: string) {
+  const now = new Date();
+  const todayUtc = Date.UTC(
+    now.getUTCFullYear(),
+    now.getUTCMonth(),
+    now.getUTCDate(),
+  );
+  const expiration = new Date(expiresAt);
+  const expirationUtc = Date.UTC(
+    expiration.getUTCFullYear(),
+    expiration.getUTCMonth(),
+    expiration.getUTCDate(),
+  );
+
+  return Math.max(
+    0,
+    Math.ceil((expirationUtc - todayUtc) / (24 * 60 * 60 * 1000)),
   );
 }
 
@@ -103,6 +132,13 @@ export function HomeContent() {
     retry: 1,
   });
 
+  const couponQuery = useQuery({
+    queryKey: ["coupons", "me"],
+    queryFn: () => getMyCoupons("all"),
+    enabled: Boolean(accessToken && currentPlan),
+    retry: false,
+  });
+
   const numberFormatter = new Intl.NumberFormat(locale);
   const joinedAt = currentPlan?.joinedAt;
   const joinedAtLabel = joinedAt
@@ -144,7 +180,7 @@ export function HomeContent() {
       icon: Gift,
     },
     {
-      href: "/my",
+      href: "/my/usage",
       label: t("quickAnalysis"),
       icon: BarChart3,
     },
@@ -155,6 +191,13 @@ export function HomeContent() {
     },
   ] as const;
 
+  const expiringCoupon = couponQuery.data?.coupons.find(
+    (coupon) => coupon.status === "available" && coupon.expiringSoon,
+  );
+  const expiringCouponDays = expiringCoupon
+    ? getDaysUntilExpiration(expiringCoupon.expiresAt)
+    : null;
+
   const todoItems: TodoItem[] = hasCurrentPlan
     ? [
         {
@@ -163,12 +206,24 @@ export function HomeContent() {
           description: t("todoContractDescription"),
           icon: CalendarDays,
         },
-        {
-          href: "/benefits",
-          title: t("todoCouponTitle"),
-          description: t("todoCouponDescription"),
-          icon: Bell,
-        },
+        ...(expiringCoupon
+          ? [
+              {
+                href: "/my/coupons" as const,
+                title: t("todoCouponTitle"),
+                description:
+                  expiringCouponDays === 0
+                    ? t("todoCouponExpiresToday", {
+                        title: expiringCoupon.title,
+                      })
+                    : t("todoCouponDescription", {
+                        title: expiringCoupon.title,
+                        days: expiringCouponDays ?? 0,
+                      }),
+                icon: Bell,
+              },
+            ]
+          : []),
       ]
     : [
         {
@@ -185,7 +240,7 @@ export function HomeContent() {
         },
       ];
 
-  const todoCount = hasCurrentPlan ? t("todoCount") : t("noPlanTodoCount");
+  const todoCount = t("todoCount", { count: todoItems.length });
 
   const billingAmount = planDetail
     ? t("billingAmountDynamic", {
@@ -200,14 +255,26 @@ export function HomeContent() {
     : t("noPlanBillingDescription");
 
   const couponCount = hasCurrentPlan
-    ? t("couponCount")
+    ? couponQuery.isPending
+      ? t("couponChecking")
+      : couponQuery.isError
+        ? t("couponCheckRequired")
+        : t("couponCount", {
+            count: couponQuery.data?.summary.available ?? 0,
+          })
     : t("noPlanCouponCount");
   const couponDescription = hasCurrentPlan
-    ? t("couponDescription")
+    ? couponQuery.isPending
+      ? t("couponCheckingDescription")
+      : couponQuery.isError
+        ? t("couponLoadError")
+        : t("couponDescription", {
+            count: couponQuery.data?.summary.expiring ?? 0,
+          })
     : t("noPlanCouponDescription");
 
   const membershipGrade = hasCurrentPlan
-    ? (planDetail?.membershipTier ?? t("membershipGrade"))
+    ? (planDetail?.membershipTier ?? t("membershipGradeUnknown"))
     : t("noPlanMembershipGrade");
 
   const membershipDescription = hasCurrentPlan
@@ -274,7 +341,7 @@ export function HomeContent() {
         </Link>
 
         <Link
-          href={hasCurrentPlan ? "/benefits" : "/plans"}
+          href={hasCurrentPlan ? "/my/coupons" : "/plans"}
           className="flex min-h-[132px] flex-col justify-between rounded-lg bg-surface p-lg shadow-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-action-primary"
         >
           <div className="flex items-start justify-between gap-sm">
@@ -387,12 +454,12 @@ export function HomeContent() {
         </div>
 
         <Link
-          href={hasCurrentPlan ? "/benefits" : "/plans"}
+          href={hasCurrentPlan ? "/my/benefits" : "/plans"}
           className="flex items-center justify-between gap-lg rounded-lg bg-surface p-lg shadow-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-action-primary"
         >
           <div className="flex min-w-0 items-center gap-md">
             <span className="flex size-[44px] shrink-0 items-center justify-center rounded-lg bg-brand-soft text-icon-brand">
-              <Barcode size={26} strokeWidth={1.7} />
+              <BadgeCheck size={26} strokeWidth={1.7} />
             </span>
 
             <div className="min-w-0">
