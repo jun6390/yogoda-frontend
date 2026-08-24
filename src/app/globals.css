@@ -42,3 +42,14 @@ button:disabled {
 *::-webkit-scrollbar {
   display: none;
 }
+
+/* 404 페이지 캐릭터의 떠다니는 효과용 keyframes */
+@keyframes float404 {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
+}

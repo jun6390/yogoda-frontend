@@ -482,7 +482,6 @@
     "discountAmount": "Discount ₩{amount}/month",
     "selectedBenefitAmount": "Value of my selected benefits",
     "benefitValueUnknown": "Value unavailable",
-
     "back": "Go back",
     "loading": "Loading plan information.",
     "error": "Unable to load plan information.",
@@ -507,7 +506,6 @@
       "description": "Your plan has been changed to {planName}.",
       "confirm": "OK"
     },
-
     "unlimited": "Unlimited",
     "data": "Data",
     "voice": "Calls",
@@ -515,19 +513,16 @@
     "tethering": "Tethering & sharing",
     "additionalVoice": "Additional calls",
     "familyData": "Family data",
-
     "goToBenefits": "Ready to choose your benefits?",
     "selectCount": "Select {count}",
     "vipInstruction": "Use this benefit in U+one.",
     "addonInstruction": "Apply separately in U+one.",
-
     "selectedBenefits": "Selected benefits",
     "estimatedPayment": "Estimated monthly payment",
     "join": "Join plan",
     "currentPlanButton": "Current plan",
     "checkingCurrentPlan": "Checking your plan",
     "joinFailed": "Unable to join this plan.",
-
     "sections": {
       "plus": "Fill your plan with the benefits you want",
       "premium": "Time to choose your special benefit",
@@ -535,7 +530,6 @@
       "couponInfo": "Nerget-only benefits",
       "membership": "Benefits included with Nerget"
     },
-
     "steps": {
       "plusBenefit": "Plus Benefits",
       "samsungDevice": "Samsung Devices",
@@ -548,7 +542,6 @@
       "addonBenefit": "Additional Benefits",
       "promotion": "Promotional Benefits"
     },
-
     "exitModal": {
       "title": "Go back to the previous page?",
       "description": "Your selected benefits will be reset.",
@@ -557,9 +550,9 @@
     }
   },
   "NotFound": {
-    "label": "404",
+    "label": "404 ERROR",
     "title": "Page not found",
-    "description": "The address may have changed or this screen is no longer available.",
+    "description": "Please tap the button below to go back home",
     "homeAction": "Go home"
   },
   "AITypingIndicator": {
