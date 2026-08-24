@@ -274,6 +274,151 @@
     "mission": "Mission",
     "my": "MY"
   },
+  "Benefits": {
+    "tabs": {
+      "label": "Benefits menu",
+      "all": "All",
+      "calendar": "Schedule",
+      "saved": "Saved"
+    },
+    "headline": "Benefits available to you today",
+    "description": "Check benefits that match your plan and membership.",
+    "eligibleSummary": "You can use {count} benefits with your current plan.",
+    "filterLabel": "Benefit categories",
+    "filters": {
+      "all": "All",
+      "membership": "Membership",
+      "partner": "Partners",
+      "discount": "Discounts"
+    },
+    "popular": "Recommended benefits",
+    "available": "Available",
+    "unavailable": "Check terms",
+    "loginRequired": "Please log in to continue.",
+    "loginDescription": "Log in to see benefits available with your plan.",
+    "loadError": "Unable to load benefits.",
+    "loadErrorDescription": "Please try again in a moment.",
+    "retry": "Try again",
+    "emptyTitle": "No benefits to show.",
+    "emptyDescription": "Try another category.",
+    "nearbyTitle": "Nearby hotspots",
+    "nearbyDescription": "Find nearby partner benefits based on your location.",
+    "benefit": "Benefit",
+    "value": "Benefit",
+    "eligibility": "Eligibility",
+    "usageLimit": "Usage limit",
+    "close": "Close",
+    "save": "Save",
+    "removeSaved": "Remove saved",
+    "savedToast": "Benefit saved.",
+    "removedToast": "Benefit removed from saved."
+  },
+  "BenefitCalendar": {
+    "title": "Benefit schedule",
+    "description": "Keep track of coupon expiration dates.",
+    "filterLabel": "Benefit schedule categories",
+    "filters": {
+      "all": "All",
+      "membership": "Membership",
+      "food": "Food & cafe",
+      "culture": "Culture",
+      "shopping": "Shopping"
+    },
+    "monthEvents": "This month",
+    "selected": "Benefits on {date}",
+    "selectedDescription": "View benefits available on this date.",
+    "close": "Close",
+    "uplusMembership": "U+ Membership",
+    "save": "Save",
+    "removeSaved": "Remove saved",
+    "viewDetail": "View benefit details",
+    "savedToast": "Benefit saved.",
+    "removedToast": "Benefit removed from saved.",
+    "opens": "Benefit opens",
+    "expires": "Coupon expires",
+    "empty": "No benefits scheduled.",
+    "emptyDescription": "Coupon expiration dates will appear here.",
+    "error": "Unable to load the schedule.",
+    "errorDescription": "Please try again in a moment.",
+    "retry": "Try again"
+  },
+  "SavedBenefits": {
+    "title": "Saved benefits",
+    "description": "Keep your favorite benefits in one place.",
+    "remove": "Remove saved",
+    "removeTitle": "Remove this saved benefit?",
+    "removeDescription": "Remove {title} from your saved benefits.",
+    "confirmRemove": "Remove",
+    "cancel": "Cancel",
+    "removedToast": "Benefit removed from saved.",
+    "empty": "No saved benefits.",
+    "emptyDescription": "Save a benefit from the full list.",
+    "error": "Unable to load saved benefits.",
+    "errorDescription": "Please try again in a moment.",
+    "retry": "Try again"
+  },
+  "Missions": {
+    "tabs": {
+      "label": "Mission menu",
+      "attendance": "Attendance",
+      "progress": "Progress",
+      "completed": "Completed"
+    },
+    "title": "Missions",
+    "headline": "Earn more points with Yogoda today",
+    "inProgress": "In progress",
+    "completed": "To claim",
+    "claimed": "Complete",
+    "filterLabel": "Mission status",
+    "progressSummary": "My mission progress",
+    "progressCount": "{active} active · {pending} rewards to claim",
+    "filters": { "active": "In progress", "done": "Completed" },
+    "status": {
+      "available": "Available",
+      "in_progress": "In progress",
+      "completed": "Claim reward",
+      "claimed": "Claimed"
+    },
+    "actions": {
+      "available": "Join mission",
+      "in_progress": "Mark complete",
+      "completed": "Claim points"
+    },
+    "requirement": "Requirement",
+    "reward": "Reward",
+    "rewardClaimed": "Reward claimed",
+    "waitingForAction": "This mission completes automatically when you meet its requirement",
+    "close": "Close",
+    "loginRequired": "Please log in to continue.",
+    "loginDescription": "Log in to join missions and earn points.",
+    "loadError": "Unable to load missions.",
+    "loadErrorDescription": "Please try again in a moment.",
+    "retry": "Try again",
+    "empty": {
+      "active": {
+        "title": "No missions available.",
+        "description": "We will let you know when new missions arrive."
+      },
+      "done": {
+        "title": "No completed missions.",
+        "description": "Join a mission and start earning points."
+      }
+    }
+  },
+  "Attendance": {
+    "title": "Today's attendance",
+    "description": "Check in daily and earn points.",
+    "checkTitle": "You have not checked in today",
+    "checkedTitle": "Today's check-in is complete",
+    "reward": "Earn {points}P for checking in",
+    "streak": "{count}-day streak",
+    "checkIn": "Check in",
+    "checked": "Checked in today",
+    "monthly": "Checked in {count} days this month",
+    "error": "Unable to load attendance.",
+    "errorDescription": "Please try again in a moment.",
+    "retry": "Try again"
+  },
   "My": {
     "defaultUserName": "User",
     "greeting": "Hello, {name}",

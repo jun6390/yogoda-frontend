@@ -45,7 +45,7 @@ export function BenefitRow({
       {...props}
     >
       <div className="flex min-w-0 items-center gap-md">
-        <span className="flex size-[32px] shrink-0 items-center justify-center rounded-sm bg-icon-secondary font-sans text-label-14-bold text-icon-inverse">
+        <span className="flex size-[32px] shrink-0 items-center justify-center rounded-sm bg-brand-soft font-sans text-label-14-bold text-icon-brand">
           {iconLabel}
         </span>
         <span className="min-w-0">

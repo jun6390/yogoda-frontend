@@ -1,7 +1,5 @@
-import { getTranslations } from "next-intl/server";
+import { BenefitsContent } from "@/components/benefits/BenefitsContent";
 
-export default async function Page() {
-  const t = await getTranslations("Pages");
-
-  return <div>{t("benefits")}</div>;
+export default function BenefitsPage() {
+  return <BenefitsContent />;
 }
