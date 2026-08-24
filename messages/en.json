@@ -562,13 +562,6 @@
     "description": "The address may have changed or this screen is no longer available.",
     "homeAction": "Go home"
   },
-  "AIState": {
-    "thinking": "Analyzing preferences",
-    "streaming": "Writing a reply",
-    "done": "Analysis complete",
-    "error": "Response failed · Try again",
-    "retry": "Response failed · Try again"
-  },
   "AITypingIndicator": {
     "typingAlt": "Writing a response",
     "error": "Could not load the response."
@@ -627,6 +620,13 @@
     "selectBtn": "Select this plan",
     "comparePlan": "Compare with my plan",
     "explorePlans": "Explore other plans",
-    "inputPlaceholder": "Enter a message"
+    "inputPlaceholder": "Enter a message",
+    "carouselDotAriaLabel": "Go to plan card {index}",
+    "guestLimitModal": {
+      "heading": "You've used all your free AI consultations",
+      "description": "As a guest, you can use AI consultation\nup to 3 times.\nLog in to keep chatting and\nsave your recommendations.",
+      "primaryLabel": "Log in to continue",
+      "secondaryLabel": "Later"
+    }
   }
 }

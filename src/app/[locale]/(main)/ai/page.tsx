@@ -1,13 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import {
-  ArrowLeft,
-  Settings,
-  Send,
-  ChevronRight,
-  AlertCircle,
-} from "lucide-react";
+import { ArrowLeft, Settings, Send, ChevronRight } from "lucide-react";
 import { useTranslations } from "next-intl";
 
 import { PlanRecommendationCards } from "@/components/chat/PlanRecommendationCards";
@@ -18,14 +12,23 @@ import {
 } from "@/components/ui/ChatBubble/ChatBubble";
 import { ChatMarkdown } from "@/components/ui/ChatMarkdown/ChatMarkdown";
 import { Input } from "@/components/ui/Input/Input";
+import { Modal } from "@/components/ui/Modal/Modal";
 import { useAIChat } from "@/hooks/useAIChat";
 import { useRouter } from "@/i18n/navigation";
+import { LOGIN_REDIRECT_STORAGE_KEY } from "@/lib/auth/loginRedirect";
 
 export default function AIConsultationPage() {
   const router = useRouter();
   const t = useTranslations("AIChat");
 
-  const { messages, isTyping, sendMessage, retryMessage } = useAIChat();
+  const {
+    messages,
+    isTyping,
+    sendMessage,
+    retryMessage,
+    showGuestLimitModal,
+    closeGuestLimitModal,
+  } = useAIChat();
   const [inputText, setInputText] = useState("");
 
   // 메시지 추가 시 자동 스크롤을 위한 ref
@@ -42,6 +45,13 @@ export default function AIConsultationPage() {
     e.preventDefault();
     sendMessage(inputText);
     setInputText("");
+  };
+
+  const handleGuestLimitLogin = () => {
+    closeGuestLimitModal();
+    // 로그인 콜백 완료 후 이 화면(AI 채팅)으로 돌아오기 위한 표시
+    sessionStorage.setItem(LOGIN_REDIRECT_STORAGE_KEY, "/ai");
+    router.push("/login");
   };
 
   return (
@@ -103,22 +113,12 @@ export default function AIConsultationPage() {
                 </button>
               )}
 
-              {/* 에러 발생 말풍선 */}
+              {/* 에러 발생 시 재시도 배너 */}
               {msg.type === "error" && (
-                <div className="flex flex-col gap-sm rounded-lg bg-error-soft border border-error/20 p-lg shadow-sm">
-                  <div className="flex items-center gap-sm text-error">
-                    <AlertCircle size={18} />
-                    <span className="font-sans text-body-14-medium">
-                      응답을 불러오지 못했어요.
-                    </span>
-                  </div>
-                  <button
-                    onClick={() => retryMessage(msg.id)}
-                    className="self-start font-sans text-caption-13-bold text-text-brand underline hover:text-action-primary-hover"
-                  >
-                    다시 시도
-                  </button>
-                </div>
+                <AITypingIndicator
+                  state="error"
+                  onRetry={() => retryMessage(msg.id)}
+                />
               )}
             </AIChatBubble>
           );
@@ -154,6 +154,25 @@ export default function AIConsultationPage() {
           </button>
         </form>
       </div>
+
+      {/* 비회원 무료 상담 소진 안내 팝업 */}
+      {showGuestLimitModal && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-lg"
+          onMouseDown={closeGuestLimitModal}
+        >
+          <Modal
+            onMouseDown={(e) => e.stopPropagation()}
+            heading={t("guestLimitModal.heading")}
+            description={t("guestLimitModal.description")}
+            primaryLabel={t("guestLimitModal.primaryLabel")}
+            secondaryLabel={t("guestLimitModal.secondaryLabel")}
+            onClose={closeGuestLimitModal}
+            onPrimaryClick={handleGuestLimitLogin}
+            onSecondaryClick={closeGuestLimitModal}
+          />
+        </div>
+      )}
     </div>
   );
 }
