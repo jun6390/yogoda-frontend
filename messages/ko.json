@@ -584,6 +584,11 @@
   },
   "AITypingIndicator": {
     "typingAlt": "응답 작성 중",
+    "typingMessages": [
+      "질문을 살펴보고 있어요",
+      "요금제를 비교하고 있어요",
+      "딱 맞는 추천을 준비하고 있어요"
+    ],
     "error": "응답을 불러오지 못했어요."
   },
   "Rows": {

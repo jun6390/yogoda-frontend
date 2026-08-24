@@ -77,3 +77,15 @@ button:disabled {
     transform: translateY(0);
   }
 }
+
+/* AI 응답 대기 문구의 글자가 지렁이처럼 순차적으로 물결치는 효과용 keyframes */
+@keyframes typingMessageWave {
+  0%,
+  60%,
+  100% {
+    transform: translateY(0);
+  }
+  30% {
+    transform: translateY(-1.5px);
+  }
+}

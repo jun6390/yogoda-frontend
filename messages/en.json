@@ -584,6 +584,11 @@
   },
   "AITypingIndicator": {
     "typingAlt": "Writing a response",
+    "typingMessages": [
+      "Looking into your question",
+      "Comparing plans",
+      "Preparing the best match for you"
+    ],
     "error": "Could not load the response."
   },
   "Rows": {
