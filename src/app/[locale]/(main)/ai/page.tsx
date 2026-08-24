@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { ArrowLeft, Settings, Send, ChevronRight } from "lucide-react";
+import { ArrowLeft, LogOut, Send, ChevronRight } from "lucide-react";
 import { useTranslations } from "next-intl";
 
 import { PlanRecommendationCards } from "@/components/chat/PlanRecommendationCards";
@@ -28,8 +28,12 @@ export default function AIConsultationPage() {
     retryMessage,
     showGuestLimitModal,
     closeGuestLimitModal,
+    isLoggedIn,
+    endCurrentChat,
   } = useAIChat();
   const [inputText, setInputText] = useState("");
+  // 회원 전용 "채팅 끝내기" 확인 팝업 표시 여부
+  const [showEndChatModal, setShowEndChatModal] = useState(false);
 
   // 메시지 추가 시 자동 스크롤을 위한 ref
   const chatEndRef = useRef<HTMLDivElement>(null);
@@ -54,6 +58,11 @@ export default function AIConsultationPage() {
     router.push("/login");
   };
 
+  const handleEndChatConfirm = () => {
+    setShowEndChatModal(false);
+    void endCurrentChat();
+  };
+
   return (
     <div className="flex h-full flex-col bg-background">
       {/* 상단 헤더 */}
@@ -71,11 +80,21 @@ export default function AIConsultationPage() {
           </h1>
         </div>
 
-        <div className="flex items-center gap-md">
-          <button className="text-text-secondary hover:text-text-primary">
-            <Settings size={20} />
-          </button>
-        </div>
+        {isLoggedIn && (
+          <div className="flex items-center gap-md">
+            <button
+              type="button"
+              aria-label={t("endChatModal.trigger")}
+              onClick={() => setShowEndChatModal(true)}
+              className="flex items-center gap-2xs text-text-secondary hover:text-text-primary"
+            >
+              <LogOut size={18} />
+              <span className="font-sans text-caption-13-medium">
+                {t("endChatModal.trigger")}
+              </span>
+            </button>
+          </div>
+        )}
       </header>
 
       {/* 대화 메세지 스크롤 영역 */}
@@ -170,6 +189,25 @@ export default function AIConsultationPage() {
             onClose={closeGuestLimitModal}
             onPrimaryClick={handleGuestLimitLogin}
             onSecondaryClick={closeGuestLimitModal}
+          />
+        </div>
+      )}
+
+      {/* 회원 전용 채팅 끝내기 확인 팝업 */}
+      {showEndChatModal && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-lg"
+          onMouseDown={() => setShowEndChatModal(false)}
+        >
+          <Modal
+            onMouseDown={(e) => e.stopPropagation()}
+            heading={t("endChatModal.heading")}
+            description={t("endChatModal.description")}
+            primaryLabel={t("endChatModal.primaryLabel")}
+            secondaryLabel={t("endChatModal.secondaryLabel")}
+            onClose={() => setShowEndChatModal(false)}
+            onPrimaryClick={handleEndChatConfirm}
+            onSecondaryClick={() => setShowEndChatModal(false)}
           />
         </div>
       )}

@@ -647,6 +647,13 @@
       "description": "비로그인 상태에서는 AI 상담을\n3회까지 이용할 수 있어요.\n로그인하면 상담을 계속하고\n추천 내역도 저장할 수 있어요.",
       "primaryLabel": "로그인하고 계속하기",
       "secondaryLabel": "나중에"
+    },
+    "endChatModal": {
+      "trigger": "채팅 끝내기",
+      "heading": "채팅을 끝내시겠어요?",
+      "description": "다음에 다시 들어오면\n새로운 대화로 시작하게 돼요.",
+      "primaryLabel": "채팅 끝내기",
+      "secondaryLabel": "취소"
     }
   },
   "Splash": {

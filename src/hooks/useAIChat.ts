@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { io, Socket } from "socket.io-client";
 
-import { getLatestChatSession } from "@/lib/api/chat";
+import { endChatSession, getLatestChatSession } from "@/lib/api/chat";
 import { useAuthStore } from "@/stores/useAuthStore";
 import {
   GUEST_CHAT_LIMIT,
@@ -72,7 +72,9 @@ export function useAIChat() {
             previousInteractionId,
           } = await getLatestChatSession();
 
-          if (!session || dbMessages.length === 0) return;
+          // 종료된 세션이면 복원하지 않고 웰컴 메시지로 새로 시작함
+          // (sessionIdRef를 비워둬야 다음 메시지 전송 시 서버가 새 세션을 발급함)
+          if (!session || session.endedAt || dbMessages.length === 0) return;
 
           sessionIdRef.current = session.id;
           collectedInfoRef.current = collectedInfo;
@@ -276,6 +278,31 @@ export function useAIChat() {
     setShowGuestLimitModal(false);
   }, []);
 
+  /*
+   * 회원이 "채팅 끝내기"를 누르면 현재 세션을 서버에 종료 처리하고(대화 내역은 삭제하지 않음),
+   * 화면을 웰컴 메시지로 초기화함. sessionId를 비워둬야 다음 메시지 전송 시
+   * 서버가 종료된 세션을 재사용하지 않고 새 세션을 발급함
+   */
+  const endCurrentChat = useCallback(async () => {
+    if (!isLoggedIn) return;
+
+    // 아직 서버에 발급된 세션이 없다면(메시지를 한 번도 안 보낸 상태) 종료 API를 부를 필요 없이
+    // 화면만 초기화하면 됨
+    if (sessionIdRef.current) {
+      try {
+        await endChatSession(sessionIdRef.current);
+      } catch (err) {
+        console.error("채팅 종료 실패:", err);
+        return;
+      }
+    }
+
+    sessionIdRef.current = null;
+    interactionIdRef.current = null;
+    collectedInfoRef.current = null;
+    setMessages([WELCOME_MESSAGE]);
+  }, [isLoggedIn]);
+
   // interactionIdRef는 마지막으로 "성공"한 응답 기준으로만 갱신되므로, 실패한 턴을 다시 보내도
   // 자동으로 그 직전까지의 대화에 이어붙게 됨 (별도로 히스토리를 잘라낼 필요 없음)
   const retryMessage = useCallback(
@@ -307,5 +334,7 @@ export function useAIChat() {
     guestChatCount,
     showGuestLimitModal,
     closeGuestLimitModal,
+    isLoggedIn,
+    endCurrentChat,
   };
 }

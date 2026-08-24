@@ -647,6 +647,13 @@
       "description": "As a guest, you can use AI consultation\nup to 3 times.\nLog in to keep chatting and\nsave your recommendations.",
       "primaryLabel": "Log in to continue",
       "secondaryLabel": "Later"
+    },
+    "endChatModal": {
+      "trigger": "End chat",
+      "heading": "End this chat?",
+      "description": "Next time you come back,\nyou'll start a new conversation.",
+      "primaryLabel": "End chat",
+      "secondaryLabel": "Cancel"
     }
   },
   "Splash": {
