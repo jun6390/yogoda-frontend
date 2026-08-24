@@ -41,6 +41,8 @@ export function useAIChat() {
   const [guestChatCount, setGuestChatCount] = useState(0);
   // 비회원이 무료 상담 횟수를 모두 소진한 직후 로그인 유도 팝업을 띄우기 위한 상태
   const [showGuestLimitModal, setShowGuestLimitModal] = useState(false);
+  // AI의 질문에 바로 탭해서 보낼 수 있는 빠른 답변 후보. 다음 메시지를 보내면 비워짐
+  const [quickReplies, setQuickReplies] = useState<string[]>([]);
 
   const socketRef = useRef<Socket | null>(null);
   // 회원의 경우 대화가 이어질 채팅 세션 id (최초 메시지 전송 시 서버가 발급, 화면 표시/기록용)
@@ -208,6 +210,11 @@ export function useAIChat() {
         ]);
       });
 
+      // AI가 질문했을 때만 오며, 바로 탭해서 보낼 수 있는 답변 후보 목록임
+      socket.on("quickReplies", (data: string[]) => {
+        setQuickReplies(data);
+      });
+
       socket.on("done", () => {
         socket.disconnect();
       });
@@ -220,6 +227,7 @@ export function useAIChat() {
           ),
         );
         setIsTyping(false);
+        setQuickReplies([]);
         socket.disconnect();
       });
 
@@ -231,6 +239,7 @@ export function useAIChat() {
           ),
         );
         setIsTyping(false);
+        setQuickReplies([]);
       });
 
       socket.on("disconnect", () => {
@@ -261,6 +270,8 @@ export function useAIChat() {
         { id: aiMsgId, sender: "ai", type: "text", text: "" },
       ]);
       setIsTyping(true);
+      // 방금 보여준 빠른 답변 후보는 이번 메시지 전송으로 소비됐으므로 지움
+      setQuickReplies([]);
 
       if (!isLoggedIn) {
         // 한도를 채우는 이번 메시지도 AI 응답은 정상적으로 받아야 하므로, 카운트만
@@ -301,6 +312,7 @@ export function useAIChat() {
     interactionIdRef.current = null;
     collectedInfoRef.current = null;
     setMessages([WELCOME_MESSAGE]);
+    setQuickReplies([]);
   }, [isLoggedIn]);
 
   // interactionIdRef는 마지막으로 "성공"한 응답 기준으로만 갱신되므로, 실패한 턴을 다시 보내도
@@ -320,6 +332,7 @@ export function useAIChat() {
         ),
       );
       setIsTyping(true);
+      setQuickReplies([]);
 
       startSocketStream(userMsg.text, failedAiMsgId);
     },
@@ -336,5 +349,6 @@ export function useAIChat() {
     closeGuestLimitModal,
     isLoggedIn,
     endCurrentChat,
+    quickReplies,
   };
 }

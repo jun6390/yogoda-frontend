@@ -112,7 +112,7 @@ export default function PlanSuccessPage() {
           <Check aria-hidden="true" size={32} strokeWidth={3} />
         </div>
 
-        <h1 className="mt-lg font-sans text-title-20-bold text-text-primary motion-safe:animate-[splashFadeUp_0.4s_ease-out_0.15s_both]">
+        <h1 className="mt-lg select-none font-sans text-title-20-bold text-text-primary motion-safe:animate-[splashFadeUp_0.4s_ease-out_0.15s_both]">
           {t("title")}
         </h1>
 

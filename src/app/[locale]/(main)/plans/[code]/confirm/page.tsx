@@ -174,7 +174,7 @@ function PlanJoinConfirmContent({ code }: PlanJoinConfirmContentProps) {
             </h1>
           </div>
 
-          <h2 className="font-sans text-title-24-bold whitespace-pre-line text-text-primary">
+          <h2 className="select-none font-sans text-title-24-bold whitespace-pre-line text-text-primary">
             {t("title")}
           </h2>
 

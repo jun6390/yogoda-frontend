@@ -30,6 +30,7 @@ export default function AIConsultationPage() {
     closeGuestLimitModal,
     isLoggedIn,
     endCurrentChat,
+    quickReplies,
   } = useAIChat();
   const [inputText, setInputText] = useState("");
   // 회원 전용 "채팅 끝내기" 확인 팝업 표시 여부
@@ -49,6 +50,10 @@ export default function AIConsultationPage() {
     e.preventDefault();
     sendMessage(inputText);
     setInputText("");
+  };
+
+  const handleQuickReplyClick = (reply: string) => {
+    sendMessage(reply);
   };
 
   const handleGuestLimitLogin = () => {
@@ -75,7 +80,7 @@ export default function AIConsultationPage() {
           >
             <ArrowLeft size={24} />
           </button>
-          <h1 className="font-sans text-title-16-bold text-text-primary">
+          <h1 className="select-none font-sans text-title-16-bold text-text-primary">
             {t("headerTitle")}
           </h1>
         </div>
@@ -151,6 +156,22 @@ export default function AIConsultationPage() {
         )}
         <div ref={chatEndRef} />
       </div>
+
+      {/* AI의 질문에 바로 탭해서 답할 수 있는 빠른 답변 후보 (입력창 바로 위, 흰 배경 없이 고정) */}
+      {quickReplies.length > 0 && (
+        <div className="flex flex-wrap gap-xs px-lg pt-lg pb-md shrink-0">
+          {quickReplies.map((reply) => (
+            <button
+              key={reply}
+              type="button"
+              onClick={() => handleQuickReplyClick(reply)}
+              className="rounded-full border border-border-default bg-surface px-md py-xs font-sans text-caption-13-medium text-text-secondary transition-colors hover:border-action-primary hover:text-action-primary"
+            >
+              {reply}
+            </button>
+          ))}
+        </div>
+      )}
 
       {/* 하단 입력 폼 영역 */}
       <div className="border-t border-border-default bg-surface p-lg shrink-0">
