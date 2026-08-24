@@ -7,6 +7,10 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Badge } from "@/components/ui/Badge/Badge";
 import { ErrorState } from "@/components/ui/ErrorState/ErrorState";
 import { Button } from "@/components/admin/Button";
+import {
+  PROMPT_HISTORY_QUERY_KEY,
+  PromptVersionHistory,
+} from "@/components/admin/PromptVersionHistory";
 import { ApiError } from "@/lib/api/client";
 import { createPrompt, getActivePrompt } from "@/lib/api/prompt";
 import { formatDateTime } from "@/lib/admin/format";
@@ -51,6 +55,7 @@ export function PromptManagementContent() {
     onSuccess: (data) => {
       setDeployedMessage(`${data.version} 버전으로 배포됐어요.`);
       queryClient.invalidateQueries({ queryKey: ACTIVE_PROMPT_QUERY_KEY });
+      queryClient.invalidateQueries({ queryKey: PROMPT_HISTORY_QUERY_KEY });
     },
   });
 
@@ -183,6 +188,8 @@ export function PromptManagementContent() {
           )}
         </div>
       </section>
+
+      <PromptVersionHistory />
     </div>
   );
 }
