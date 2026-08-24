@@ -29,7 +29,7 @@ function formatPrice(amount: number, locale: string) {
 interface ManagementRowProps {
   label: string;
   value: string;
-  href?: "/benefits" | "/my/account" | "/my/benefits";
+  href?: "/benefits" | "/my/account" | "/my/benefits" | "/my/coupons";
   emphasized?: boolean;
 }
 
@@ -242,7 +242,11 @@ export function MyContent() {
             href="/my/benefits"
             emphasized
           />
-          <ManagementRow label={t("couponWallet")} value={t("comingSoon")} />
+          <ManagementRow
+            label={t("couponWallet")}
+            value={t("viewCoupons")}
+            href="/my/coupons"
+          />
           <ManagementRow
             label={t("manageBenefits")}
             value={t("activeBenefitCount", { count: selectedBenefitCount })}

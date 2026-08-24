@@ -71,7 +71,7 @@ export function HomeBannerCarousel() {
           style={{ transform: `translateX(-${activeIndex * 100}%)` }}
         >
           {bannerSlides.map((slide, index) => {
-            const isInitialSlide = index === 0;
+            const isActiveSlide = activeIndex === index;
 
             return (
               <Link
@@ -85,8 +85,9 @@ export function HomeBannerCarousel() {
                   src={slide.src}
                   alt={t(slide.altKey)}
                   fill
-                  loading={isInitialSlide ? "eager" : "lazy"}
-                  fetchPriority={isInitialSlide ? "high" : "auto"}
+                  // 자동 전환된 배너도 LCP 후보가 되므로 현재 배너를 즉시 로드함
+                  loading={isActiveSlide ? "eager" : "lazy"}
+                  fetchPriority={isActiveSlide ? "high" : "auto"}
                   sizes="(max-width: 448px) calc(100vw - 40px), 408px"
                   quality={75}
                   className="object-contain"
