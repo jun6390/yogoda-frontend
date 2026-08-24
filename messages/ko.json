@@ -719,5 +719,9 @@
       "primaryLabel": "로그인하고 계속하기",
       "secondaryLabel": "나중에"
     }
+  },
+  "Splash": {
+    "logoAlt": "요고다",
+    "greeting": "요고가 딱 맞는 요금제를 찾아드릴게요"
   }
 }
