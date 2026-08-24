@@ -20,6 +20,7 @@ import {
   X,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
+import { Link } from "@/i18n/navigation";
 
 import { BenefitRow } from "@/components/ui/BenefitRow/BenefitRow";
 import { Button } from "@/components/ui/Button/Button";
@@ -174,7 +175,10 @@ export function BenefitsContent() {
           />
         )}
 
-        <section className="rounded-lg border border-border-default bg-surface p-lg">
+        <Link
+          href="/benefits/nearby"
+          className="block rounded-lg border border-border-default bg-surface p-lg"
+        >
           <div className="flex items-start gap-md">
             <span className="flex size-[40px] shrink-0 items-center justify-center rounded-sm bg-brand-soft text-icon-brand">
               <MapPin aria-hidden="true" size={21} />
@@ -188,7 +192,7 @@ export function BenefitsContent() {
               </p>
             </div>
           </div>
-        </section>
+        </Link>
       </div>
 
       {selectedBenefit && (

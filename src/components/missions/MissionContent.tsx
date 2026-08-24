@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useSyncExternalStore } from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { CheckCircle2, ChevronRight, Gift, Target, X } from "lucide-react";
@@ -8,15 +8,18 @@ import { useTranslations } from "next-intl";
 
 import { MissionSubNav } from "./MissionSubNav";
 
+import { Badge } from "@/components/ui/Badge/Badge";
 import { Button } from "@/components/ui/Button/Button";
 import { EmptyState } from "@/components/ui/EmptyState/EmptyState";
 import { ErrorState } from "@/components/ui/ErrorState/ErrorState";
 import { ProgressBar } from "@/components/ui/ProgressBar/ProgressBar";
+import { Toast } from "@/components/ui/Toast/Toast";
 import {
   claimMissionReward,
   getMyMissions,
   joinMission,
 } from "@/lib/api/mission";
+import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/stores/useAuthStore";
 import type { Mission, MissionStatus } from "@/types/mission";
 
@@ -36,6 +39,7 @@ export function MissionContent({ view = "active" }: { view?: MissionView }) {
   const hydrated = useHydrated();
   const accessToken = useAuthStore((state) => state.accessToken);
   const [selected, setSelected] = useState<Mission | null>(null);
+  const [claimedPoints, setClaimedPoints] = useState<number | null>(null);
   const isLoggedIn = hydrated && Boolean(accessToken);
   const missionQuery = useQuery({
     queryKey: ["missions", "me"],
@@ -49,6 +53,12 @@ export function MissionContent({ view = "active" }: { view?: MissionView }) {
       ? mission.status === "available" || mission.status === "in_progress"
       : mission.status === "completed" || mission.status === "claimed",
   );
+
+  useEffect(() => {
+    if (claimedPoints === null) return;
+    const timer = window.setTimeout(() => setClaimedPoints(null), 2500);
+    return () => window.clearTimeout(timer);
+  }, [claimedPoints]);
 
   return (
     <div className="min-h-full bg-background pb-xl">
@@ -114,9 +124,7 @@ export function MissionContent({ view = "active" }: { view?: MissionView }) {
                       <span className="block truncate font-sans text-label-14-medium text-text-primary">
                         {mission.title}
                       </span>
-                      <span className="mt-xs block font-sans text-caption-12-regular text-text-secondary">
-                        {t(`status.${mission.status}`)}
-                      </span>
+                      <MissionStatusBadge status={mission.status} />
                     </span>
                     <span className="shrink-0 font-sans text-caption-13-bold text-text-brand">
                       +{mission.rewardPoints}P
@@ -141,7 +149,18 @@ export function MissionContent({ view = "active" }: { view?: MissionView }) {
       </div>
 
       {selected && (
-        <MissionDetail mission={selected} onClose={() => setSelected(null)} />
+        <MissionDetail
+          mission={selected}
+          onClose={() => setSelected(null)}
+          onClaimed={setClaimedPoints}
+        />
+      )}
+      {claimedPoints !== null && (
+        <Toast
+          message={t("pointsClaimedToast", { points: claimedPoints })}
+          actionLabel={null}
+          className="fixed bottom-[calc(var(--bottom-nav-height)+var(--spacing-lg))] left-1/2 z-[60] max-w-[calc(100%-32px)] -translate-x-1/2"
+        />
       )}
     </div>
   );
@@ -150,9 +169,11 @@ export function MissionContent({ view = "active" }: { view?: MissionView }) {
 function MissionDetail({
   mission,
   onClose,
+  onClaimed,
 }: {
   mission: Mission;
   onClose: () => void;
+  onClaimed: (points: number) => void;
 }) {
   const t = useTranslations("Missions");
   const queryClient = useQueryClient();
@@ -160,6 +181,9 @@ function MissionDetail({
     mutationFn: () => getMissionAction(mission.status)(mission.code),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ["missions", "me"] });
+      if (mission.status === "completed") {
+        onClaimed(mission.rewardPoints);
+      }
       onClose();
     },
   });
@@ -191,6 +215,7 @@ function MissionDetail({
         >
           {mission.title}
         </h2>
+        <MissionStatusBadge status={mission.status} />
         <p className="mt-sm font-sans text-body-14-regular text-text-secondary">
           {mission.summary}
         </p>
@@ -238,6 +263,26 @@ function MissionDetail({
         )}
       </section>
     </div>
+  );
+}
+
+function MissionStatusBadge({ status }: { status: MissionStatus }) {
+  const t = useTranslations("Missions");
+
+  return (
+    <Badge
+      className={cn(
+        "mt-sm min-h-[24px] px-md py-xs text-caption-12-bold",
+        status === "available" &&
+          "border border-border-default bg-surface-subtle text-text-primary",
+        status === "in_progress" &&
+          "border border-action-primary bg-surface text-text-brand",
+        status === "completed" && "bg-action-primary text-text-on-primary",
+        status === "claimed" && "bg-success-soft text-success",
+      )}
+    >
+      {t(`status.${status}`)}
+    </Badge>
   );
 }
 

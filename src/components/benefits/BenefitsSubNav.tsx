@@ -4,10 +4,11 @@ import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { cn } from "@/lib/utils";
 
-type BenefitTab = "all" | "calendar" | "saved";
+type BenefitTab = "all" | "calendar" | "nearby" | "saved";
 const tabs: { value: BenefitTab; href: string }[] = [
   { value: "all", href: "/benefits" },
   { value: "calendar", href: "/benefits/calendar" },
+  { value: "nearby", href: "/benefits/nearby" },
   { value: "saved", href: "/benefits/saved" },
 ];
 
