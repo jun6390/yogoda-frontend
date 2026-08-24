@@ -1,6 +1,12 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  useSyncExternalStore,
+} from "react";
 import { io, Socket } from "socket.io-client";
 
 import { endChatSession, getLatestChatSession } from "@/lib/api/chat";
@@ -20,6 +26,31 @@ const WELCOME_MESSAGE: ChatMessage = {
   type: "text",
   text: "안녕하세요! 사용자님에게 딱 맞는 베스트 요금제를 추천해 드릴게요. 평소 데이터 사용량이나 선호하시는 혜택(OTT 등)에 대해 편하게 말씀해 주세요!",
 };
+
+function subscribeToAuthHydration(onStoreChange: () => void) {
+  const unsubscribeHydrate = useAuthStore.persist.onHydrate(onStoreChange);
+  const unsubscribeFinishHydration =
+    useAuthStore.persist.onFinishHydration(onStoreChange);
+
+  return () => {
+    unsubscribeHydrate();
+    unsubscribeFinishHydration();
+  };
+}
+
+/*
+ * accessToken은 zustand persist로 localStorage에서 비동기 복원(hydration)되므로,
+ * 새로고침 직후 첫 렌더의 isLoggedIn만 보고 판단하면 항상 비회원으로 오판해
+ * 회원의 DB 대화 내역 복원이 실행되지 않음. hydration 완료 여부를 별도로 구독함
+ */
+function useAuthHydrated() {
+  return useSyncExternalStore(
+    subscribeToAuthHydration,
+    () => useAuthStore.persist.hasHydrated(),
+    () => false,
+  );
+}
+
 /**
  * AI 상담 채팅의 상태와 소켓 통신을 담당하는 훅.
  * - 로그인 여부에 따라 회원은 DB, 비회원은 로컬 스토리지에서 이전 대화를 복원함
@@ -51,7 +82,7 @@ export function useAIChat() {
   const interactionIdRef = useRef<string | null>(null);
   // 지금까지 대화로 파악된 정보 (모델이 맥락을 놓치는 경우를 대비한 이중 안전장치)
   const collectedInfoRef = useRef<CollectedInfo | null>(null);
-  const initialIsLoggedInRef = useRef(isLoggedIn);
+  const isAuthHydrated = useAuthHydrated();
 
   const appendChars = useCallback((messageId: string, chars: string) => {
     setMessages((prev) =>
@@ -63,9 +94,12 @@ export function useAIChat() {
   const typewriter = useTypewriter(appendChars);
 
   // 마운트 시 이전 대화 내역 복원 (회원은 DB, 비회원은 로컬 스토리지에서)
+  // accessToken의 hydration이 끝나기 전까지는 로그인 여부를 신뢰할 수 없으므로 대기함
   useEffect(() => {
+    if (!isAuthHydrated) return;
+
     async function restoreHistory() {
-      if (initialIsLoggedInRef.current) {
+      if (isLoggedIn) {
         try {
           const {
             session,
@@ -121,7 +155,8 @@ export function useAIChat() {
     }
 
     void restoreHistory();
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- 복원은 hydration 완료 후 한 번만 실행하면 되므로 isLoggedIn 변경(로그인/로그아웃) 시 재실행은 의도적으로 제외함
+  }, [isAuthHydrated]);
 
   // 비회원의 대화 내역을 로컬 스토리지에 동기화 (타자기 효과로 인한 잦은 쓰기를 막기 위해 디바운스)
   useEffect(() => {
