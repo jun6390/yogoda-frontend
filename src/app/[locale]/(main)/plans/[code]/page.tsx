@@ -2,7 +2,7 @@
 
 import type { ReactNode } from "react";
 import { useEffect, useRef, useState } from "react";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import {
   ArrowLeft,
   Check,
@@ -16,22 +16,18 @@ import {
   Users,
 } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 
 import { PageContainer } from "@/components/layout/PageContainer";
 import { NergetPlanBadge } from "@/components/plans/NergetPlanBadge";
 import { Button } from "@/components/ui/Button/Button";
-import {
-  changePlan,
-  getCurrentPlan,
-  getPlanByCode,
-  joinPlan,
-} from "@/lib/api/plan";
+import { useRouter } from "@/i18n/navigation";
+import { getCurrentPlan, getPlanByCode } from "@/lib/api/plan";
+import { getPlanJoinDraftKey } from "@/lib/plan-join-draft";
 import { useAuthStore } from "@/stores/useAuthStore";
 import type { PlanChoiceBenefit, PlanChoiceBenefitOption } from "@/types/plan";
 
 type SelectedBenefits = Record<string, string[]>;
-type PlanAction = "join" | "change";
 
 export default function PlanDetailPage() {
   const { code } = useParams<{ code: string }>();
@@ -45,7 +41,6 @@ interface PlanDetailContentProps {
 
 function PlanDetailContent({ code }: PlanDetailContentProps) {
   const router = useRouter();
-  const queryClient = useQueryClient();
 
   const t = useTranslations("PlanDetail");
   const locale = useLocale();
@@ -66,11 +61,6 @@ function PlanDetailContent({ code }: PlanDetailContentProps) {
   >(null);
 
   const [isExitModalOpen, setIsExitModalOpen] = useState(false);
-  const [completedAction, setCompletedAction] = useState<PlanAction | null>(
-    null,
-  );
-
-  const [planActionError, setPlanActionError] = useState<string | null>(null);
 
   const {
     data: plan,
@@ -91,45 +81,6 @@ function PlanDetailContent({ code }: PlanDetailContentProps) {
     queryFn: getCurrentPlan,
     enabled: Boolean(accessToken),
     retry: false,
-  });
-
-  /*
-   * 현재 가입 상태에 따라 최초 가입과 요금제 변경 API를 분기함
-   */
-  const {
-    mutate: requestPlanAction,
-    isPending: isPlanActionPending,
-    variables: pendingAction,
-  } = useMutation({
-    mutationFn: (action: PlanAction) => {
-      if (action === "change") {
-        return changePlan(code, selectedBenefits);
-      }
-
-      return joinPlan(code, selectedBenefits);
-    },
-
-    onMutate: () => {
-      setPlanActionError(null);
-    },
-
-    onSuccess: (_, action) => {
-      setCompletedAction(action);
-
-      void queryClient.invalidateQueries({
-        queryKey: ["plans", "me", "current"],
-      });
-    },
-
-    onError: (error, action) => {
-      setPlanActionError(
-        error instanceof Error
-          ? error.message
-          : action === "change"
-            ? t("changeError")
-            : t("joinError"),
-      );
-    },
   });
 
   const formatNumber = (value: number) =>
@@ -443,7 +394,6 @@ function PlanDetailContent({ code }: PlanDetailContentProps) {
     );
 
     setSelectedBenefits(sanitizedSelections);
-    setPlanActionError(null);
 
     if (!isStepComplete(step, sanitizedSelections)) {
       return;
@@ -485,6 +435,10 @@ function PlanDetailContent({ code }: PlanDetailContentProps) {
     router.back();
   };
 
+  /*
+   * 실제 가입/변경 API 호출은 확인 페이지에서 처리함
+   * 여기서는 선택한 혜택을 세션에 저장하고 확인 페이지로 이동만 담당함
+   */
   const handlePlanAction = () => {
     if (isCurrentPlan) {
       return;
@@ -495,12 +449,12 @@ function PlanDetailContent({ code }: PlanDetailContentProps) {
       return;
     }
 
-    requestPlanAction(isPlanChange ? "change" : "join");
-  };
+    window.sessionStorage.setItem(
+      getPlanJoinDraftKey(code),
+      JSON.stringify(selectedBenefits),
+    );
 
-  const handlePlanSuccessConfirm = () => {
-    setCompletedAction(null);
-    router.replace(`/${locale}`);
+    router.push(`/plans/${code}/confirm`);
   };
 
   return (
@@ -780,20 +734,10 @@ function PlanDetailContent({ code }: PlanDetailContentProps) {
               </strong>
             </div>
 
-            {planActionError && (
-              <p
-                role="alert"
-                className="mb-md text-center font-sans text-caption-13-medium text-error"
-              >
-                {planActionError}
-              </p>
-            )}
-
             <Button
               className="h-[56px] w-full rounded-xl"
               disabled={
                 !isJoinEnabled ||
-                isPlanActionPending ||
                 isCurrentPlan ||
                 (Boolean(accessToken) && isCurrentPlanPending)
               }
@@ -801,15 +745,11 @@ function PlanDetailContent({ code }: PlanDetailContentProps) {
             >
               {Boolean(accessToken) && isCurrentPlanPending
                 ? t("loading")
-                : isPlanActionPending
-                  ? pendingAction === "change"
-                    ? t("changing")
-                    : t("joining")
-                  : isCurrentPlan
-                    ? t("currentPlan")
-                    : isPlanChange
-                      ? t("changePlan")
-                      : t("join")}
+                : isCurrentPlan
+                  ? t("currentPlan")
+                  : isPlanChange
+                    ? t("changePlan")
+                    : t("join")}
             </Button>
           </div>
         </div>
@@ -855,51 +795,6 @@ function PlanDetailContent({ code }: PlanDetailContentProps) {
                 {t("exitModal.confirm")}
               </button>
             </div>
-          </div>
-        </div>
-      )}
-
-      {completedAction && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-lg">
-          <div
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="plan-success-title"
-            className="w-full max-w-[320px] rounded-xl bg-surface p-xl shadow-xl"
-          >
-            <div className="flex justify-center">
-              <div className="flex size-[56px] items-center justify-center rounded-full bg-action-primary/10 text-action-primary">
-                <Check aria-hidden="true" size={28} strokeWidth={2.5} />
-              </div>
-            </div>
-
-            <h2
-              id="plan-success-title"
-              className="mt-lg text-center font-sans text-title-18-bold text-text-primary"
-            >
-              {completedAction === "change"
-                ? t("changeSuccess.title")
-                : t("joinSuccess.title")}
-            </h2>
-
-            <p className="mt-sm text-center font-sans text-caption-13-medium leading-relaxed text-text-secondary">
-              {completedAction === "change"
-                ? t("changeSuccess.description", {
-                    planName: plan.name,
-                  })
-                : t("joinSuccess.description", {
-                    planName: plan.name,
-                  })}
-            </p>
-
-            <Button
-              className="mt-xl h-[52px] w-full rounded-lg"
-              onClick={handlePlanSuccessConfirm}
-            >
-              {completedAction === "change"
-                ? t("changeSuccess.confirm")
-                : t("joinSuccess.confirm")}
-            </Button>
           </div>
         </div>
       )}
