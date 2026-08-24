@@ -7,15 +7,11 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Badge } from "@/components/ui/Badge/Badge";
 import { ErrorState } from "@/components/ui/ErrorState/ErrorState";
 import { Button } from "@/components/admin/Button";
-import {
-  PROMPT_HISTORY_QUERY_KEY,
-  PromptVersionHistory,
-} from "@/components/admin/PromptVersionHistory";
+import { PromptVersionHistory } from "@/components/admin/PromptVersionHistory";
 import { ApiError } from "@/lib/api/client";
 import { createPrompt, getActivePrompt } from "@/lib/api/prompt";
 import { formatDateTime } from "@/lib/admin/format";
-
-const ACTIVE_PROMPT_QUERY_KEY = ["admin", "prompts", "active"];
+import { ADMIN_PROMPT_QUERY_KEYS } from "@/lib/admin/queryKeys";
 
 export function PromptManagementContent() {
   const queryClient = useQueryClient();
@@ -27,7 +23,7 @@ export function PromptManagementContent() {
     error,
     refetch,
   } = useQuery({
-    queryKey: ACTIVE_PROMPT_QUERY_KEY,
+    queryKey: ADMIN_PROMPT_QUERY_KEYS.active,
     queryFn: getActivePrompt,
   });
 
@@ -54,8 +50,12 @@ export function PromptManagementContent() {
     mutationFn: createPrompt,
     onSuccess: (data) => {
       setDeployedMessage(`${data.version} 버전으로 배포됐어요.`);
-      queryClient.invalidateQueries({ queryKey: ACTIVE_PROMPT_QUERY_KEY });
-      queryClient.invalidateQueries({ queryKey: PROMPT_HISTORY_QUERY_KEY });
+      queryClient.invalidateQueries({
+        queryKey: ADMIN_PROMPT_QUERY_KEYS.active,
+      });
+      queryClient.invalidateQueries({
+        queryKey: ADMIN_PROMPT_QUERY_KEYS.history,
+      });
     },
   });
 

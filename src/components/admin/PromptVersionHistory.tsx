@@ -1,21 +1,51 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { Badge } from "@/components/ui/Badge/Badge";
 import { ErrorState } from "@/components/ui/ErrorState/ErrorState";
+import { Button } from "@/components/admin/Button";
 import { ApiError } from "@/lib/api/client";
-import { getPromptHistory } from "@/lib/api/prompt";
+import { activatePromptVersion, getPromptHistory } from "@/lib/api/prompt";
 import { formatDateTime } from "@/lib/admin/format";
+import { ADMIN_PROMPT_QUERY_KEYS } from "@/lib/admin/queryKeys";
 import { cn } from "@/lib/utils";
 
-export const PROMPT_HISTORY_QUERY_KEY = ["admin", "prompts", "history"];
-
 export function PromptVersionHistory() {
+  const queryClient = useQueryClient();
+
   const { data, isPending, isError, error, refetch } = useQuery({
-    queryKey: PROMPT_HISTORY_QUERY_KEY,
+    queryKey: ADMIN_PROMPT_QUERY_KEYS.history,
     queryFn: getPromptHistory,
   });
+
+  const rollbackMutation = useMutation({
+    mutationFn: activatePromptVersion,
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ADMIN_PROMPT_QUERY_KEYS.active,
+      });
+      queryClient.invalidateQueries({
+        queryKey: ADMIN_PROMPT_QUERY_KEYS.history,
+      });
+    },
+  });
+
+  const rollingBackVersionId = rollbackMutation.isPending
+    ? rollbackMutation.variables
+    : undefined;
+
+  const handleRollback = (version: string, versionId: string) => {
+    const confirmed = window.confirm(
+      `${version} 버전으로 되돌릴까요?\n지금 즉시 사용자 앱에 반영돼요.`,
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
+    rollbackMutation.mutate(versionId);
+  };
 
   return (
     <section className="mt-xl rounded-lg border border-border-default bg-surface p-lg">
@@ -55,6 +85,9 @@ export function PromptVersionHistory() {
                   </th>
                   <th className="whitespace-nowrap px-sm py-sm text-right font-sans text-caption-12-bold text-text-tertiary">
                     기간 전환율
+                  </th>
+                  <th className="whitespace-nowrap px-sm py-sm text-right font-sans text-caption-12-bold text-text-tertiary">
+                    액션
                   </th>
                 </tr>
               </thead>
@@ -103,11 +136,40 @@ export function PromptVersionHistory() {
                         </span>
                       )}
                     </td>
+
+                    <td className="whitespace-nowrap px-sm py-md text-right">
+                      {version.isActive ? (
+                        <span className="font-sans text-caption-12-regular text-text-tertiary">
+                          현재 버전
+                        </span>
+                      ) : (
+                        <Button
+                          variant="text"
+                          className="px-sm py-xs text-caption-12-bold"
+                          loading={rollingBackVersionId === version.versionId}
+                          loadingLabel="되돌리는 중..."
+                          disabled={rollbackMutation.isPending}
+                          onClick={() =>
+                            handleRollback(version.version, version.versionId)
+                          }
+                        >
+                          이 버전으로 되돌리기
+                        </Button>
+                      )}
+                    </td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
+        )}
+
+        {rollbackMutation.isError && (
+          <p className="mt-sm font-sans text-caption-12-regular text-error">
+            {rollbackMutation.error instanceof ApiError
+              ? rollbackMutation.error.message
+              : "되돌리기 중 오류가 발생했어요."}
+          </p>
         )}
       </div>
     </section>
