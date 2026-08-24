@@ -11,27 +11,27 @@ import { cn } from "@/lib/utils";
 const bannerSlides = [
   {
     href: "/benefits",
-    src: "/yogoda-banners/uplus-benefit-v4.png",
+    src: "/yogoda-banners/uplus-benefit.webp",
     altKey: "bannerBenefitAlt",
   },
   {
     href: "/my",
-    src: "/yogoda-banners/plan-compare-v5.png",
+    src: "/yogoda-banners/plan-compare.webp",
     altKey: "bannerPlanAlt",
   },
   {
     href: "/mission",
-    src: "/yogoda-banners/mission-point-v6.png",
+    src: "/yogoda-banners/mission-point.webp",
     altKey: "bannerMissionAlt",
   },
   {
     href: "/benefits",
-    src: "/yogoda-banners/uplus-special-v7.png",
+    src: "/yogoda-banners/uplus-special.webp",
     altKey: "bannerSpecialAlt",
   },
   {
     href: "/benefits",
-    src: "/yogoda-banners/coupon-partner-v9.png",
+    src: "/yogoda-banners/coupon-partner.webp",
     altKey: "bannerCouponAlt",
   },
 ] as const;
@@ -48,20 +48,18 @@ export function HomeBannerCarousel() {
      * 컴포넌트가 사라지면 타이머도 같이 정리함
      */
     const timerId = window.setInterval(() => {
-      setActiveIndex((currentIndex) =>
-        (currentIndex + 1) % bannerSlides.length,
+      setActiveIndex(
+        (currentIndex) => (currentIndex + 1) % bannerSlides.length,
       );
     }, autoSlideDelay);
 
     return () => {
       window.clearInterval(timerId);
     };
-  }, [activeIndex]);
+  }, []);
 
   const moveTo = (nextIndex: number) => {
-    setActiveIndex(
-      (nextIndex + bannerSlides.length) % bannerSlides.length,
-    );
+    setActiveIndex((nextIndex + bannerSlides.length) % bannerSlides.length);
   };
 
   return (
@@ -72,24 +70,30 @@ export function HomeBannerCarousel() {
           className="flex transition-transform duration-300 ease-out"
           style={{ transform: `translateX(-${activeIndex * 100}%)` }}
         >
-          {bannerSlides.map((slide, index) => (
-            <Link
-              key={slide.src}
-              href={slide.href}
-              aria-hidden={activeIndex !== index}
-              tabIndex={activeIndex === index ? undefined : -1}
-              className="relative block aspect-[653/494] min-w-full bg-surface focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-action-primary"
-            >
-              <Image
-                src={slide.src}
-                alt={t(slide.altKey)}
-                fill
-                priority={index === 0}
-                sizes="(max-width: 390px) 350px, 350px"
-                className="object-contain"
-              />
-            </Link>
-          ))}
+          {bannerSlides.map((slide, index) => {
+            const isInitialSlide = index === 0;
+
+            return (
+              <Link
+                key={slide.src}
+                href={slide.href}
+                aria-hidden={activeIndex !== index}
+                tabIndex={activeIndex === index ? undefined : -1}
+                className="relative block aspect-[653/494] min-w-full bg-surface focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-action-primary"
+              >
+                <Image
+                  src={slide.src}
+                  alt={t(slide.altKey)}
+                  fill
+                  loading={isInitialSlide ? "eager" : "lazy"}
+                  fetchPriority={isInitialSlide ? "high" : "auto"}
+                  sizes="(max-width: 448px) calc(100vw - 40px), 408px"
+                  quality={75}
+                  className="object-contain"
+                />
+              </Link>
+            );
+          })}
         </div>
 
         <button
@@ -125,7 +129,7 @@ export function HomeBannerCarousel() {
                   "h-[6px] rounded-full transition-all",
                   isActive
                     ? "w-[18px] bg-action-primary"
-                    : "w-[6px] bg-[#b8c0cc]",
+                    : "w-[6px] bg-border-strong",
                 )}
               />
             );

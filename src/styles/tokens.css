@@ -59,6 +59,8 @@
   --semantic-action-primary: var(--primitive-brand-magenta);
   --semantic-action-primary-hover: var(--primitive-brand-magenta-dark);
   --semantic-action-secondary: var(--primitive-brand-purple);
+  --semantic-toast-background: var(--primitive-brand-deep);
+  --semantic-toast-action-text: var(--primitive-brand-magenta-light);
 
   --semantic-success: var(--primitive-success);
   --semantic-success-soft: var(--primitive-success-soft);
@@ -100,6 +102,8 @@
   --semantic-action-primary: var(--primitive-brand-magenta);
   --semantic-action-primary-hover: var(--primitive-brand-magenta-dark);
   --semantic-action-secondary: var(--primitive-brand-purple);
+  --semantic-toast-background: var(--primitive-brand-deep);
+  --semantic-toast-action-text: var(--primitive-brand-magenta-light);
 
   --semantic-success: var(--primitive-success);
   --semantic-success-soft: var(--primitive-success-soft);
@@ -152,6 +156,8 @@
   --color-action-primary: var(--semantic-action-primary);
   --color-action-primary-hover: var(--semantic-action-primary-hover);
   --color-action-secondary: var(--semantic-action-secondary);
+  --color-toast-background: var(--semantic-toast-background);
+  --color-toast-action-text: var(--semantic-toast-action-text);
 
   --color-success: var(--semantic-success);
   --color-success-soft: var(--semantic-success-soft);

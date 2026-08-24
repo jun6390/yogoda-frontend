@@ -2,7 +2,10 @@ import type { InputHTMLAttributes, ReactNode } from "react";
 
 import { cn } from "@/lib/utils";
 
-interface SwitchProps extends Omit<InputHTMLAttributes<HTMLInputElement>, "type"> {
+interface SwitchProps extends Omit<
+  InputHTMLAttributes<HTMLInputElement>,
+  "type"
+> {
   label?: ReactNode;
 }
 

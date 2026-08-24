@@ -1,7 +1,5 @@
-import { getTranslations } from "next-intl/server";
+import { MyContent } from "@/components/my/MyContent";
 
-export default async function Page() {
-  const t = await getTranslations("Pages");
-
-  return <div>{t("my")}</div>;
+export default function MyPage() {
+  return <MyContent />;
 }

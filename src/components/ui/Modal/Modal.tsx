@@ -12,6 +12,8 @@ interface ModalProps extends HTMLAttributes<HTMLDivElement> {
   primaryLabel: ReactNode;
   secondaryLabel?: ReactNode;
   onClose?: ButtonHTMLAttributes<HTMLButtonElement>["onClick"];
+  onPrimaryClick?: ButtonHTMLAttributes<HTMLButtonElement>["onClick"];
+  onSecondaryClick?: ButtonHTMLAttributes<HTMLButtonElement>["onClick"];
 }
 
 const modalSparkles = "/figma-assets/icon-modal-sparkles.svg";
@@ -23,20 +25,24 @@ export function Modal({
   primaryLabel,
   secondaryLabel,
   onClose,
+  onPrimaryClick,
+  onSecondaryClick,
   className,
   ...props
 }: ModalProps) {
   const common = useTranslations("Common");
   const modal = useTranslations("Modal");
   const resolvedSecondaryLabel =
-    secondaryLabel === undefined ? modal("defaultSecondaryLabel") : secondaryLabel;
+    secondaryLabel === undefined
+      ? modal("defaultSecondaryLabel")
+      : secondaryLabel;
 
   return (
     <div
       role="dialog"
       aria-modal="true"
       className={cn(
-        "relative flex w-[350px] flex-col items-center rounded-2xl bg-surface p-2xl text-center shadow-md",
+        "relative flex w-[calc(100vw-40px)] max-w-[350px] flex-col items-center rounded-2xl bg-surface p-2xl text-center shadow-md",
         className,
       )}
       {...props}
@@ -59,10 +65,13 @@ export function Modal({
       <p className="whitespace-pre-line py-2xl font-sans text-body-14-regular text-text-secondary">
         {description}
       </p>
-      <Button className="h-[48px] w-full rounded-lg">{primaryLabel}</Button>
+      <Button className="h-[48px] w-full rounded-lg" onClick={onPrimaryClick}>
+        {primaryLabel}
+      </Button>
       <button
         type="button"
         className="mt-md font-sans text-label-14-bold text-text-secondary"
+        onClick={onSecondaryClick}
       >
         {resolvedSecondaryLabel}
       </button>
