@@ -719,5 +719,9 @@
       "primaryLabel": "Log in to continue",
       "secondaryLabel": "Later"
     }
+  },
+  "Splash": {
+    "logoAlt": "Yogoda",
+    "greeting": "Yogo will find the perfect plan for you"
   }
 }
