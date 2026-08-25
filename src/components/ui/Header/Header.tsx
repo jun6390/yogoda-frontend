@@ -11,12 +11,19 @@ import { cn } from "@/lib/utils";
 interface HeaderProps {
   className?: string;
   onMenuClick?: () => void;
+  onNotificationsClick?: () => void;
+  hasUnreadNotifications?: boolean;
 }
 
 const logoText = "Yogoda";
 const logoSrc = "/yogoda-logo.svg";
 
-export function Header({ className, onMenuClick }: HeaderProps) {
+export function Header({
+  className,
+  onMenuClick,
+  onNotificationsClick,
+  hasUnreadNotifications = false,
+}: HeaderProps) {
   const navigation = useTranslations("Navigation");
 
   return (
@@ -38,10 +45,13 @@ export function Header({ className, onMenuClick }: HeaderProps) {
         <button
           type="button"
           aria-label={navigation("notifications")}
+          onClick={onNotificationsClick}
           className="relative flex size-10 items-center justify-center text-icon-default focus-visible:outline-2 focus-visible:outline-action-primary"
         >
           <Bell aria-hidden="true" size={24} strokeWidth={1.8} />
-          <span className="absolute right-[7px] top-[6px] size-[7px] rounded-full bg-action-primary ring-2 ring-surface" />
+          {hasUnreadNotifications && (
+            <span className="absolute right-[7px] top-[6px] size-[7px] rounded-full bg-action-primary ring-2 ring-surface" />
+          )}
         </button>
 
         <button

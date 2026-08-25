@@ -62,42 +62,18 @@ export function CallbackHandler({ provider }: CallbackHandlerProps) {
       setAuth(accessToken, { userId, name, isNewUser, role, provider });
 
       // 비회원(게스트) 상태에서 나눈 대화가 있으면 방금 로그인한 회원 세션으로 이관함
-      // (요금제 추천 카드는 화면에서처럼 직전 AI 텍스트 메시지에 함께 실어서 보냄)
-      const guestHistory = useChatHistoryStore.getState();
-      const guestMessages: {
-        role: "user" | "admin";
-        content: string;
-        plans?: (typeof guestHistory.messages)[number]["plans"];
-      }[] = [];
+      // 서버가 게스트 세션도 실시간 저장해두므로, sessionId만 넘기면 됨
+      const guestSessionId = useChatHistoryStore.getState().sessionId;
 
-      guestHistory.messages.forEach((m) => {
-        if (m.type === "text" && m.text && m.id !== "welcome") {
-          guestMessages.push({
-            role: m.sender === "user" ? "user" : "admin",
-            content: m.text,
-          });
-          return;
-        }
-
-        if (m.type === "plans" && m.plans?.length) {
-          const lastMessage = guestMessages[guestMessages.length - 1];
-          if (lastMessage && lastMessage.role === "admin") {
-            lastMessage.plans = m.plans;
-          }
-        }
-      });
-
-      if (guestMessages.length > 0) {
+      if (guestSessionId) {
         try {
-          await importGuestChatSession({
-            messages: guestMessages,
-            collectedInfo: guestHistory.collectedInfo ?? undefined,
-            lastInteractionId: guestHistory.lastInteractionId ?? undefined,
-          });
+          // sessionId가 만료됐거나 찾을 수 없어도 서버는 예외 없이 { session: null }로
+          // 응답함(정상적인 실패 케이스). catch는 네트워크 에러 등 진짜 예외 상황 대비용
+          await importGuestChatSession({ sessionId: guestSessionId });
         } catch (err) {
           console.error("게스트 대화 내역 이관 실패:", err);
         } finally {
-          guestHistory.clearMessages();
+          useChatHistoryStore.getState().clearMessages();
         }
       }
 

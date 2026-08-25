@@ -256,6 +256,11 @@
     "openMenu": "Open menu",
     "closeMenu": "Close menu"
   },
+  "Notifications": {
+    "title": "Notifications",
+    "empty": "No notifications yet",
+    "close": "Close notifications"
+  },
   "Menu": {
     "title": "Menu",
     "language": "Language",
@@ -264,6 +269,7 @@
     "english": "English",
     "lightMode": "Light mode",
     "darkMode": "Dark mode",
+    "adminPage": "Admin page",
     "logout": "Log out",
     "loggingOut": "Logging out"
   },
@@ -976,6 +982,10 @@
       "description": "Next time you come back,\nyou'll start a new conversation.",
       "primaryLabel": "End chat",
       "secondaryLabel": "Cancel"
+    },
+    "voiceInput": {
+      "start": "Start voice input",
+      "stop": "Stop voice input"
     }
   },
   "Splash": {

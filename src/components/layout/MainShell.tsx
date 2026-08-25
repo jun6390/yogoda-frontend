@@ -6,13 +6,17 @@ import { useEffect, useState, useSyncExternalStore } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { Moon, Sun, X } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
+import NextLink from "next/link";
 
 import { AppLayout } from "./AppLayout";
 
 import { LogoutButton } from "@/components/auth/LogoutButton";
 import { BottomNavigation } from "@/components/ui/BottomNavigation/BottomNavigation";
 import { Header } from "@/components/ui/Header/Header";
+import { NotificationPanel } from "@/components/ui/NotificationPanel/NotificationPanel";
+import { useNotifications } from "@/hooks/useNotifications";
 import { usePathname, useRouter } from "@/i18n/navigation";
+import type { AppNotification } from "@/lib/api/notification";
 import { logout } from "@/lib/api/auth";
 import { cn } from "@/lib/utils";
 import { useTheme } from "@/providers/theme-provider";
@@ -52,6 +56,9 @@ export function MainShell({ children }: MainShellProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(
     shouldKeepMenuOpenAfterLocaleChange,
   );
+  const [isNotificationPanelOpen, setIsNotificationPanelOpen] = useState(false);
+
+  const { notifications, unreadCount, markAsRead } = useNotifications();
 
   const { resolvedTheme, setTheme } = useTheme();
   const menu = useTranslations("Menu");
@@ -62,6 +69,7 @@ export function MainShell({ children }: MainShellProps) {
   const router = useRouter();
 
   const accessToken = useAuthStore((state) => state.accessToken);
+  const isAdmin = useAuthStore((state) => state.user?.role === "admin");
   const clearAuth = useAuthStore((state) => state.clearAuth);
 
   const isDark = mounted && resolvedTheme === "dark";
@@ -110,11 +118,44 @@ export function MainShell({ children }: MainShellProps) {
     },
   });
 
+  const handleNotificationClick = async (notification: AppNotification) => {
+    /*
+     * 읽음 처리가 서버에 반영되는 걸 먼저 기다린 뒤 이동해야, 페이지 전환으로
+     * 컴포넌트가 언마운트되며 읽음 처리 요청이 씹히는 경쟁 상태를 막을 수 있음.
+     * 이미 읽은 알림인지 여부는 markAsRead 내부에서 판단하므로 여기서 다시
+     * 검사하지 않음
+     */
+    await markAsRead(notification.id);
+
+    setIsNotificationPanelOpen(false);
+
+    if (notification.link) {
+      router.push(notification.link);
+    }
+  };
+
   return (
     <>
       <AppLayout
-        header={<Header onMenuClick={() => setIsMenuOpen(true)} />}
+        header={
+          <Header
+            onMenuClick={() => setIsMenuOpen(true)}
+            onNotificationsClick={() =>
+              setIsNotificationPanelOpen((prev) => !prev)
+            }
+            hasUnreadNotifications={unreadCount > 0}
+          />
+        }
         bottomNavigation={<BottomNavigation />}
+        overlay={
+          isNotificationPanelOpen && (
+            <NotificationPanel
+              notifications={notifications}
+              onClose={() => setIsNotificationPanelOpen(false)}
+              onNotificationClick={handleNotificationClick}
+            />
+          )
+        }
       >
         {children}
       </AppLayout>
@@ -234,15 +275,31 @@ export function MainShell({ children }: MainShellProps) {
               </button>
             </section>
 
-            {accessToken && (
-              <LogoutButton
-                label={menu("logout")}
-                loadingLabel={menu("loggingOut")}
-                loading={isPendingLogout}
-                onClick={() => requestLogout()}
-                className="mt-auto"
-              />
-            )}
+            {/* 설정(언어/테마)이 아니라 "이 화면을 벗어나는 액션"이라 관리자 페이지/로그아웃을 아래쪽에 묶어둠 */}
+            <div className="mt-auto flex flex-col gap-md">
+              {isAdmin && (
+                // 어드민은 [locale] 라우팅 밖의 별도 Root Layout이라 next-intl Link가 아니라 next/link로 이동함
+                <NextLink
+                  href="/admin"
+                  className={cn(
+                    "flex h-[48px] w-full items-center justify-center rounded-lg bg-surface-subtle",
+                    "font-sans text-label-14-bold text-text-primary transition-colors",
+                    "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-action-primary",
+                  )}
+                >
+                  {menu("adminPage")}
+                </NextLink>
+              )}
+
+              {accessToken && (
+                <LogoutButton
+                  label={menu("logout")}
+                  loadingLabel={menu("loggingOut")}
+                  loading={isPendingLogout}
+                  onClick={() => requestLogout()}
+                />
+              )}
+            </div>
           </div>
         </aside>
       </div>

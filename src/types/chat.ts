@@ -18,6 +18,3 @@ export interface ChatMessage {
   textKey?: string;
   plans?: ChatPlanCard[];
 }
-
-// AI가 대화로 파악한 정보 (반복 질문을 막기 위해 매 요청마다 그대로 다시 실어 보냄)
-export type CollectedInfo = Record<string, string>;

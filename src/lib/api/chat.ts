@@ -1,10 +1,10 @@
 import { apiFetch } from "./client";
 
-import type { ChatPlanCard, CollectedInfo } from "@/types/chat";
+import type { ChatPlanCard } from "@/types/chat";
 
 export interface ChatSessionMessage {
   id: string;
-  role: "user" | "admin";
+  role: "user" | "ai";
   content: string;
   // AI가 요금제를 추천한 메시지에만 존재함 (재접속 시 카드를 그대로 복원하기 위함)
   plans?: ChatPlanCard[];
@@ -31,13 +31,9 @@ export async function getLatestChatSession(): Promise<LatestSessionResponse> {
 }
 
 export interface ImportGuestChatPayload {
-  messages: {
-    role: "user" | "admin";
-    content: string;
-    plans?: ChatPlanCard[];
-  }[];
-  collectedInfo?: CollectedInfo;
-  lastInteractionId?: string;
+  // 서버가 게스트 소켓 연결 시 발급한 세션 id. 서버가 이미 실시간으로 저장해둔
+  // 해당 세션의 대화 내역을 그대로 로그인한 회원 계정으로 이관함
+  sessionId: string;
 }
 
 export interface ImportGuestChatResponse {
@@ -45,7 +41,7 @@ export interface ImportGuestChatResponse {
 }
 
 /**
- * 비회원(게스트) 상태에서 로컬 스토리지에 쌓인 대화 내역을 로그인 직후 회원 세션으로 이관합니다.
+ * 로그인 직후, 로그인 전(게스트) 세션에 실시간 저장돼 있던 대화 내역을 회원 세션으로 이관합니다.
  */
 export async function importGuestChatSession(
   payload: ImportGuestChatPayload,
