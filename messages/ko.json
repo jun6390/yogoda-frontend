@@ -256,6 +256,11 @@
     "openMenu": "메뉴 열기",
     "closeMenu": "메뉴 닫기"
   },
+  "Notifications": {
+    "title": "알림",
+    "empty": "아직 알림이 없어요",
+    "close": "알림 닫기"
+  },
   "Menu": {
     "title": "메뉴",
     "language": "언어",

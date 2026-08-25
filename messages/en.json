@@ -256,6 +256,11 @@
     "openMenu": "Open menu",
     "closeMenu": "Close menu"
   },
+  "Notifications": {
+    "title": "Notifications",
+    "empty": "No notifications yet",
+    "close": "Close notifications"
+  },
   "Menu": {
     "title": "Menu",
     "language": "Language",
