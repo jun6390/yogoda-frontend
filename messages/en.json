@@ -256,6 +256,11 @@
     "openMenu": "Open menu",
     "closeMenu": "Close menu"
   },
+  "Notifications": {
+    "title": "Notifications",
+    "empty": "No notifications yet",
+    "close": "Close notifications"
+  },
   "Menu": {
     "title": "Menu",
     "language": "Language",
@@ -977,6 +982,10 @@
       "description": "Next time you come back,\nyou'll start a new conversation.",
       "primaryLabel": "End chat",
       "secondaryLabel": "Cancel"
+    },
+    "voiceInput": {
+      "start": "Start voice input",
+      "stop": "Stop voice input"
     }
   },
   "Splash": {

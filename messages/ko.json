@@ -256,6 +256,11 @@
     "openMenu": "메뉴 열기",
     "closeMenu": "메뉴 닫기"
   },
+  "Notifications": {
+    "title": "알림",
+    "empty": "아직 알림이 없어요",
+    "close": "알림 닫기"
+  },
   "Menu": {
     "title": "메뉴",
     "language": "언어",
@@ -977,6 +982,10 @@
       "description": "다음에 다시 들어오면\n새로운 대화로 시작하게 돼요.",
       "primaryLabel": "채팅 끝내기",
       "secondaryLabel": "취소"
+    },
+    "voiceInput": {
+      "start": "음성으로 입력하기",
+      "stop": "음성 입력 중지하기"
     }
   },
   "Splash": {

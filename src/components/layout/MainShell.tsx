@@ -13,7 +13,10 @@ import { AppLayout } from "./AppLayout";
 import { LogoutButton } from "@/components/auth/LogoutButton";
 import { BottomNavigation } from "@/components/ui/BottomNavigation/BottomNavigation";
 import { Header } from "@/components/ui/Header/Header";
+import { NotificationPanel } from "@/components/ui/NotificationPanel/NotificationPanel";
+import { useNotifications } from "@/hooks/useNotifications";
 import { usePathname, useRouter } from "@/i18n/navigation";
+import type { AppNotification } from "@/lib/api/notification";
 import { logout } from "@/lib/api/auth";
 import { cn } from "@/lib/utils";
 import { useTheme } from "@/providers/theme-provider";
@@ -53,6 +56,9 @@ export function MainShell({ children }: MainShellProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(
     shouldKeepMenuOpenAfterLocaleChange,
   );
+  const [isNotificationPanelOpen, setIsNotificationPanelOpen] = useState(false);
+
+  const { notifications, unreadCount, markAsRead } = useNotifications();
 
   const { resolvedTheme, setTheme } = useTheme();
   const menu = useTranslations("Menu");
@@ -112,11 +118,44 @@ export function MainShell({ children }: MainShellProps) {
     },
   });
 
+  const handleNotificationClick = async (notification: AppNotification) => {
+    /*
+     * 읽음 처리가 서버에 반영되는 걸 먼저 기다린 뒤 이동해야, 페이지 전환으로
+     * 컴포넌트가 언마운트되며 읽음 처리 요청이 씹히는 경쟁 상태를 막을 수 있음.
+     * 이미 읽은 알림인지 여부는 markAsRead 내부에서 판단하므로 여기서 다시
+     * 검사하지 않음
+     */
+    await markAsRead(notification.id);
+
+    setIsNotificationPanelOpen(false);
+
+    if (notification.link) {
+      router.push(notification.link);
+    }
+  };
+
   return (
     <>
       <AppLayout
-        header={<Header onMenuClick={() => setIsMenuOpen(true)} />}
+        header={
+          <Header
+            onMenuClick={() => setIsMenuOpen(true)}
+            onNotificationsClick={() =>
+              setIsNotificationPanelOpen((prev) => !prev)
+            }
+            hasUnreadNotifications={unreadCount > 0}
+          />
+        }
         bottomNavigation={<BottomNavigation />}
+        overlay={
+          isNotificationPanelOpen && (
+            <NotificationPanel
+              notifications={notifications}
+              onClose={() => setIsNotificationPanelOpen(false)}
+              onNotificationClick={handleNotificationClick}
+            />
+          )
+        }
       >
         {children}
       </AppLayout>
