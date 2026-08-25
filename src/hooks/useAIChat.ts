@@ -16,7 +16,7 @@ import {
   useChatHistoryStore,
 } from "@/stores/chatHistoryStore";
 import { usePersonaStore } from "@/stores/personaStore";
-import type { ChatMessage, CollectedInfo } from "@/types/chat";
+import type { ChatMessage } from "@/types/chat";
 
 import { useTypewriter } from "./useTypewriter";
 
@@ -54,9 +54,8 @@ function useAuthHydrated() {
 /**
  * AI 상담 채팅의 상태와 소켓 통신을 담당하는 훅.
  * - 로그인 여부에 따라 회원은 DB, 비회원은 로컬 스토리지에서 이전 대화를 복원함
- * - Gemini Interactions API는 interactionId만 이어서 보내면 서버가 대화 맥락을 기억하므로,
- *   프론트에서 대화 기록을 직접 조립해서 보낼 필요가 없음
- * - collectedInfo(대화로 파악한 정보)를 매 응답마다 갱신해서 반복 질문을 방지하는 이중 안전장치로 사용함
+ * - sessionId만 소켓 연결 시 auth로 실어 보내면 서버가 그 세션에 연결된 대화 맥락
+ *   (Gemini interaction, 파악된 정보 등)을 알아서 이어가므로, 프론트는 sessionId 하나만 들고 있으면 됨
  */
 export function useAIChat() {
   const accessToken = useAuthStore((state) => state.accessToken);
@@ -76,12 +75,9 @@ export function useAIChat() {
   const [quickReplies, setQuickReplies] = useState<string[]>([]);
 
   const socketRef = useRef<Socket | null>(null);
-  // 회원의 경우 대화가 이어질 채팅 세션 id (최초 메시지 전송 시 서버가 발급, 화면 표시/기록용)
+  // 대화가 이어질 채팅 세션 id. 소켓 연결 시 auth로 실어 보내면 서버가 같은 세션으로 이어감
+  // (회원은 최초 접속 시 DB에서 복원, 게스트는 localStorage에서 복원)
   const sessionIdRef = useRef<string | null>(null);
-  // Gemini Interactions API가 서버 쪽에서 관리하는 대화 맥락을 이어가기 위한 토큰
-  const interactionIdRef = useRef<string | null>(null);
-  // 지금까지 대화로 파악된 정보 (모델이 맥락을 놓치는 경우를 대비한 이중 안전장치)
-  const collectedInfoRef = useRef<CollectedInfo | null>(null);
   const isAuthHydrated = useAuthHydrated();
 
   const appendChars = useCallback((messageId: string, chars: string) => {
@@ -101,20 +97,14 @@ export function useAIChat() {
     async function restoreHistory() {
       if (isLoggedIn) {
         try {
-          const {
-            session,
-            messages: dbMessages,
-            collectedInfo,
-            previousInteractionId,
-          } = await getLatestChatSession();
+          const { session, messages: dbMessages } =
+            await getLatestChatSession();
 
           // 종료된 세션이면 복원하지 않고 웰컴 메시지로 새로 시작함
           // (sessionIdRef를 비워둬야 다음 메시지 전송 시 서버가 새 세션을 발급함)
           if (!session || session.endedAt || dbMessages.length === 0) return;
 
           sessionIdRef.current = session.id;
-          collectedInfoRef.current = collectedInfo;
-          interactionIdRef.current = previousInteractionId;
           setMessages(
             dbMessages.flatMap((m) => {
               const textMsg: ChatMessage = {
@@ -146,8 +136,7 @@ export function useAIChat() {
       }
 
       const stored = useChatHistoryStore.getState();
-      collectedInfoRef.current = stored.collectedInfo;
-      interactionIdRef.current = stored.lastInteractionId;
+      sessionIdRef.current = stored.sessionId;
       setGuestChatCount(stored.guestChatCount);
       if (stored.messages.length > 0) {
         setMessages(stored.messages);
@@ -182,14 +171,23 @@ export function useAIChat() {
       const apiBase =
         process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000";
 
-      const socket = io(`${apiBase}/chat`, { transports: ["websocket"] });
+      const { accessToken: token } = useAuthStore.getState();
+
+      // token/sessionId는 연결 시점에 한 번만 인증 정보로 실어 보냄
+      // (collectedInfo/interactionId는 서버가 세션에 연결해 직접 관리하므로 더 이상 프론트가 들고 있지 않음)
+      const socket = io(`${apiBase}/chat`, {
+        transports: ["websocket"],
+        auth: {
+          token: token ?? undefined,
+          sessionId: sessionIdRef.current ?? undefined,
+        },
+      });
       socketRef.current = socket;
 
       socket.on("connect", () => {
         // 비로그인 사용자는 설문 결과가 로컬 스토리지(zustand persist)에만 있으므로
         // 매 요청마다 함께 실어 보내서 AI가 이미 아는 정보를 다시 묻지 않게 함
         const persona = usePersonaStore.getState();
-        const { accessToken: token } = useAuthStore.getState();
 
         socket.emit("message", {
           message: text,
@@ -198,35 +196,19 @@ export function useAIChat() {
             analysisResult: persona.analysisResult,
             isSkipped: persona.isSkipped,
           },
-          collectedInfo: collectedInfoRef.current ?? undefined,
-          previousInteractionId: interactionIdRef.current ?? undefined,
-          token: token ?? undefined,
-          sessionId: sessionIdRef.current ?? undefined,
         });
       });
 
-      socket.on("session", (data: { sessionId: string }) => {
-        // 회원의 첫 메시지 전송 시 서버가 새로 발급한 세션 id를 기억해둠
-        sessionIdRef.current = data.sessionId;
-      });
-
-      socket.on("interaction", (data: { interactionId: string }) => {
-        // 다음 턴에도 대화가 이어지도록, 이번 응답의 interaction id를 저장해둠
-        interactionIdRef.current = data.interactionId;
-        if (!isLoggedIn) {
-          useChatHistoryStore
-            .getState()
-            .setLastInteractionId(data.interactionId);
-        }
-      });
-
-      socket.on("info", (data: CollectedInfo) => {
-        // AI가 갱신한 "지금까지 파악된 정보"를 저장해뒀다가 다음 요청에 그대로 다시 실어 보냄
-        collectedInfoRef.current = data;
-        if (!isLoggedIn) {
-          useChatHistoryStore.getState().setCollectedInfo(data);
-        }
-      });
+      socket.on(
+        "session_created",
+        (data: { sessionId: string; promptVersion: string }) => {
+          // 이 세션 id를 다음 연결의 auth로 그대로 실어 보내면 서버가 같은 대화로 이어감
+          sessionIdRef.current = data.sessionId;
+          if (!isLoggedIn) {
+            useChatHistoryStore.getState().setSessionId(data.sessionId);
+          }
+        },
+      );
 
       socket.on("chunk", (data: string) => {
         setIsTyping(false);
@@ -344,13 +326,11 @@ export function useAIChat() {
     }
 
     sessionIdRef.current = null;
-    interactionIdRef.current = null;
-    collectedInfoRef.current = null;
     setMessages([WELCOME_MESSAGE]);
     setQuickReplies([]);
   }, [isLoggedIn]);
 
-  // interactionIdRef는 마지막으로 "성공"한 응답 기준으로만 갱신되므로, 실패한 턴을 다시 보내도
+  // sessionIdRef는 마지막으로 "성공"한 응답 기준으로만 갱신되므로, 실패한 턴을 다시 보내도
   // 자동으로 그 직전까지의 대화에 이어붙게 됨 (별도로 히스토리를 잘라낼 필요 없음)
   const retryMessage = useCallback(
     (failedAiMsgId: string) => {
