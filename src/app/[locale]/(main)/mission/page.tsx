@@ -1,7 +1,5 @@
-import { getTranslations } from "next-intl/server";
+import { AttendanceContent } from "@/components/missions/AttendanceContent";
 
-export default async function Page() {
-  const t = await getTranslations("Pages");
-
-  return <div>{t("mission")}</div>;
+export default function MissionPage() {
+  return <AttendanceContent />;
 }

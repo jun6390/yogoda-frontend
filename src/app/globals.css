@@ -42,3 +42,50 @@ button:disabled {
 *::-webkit-scrollbar {
   display: none;
 }
+
+/* 404 페이지 캐릭터의 떠다니는 효과용 keyframes */
+@keyframes float404 {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
+}
+
+/* 스플래시 캐릭터가 통통 튀며 등장하는 효과용 keyframes */
+@keyframes splashPop {
+  0% {
+    opacity: 0;
+    transform: scale(0.85) translateY(12px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+/* 스플래시 로고/문구가 아래에서 살짝 떠오르며 나타나는 효과용 keyframes */
+@keyframes splashFadeUp {
+  0% {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* AI 응답 대기 문구의 글자가 지렁이처럼 순차적으로 물결치는 효과용 keyframes */
+@keyframes typingMessageWave {
+  0%,
+  60%,
+  100% {
+    transform: translateY(0);
+  }
+  30% {
+    transform: translateY(-1.5px);
+  }
+}

@@ -274,6 +274,181 @@
     "mission": "Mission",
     "my": "MY"
   },
+  "Benefits": {
+    "tabs": {
+      "label": "Benefits menu",
+      "all": "All",
+      "calendar": "Schedule",
+      "nearby": "Nearby",
+      "saved": "Saved"
+    },
+    "headline": "Benefits available to you today",
+    "description": "Check benefits that match your plan and membership.",
+    "eligibleSummary": "You can use {count} benefits with your current plan.",
+    "filterLabel": "Benefit categories",
+    "filters": {
+      "all": "All",
+      "membership": "Membership",
+      "partner": "Partners",
+      "discount": "Discounts"
+    },
+    "popular": "Recommended benefits",
+    "available": "Available",
+    "unavailable": "Check terms",
+    "loginRequired": "Please log in to continue.",
+    "loginDescription": "Log in to see benefits available with your plan.",
+    "loadError": "Unable to load benefits.",
+    "loadErrorDescription": "Please try again in a moment.",
+    "retry": "Try again",
+    "emptyTitle": "No benefits to show.",
+    "emptyDescription": "Try another category.",
+    "nearbyTitle": "Nearby hotspots",
+    "nearbyDescription": "Find nearby partner benefits based on your location.",
+    "benefit": "Benefit",
+    "value": "Benefit",
+    "eligibility": "Eligibility",
+    "usageLimit": "Usage limit",
+    "close": "Close",
+    "save": "Save",
+    "removeSaved": "Remove saved",
+    "savedToast": "Benefit saved.",
+    "removedToast": "Benefit removed from saved."
+  },
+  "BenefitCalendar": {
+    "title": "Benefit schedule",
+    "description": "Keep track of coupon expiration dates.",
+    "filterLabel": "Benefit schedule categories",
+    "filters": {
+      "all": "All",
+      "membership": "Membership",
+      "food": "Food & cafe",
+      "culture": "Culture",
+      "shopping": "Shopping"
+    },
+    "monthEvents": "This month",
+    "selected": "Benefits on {date}",
+    "selectedDescription": "View benefits available on this date.",
+    "close": "Close",
+    "uplusMembership": "U+ Membership",
+    "save": "Save",
+    "removeSaved": "Remove saved",
+    "viewDetail": "View benefit details",
+    "savedToast": "Benefit saved.",
+    "removedToast": "Benefit removed from saved.",
+    "opens": "Benefit opens",
+    "expires": "Coupon expires",
+    "empty": "No benefits scheduled.",
+    "emptyDescription": "Coupon expiration dates will appear here.",
+    "error": "Unable to load the schedule.",
+    "errorDescription": "Please try again in a moment.",
+    "retry": "Try again"
+  },
+  "NearbyBenefits": {
+    "title": "Nearby benefits",
+    "description": "Find benefits available at nearby partner locations.",
+    "useLocation": "Use my location",
+    "locationApplied": "Showing your current location",
+    "locationError": "Location is unavailable. Check your browser permissions.",
+    "save": "Save",
+    "removeSaved": "Remove saved",
+    "savedToast": "Benefit saved.",
+    "removedToast": "Benefit removed from saved.",
+    "distance": "{distance} km",
+    "categories": {
+      "all": "All",
+      "food": "Food",
+      "culture": "Culture",
+      "shopping": "Shopping"
+    },
+    "views": { "map": "Map", "list": "List" },
+    "close": "Close",
+    "loadError": "Unable to load nearby benefits.",
+    "loadErrorDescription": "Please try again in a moment.",
+    "retry": "Try again",
+    "empty": "No nearby benefits are available.",
+    "emptyDescription": "Try another location or check again later.",
+    "mapError": "Unable to load the map.",
+    "mapErrorDescription": "Check the map API settings and registered service URL."
+  },
+  "SavedBenefits": {
+    "title": "Saved benefits",
+    "description": "Keep your favorite benefits in one place.",
+    "remove": "Remove saved",
+    "removeTitle": "Remove this saved benefit?",
+    "removeDescription": "Remove {title} from your saved benefits.",
+    "confirmRemove": "Remove",
+    "cancel": "Cancel",
+    "removedToast": "Benefit removed from saved.",
+    "empty": "No saved benefits.",
+    "emptyDescription": "Save a benefit from the full list.",
+    "error": "Unable to load saved benefits.",
+    "errorDescription": "Please try again in a moment.",
+    "retry": "Try again"
+  },
+  "Missions": {
+    "tabs": {
+      "label": "Mission menu",
+      "attendance": "Attendance",
+      "progress": "Progress",
+      "completed": "Completed"
+    },
+    "title": "Missions",
+    "headline": "Earn more points with Yogoda today",
+    "description": "Complete missions and collect reward points.",
+    "inProgress": "In progress",
+    "completed": "To claim",
+    "claimed": "Complete",
+    "filterLabel": "Mission status",
+    "progressSummary": "My mission progress",
+    "progressCount": "{active} active · {pending} rewards to claim",
+    "filters": { "active": "In progress", "done": "Completed" },
+    "status": {
+      "available": "Available",
+      "in_progress": "In progress",
+      "completed": "Claim reward",
+      "claimed": "Claimed"
+    },
+    "actions": {
+      "available": "Join mission",
+      "in_progress": "Mark complete",
+      "completed": "Claim points"
+    },
+    "requirement": "Requirement",
+    "reward": "Reward",
+    "rewardClaimed": "Reward claimed",
+    "pointsClaimedToast": "You received {points}P",
+    "waitingForAction": "This mission completes automatically when you meet its requirement",
+    "close": "Close",
+    "loginRequired": "Please log in to continue.",
+    "loginDescription": "Log in to join missions and earn points.",
+    "loadError": "Unable to load missions.",
+    "loadErrorDescription": "Please try again in a moment.",
+    "retry": "Try again",
+    "empty": {
+      "active": {
+        "title": "No missions available.",
+        "description": "We will let you know when new missions arrive."
+      },
+      "done": {
+        "title": "No completed missions.",
+        "description": "Join a mission and start earning points."
+      }
+    }
+  },
+  "Attendance": {
+    "title": "Today's attendance",
+    "description": "Check in daily and earn points.",
+    "checkTitle": "You have not checked in today",
+    "checkedTitle": "Today's check-in is complete",
+    "reward": "Earn {points}P for checking in",
+    "streak": "{count}-day streak",
+    "checkIn": "Check in",
+    "checked": "Checked in today",
+    "monthly": "Checked in {count} days this month",
+    "error": "Unable to load attendance.",
+    "errorDescription": "Please try again in a moment.",
+    "retry": "Try again"
+  },
   "My": {
     "defaultUserName": "User",
     "greeting": "Hello, {name}",
@@ -304,12 +479,149 @@
     "membershipPending": "Checking tier",
     "membershipUnavailable": "Available after joining",
     "couponWallet": "Coupons",
+    "viewCoupons": "View coupons",
     "comingSoon": "Coming soon",
     "manageBenefits": "Manage benefits",
     "activeBenefitCount": "{count} selected",
     "stores": "Direct stores",
+    "findStores": "Find nearby stores",
     "securityAccount": "Security/account",
     "loginPassword": "Account · Log out"
+  },
+  "Stores": {
+    "title": "Direct stores",
+    "detailTitle": "Store details",
+    "back": "Go back",
+    "headline": "Find a nearby U+ direct store",
+    "description": "Check available services and opening hours before visiting.",
+    "searchLabel": "Search by store name or address",
+    "searchPlaceholder": "Enter a store name or address",
+    "allRegions": "All regions",
+    "regionFilterLabel": "Select region",
+    "serviceFilterLabel": "Select service",
+    "nearbySort": "Sort by distance from me",
+    "locationApplied": "Sorted by nearest",
+    "locationError": "Location is unavailable. Check your browser permissions.",
+    "resultCount": "{count} direct stores",
+    "views": { "map": "Map", "list": "List" },
+    "mapError": "Unable to load the map.",
+    "mapErrorDescription": "Check the map API settings and registered service URL.",
+    "distance": "{distance} km",
+    "weekdayHours": "Weekdays {hours}",
+    "loadError": "Unable to load stores.",
+    "detailError": "Unable to load store details.",
+    "loadErrorDescription": "Please try again in a moment.",
+    "retry": "Try again",
+    "emptyTitle": "No stores match your filters.",
+    "emptyDescription": "Try changing the search or filters.",
+    "availableServices": "Available services",
+    "weekday": "Weekdays",
+    "saturday": "Saturday",
+    "sunday": "Sunday",
+    "contactStore": "Contact store",
+    "call": "Call",
+    "phoneUnavailable": "No phone number",
+    "directions": "Directions",
+    "hoursNotice": "Services and opening hours may vary by store.",
+    "services": {
+      "all": "All services",
+      "mobile": "Mobile",
+      "internet": "Internet/IPTV",
+      "payment": "Bill payment",
+      "support": "Account support",
+      "data_transfer": "Data transfer"
+    }
+  },
+  "MyCoupons": {
+    "title": "Coupons",
+    "back": "Back to MY",
+    "coupon": "Coupon",
+    "availableCoupons": "Available coupons",
+    "couponCount": "{count}",
+    "expiringCount": "{count} expiring within 7 days",
+    "filterLabel": "Coupon status",
+    "filters": {
+      "available": "Available",
+      "expiring": "Expiring",
+      "used": "Used",
+      "expired": "Expired"
+    },
+    "status": {
+      "available": "Available",
+      "expiring": "Expiring",
+      "used": "Used",
+      "expired": "Expired"
+    },
+    "empty": {
+      "available": {
+        "title": "No available coupons",
+        "description": "Newly issued benefits will appear here."
+      },
+      "expiring": {
+        "title": "No coupons expiring soon",
+        "description": "Coupons expiring within seven days will appear here."
+      },
+      "used": {
+        "title": "No used coupons",
+        "description": "Your coupon usage history will appear here."
+      },
+      "expired": {
+        "title": "No expired coupons",
+        "description": "Coupons past their validity period will appear here."
+      }
+    },
+    "loginRequired": "Sign in required",
+    "loginRequiredDescription": "Sign in to view your coupons.",
+    "login": "Sign in",
+    "loadError": "Unable to load your coupons.",
+    "loadErrorDescription": "Please try again in a moment.",
+    "retry": "Try again",
+    "expiresAt": "Valid until {date}",
+    "usedAt": "Used {date}",
+    "close": "Close coupon details",
+    "showBarcode": "Show this barcode to a store employee.",
+    "benefit": "Benefit",
+    "validUntil": "Valid until",
+    "usageDate": "Used at",
+    "useCoupon": "Use coupon",
+    "useConfirmTitle": "Use this coupon?",
+    "useConfirmDescription": "This cannot be undone. Continue only after a store employee confirms it.",
+    "confirmUse": "Mark as used",
+    "cancel": "Cancel"
+  },
+  "UsageReport": {
+    "title": "Usage report",
+    "back": "Back to home",
+    "description": "Review your recent usage patterns at a glance.",
+    "monthlyData": "Data this month",
+    "gigabytes": "{amount}GB",
+    "usageRate": "{rate}% used",
+    "remainingData": "{amount}GB remaining",
+    "recentUsage": "Recent 3-month usage",
+    "averageUsage": "3-month average {amount}GB",
+    "summary": "Monthly usage summary",
+    "data": "Data",
+    "calls": "Calls",
+    "minutes": "{amount} min",
+    "subscriptions": "Subscriptions",
+    "subscriptionsCount": "{count} active",
+    "estimatedBill": "Estimated monthly bill",
+    "basedOnCurrentPlan": "Based on your current plan",
+    "won": "KRW {amount}",
+    "aiAnalysis": "U+ AI analysis",
+    "insightTitle": "You used an average of {amount}GB over 3 months.",
+    "insightDescription": "Your usage stays comfortably within the current allowance, so a less expensive plan with a similar data allowance is unlikely to fall short.",
+    "potentialSavings": "Save KRW {amount}/month",
+    "sourcesTitle": "Information used for AI recommendations",
+    "sources": {
+      "recentUsage": "Recent 3-month data usage",
+      "monthlyFee": "Current monthly bill",
+      "ottPattern": "OTT usage patterns",
+      "interests": "Selected interests"
+    },
+    "sourcesDescription": "This information is used only for personalized plan recommendations.",
+    "viewRecommendations": "View AI recommendations",
+    "askAi": "Ask AI for details"
   },
   "MyPlan": {
     "title": "My plan",
@@ -433,6 +745,10 @@
     "couponTitle": "Available coupons",
     "couponCount": "3",
     "couponDescription": "1 expires this month",
+    "couponChecking": "Checking",
+    "couponCheckingDescription": "Loading your coupon information",
+    "couponCheckRequired": "Check required",
+    "couponLoadError": "Please check your coupon wallet again",
     "noPlanCouponCount": "0",
     "noPlanCouponDescription": "Available after joining",
     "todoTitle": "To-do today",
@@ -454,6 +770,7 @@
     "quickConsulting": "Plan chat",
     "membershipTitle": "Membership",
     "membershipGrade": "VIP membership",
+    "membershipGradeUnknown": "Checking tier",
     "membershipDescription": "Use your barcode and coupon box right away",
     "membershipAction": "Barcode",
     "noPlanMembershipGrade": "Membership pending",
@@ -482,7 +799,6 @@
     "discountAmount": "Discount ₩{amount}/month",
     "selectedBenefitAmount": "Value of my selected benefits",
     "benefitValueUnknown": "Value unavailable",
-
     "back": "Go back",
     "loading": "Loading plan information.",
     "error": "Unable to load plan information.",
@@ -493,21 +809,10 @@
     "monthlyValue": "Worth ₩{amount}/month",
     "joining": "Joining...",
     "joinError": "An error occurred while joining the plan.",
-    "joinSuccess": {
-      "title": "Plan activated!",
-      "description": "You've successfully joined the {planName} plan.",
-      "confirm": "OK"
-    },
     "changePlan": "Change plan",
     "currentPlan": "Your current plan",
     "changing": "Changing...",
     "changeError": "An error occurred while changing your plan.",
-    "changeSuccess": {
-      "title": "Plan changed!",
-      "description": "Your plan has been changed to {planName}.",
-      "confirm": "OK"
-    },
-
     "unlimited": "Unlimited",
     "data": "Data",
     "voice": "Calls",
@@ -515,19 +820,16 @@
     "tethering": "Tethering & sharing",
     "additionalVoice": "Additional calls",
     "familyData": "Family data",
-
     "goToBenefits": "Ready to choose your benefits?",
     "selectCount": "Select {count}",
     "vipInstruction": "Use this benefit in U+one.",
     "addonInstruction": "Apply separately in U+one.",
-
     "selectedBenefits": "Selected benefits",
     "estimatedPayment": "Estimated monthly payment",
     "join": "Join plan",
     "currentPlanButton": "Current plan",
     "checkingCurrentPlan": "Checking your plan",
     "joinFailed": "Unable to join this plan.",
-
     "sections": {
       "plus": "Fill your plan with the benefits you want",
       "premium": "Time to choose your special benefit",
@@ -535,7 +837,6 @@
       "couponInfo": "Nerget-only benefits",
       "membership": "Benefits included with Nerget"
     },
-
     "steps": {
       "plusBenefit": "Plus Benefits",
       "samsungDevice": "Samsung Devices",
@@ -548,7 +849,6 @@
       "addonBenefit": "Additional Benefits",
       "promotion": "Promotional Benefits"
     },
-
     "exitModal": {
       "title": "Go back to the previous page?",
       "description": "Your selected benefits will be reset.",
@@ -557,13 +857,55 @@
     }
   },
   "NotFound": {
-    "label": "404",
+    "label": "404 ERROR",
     "title": "Page not found",
-    "description": "The address may have changed or this screen is no longer available.",
+    "description": "Please tap the button below to go back home",
     "homeAction": "Go home"
+  },
+  "PlanJoinConfirm": {
+    "loading": "Loading your subscription details.",
+    "back": "Go back",
+    "header": "Plan Subscription",
+    "title": "Please review your\nsubscription details",
+    "pendingPlanLabel": "Plan to subscribe",
+    "wonUnit": " KRW",
+    "perMonth": "/ month",
+    "conditionsLabel": "Selected benefits & conditions",
+    "estimatedPayment": "Estimated monthly payment",
+    "savingsPreview": "₩{monthly}/month less · ₩{yearly}/year estimated savings",
+    "submitting": "Processing your subscription...",
+    "submit": "Complete subscription",
+    "joinError": "Couldn't join the plan. Please try again.",
+    "changeError": "Couldn't change the plan. Please try again."
+  },
+  "PlanSuccess": {
+    "loading": "Loading your plan result.",
+    "error": "Couldn't load your plan result.",
+    "empty": "You haven't joined a plan yet.",
+    "title": "You're all set!",
+    "description": "Your new plan applies as soon as activation is complete.\nYogo's AI will keep tracking your benefits for you.",
+    "savingsHeading": "{name}'s estimated monthly savings",
+    "savingsHeadingNoName": "Your estimated monthly savings",
+    "monthlySavings": "₩{amount}/month",
+    "yearlySavings": "That's ₩{amount} saved over a year.",
+    "firstJoinTitle": "Welcome to U+!",
+    "firstJoinDescription": "Yogo will keep finding the perks that fit you best.",
+    "newPlanSummaryLabel": "Your new plan",
+    "selectedBenefitsLabel": "Selected benefits",
+    "wonPerMonth": " KRW/month",
+    "summaryDivider": "·",
+    "detailNotice": "You can check the full subscription details anytime in the MY tab.",
+    "goHome": "Go home",
+    "backToChat": "Back to chat",
+    "goToPlanDetail": "View subscription details"
   },
   "AITypingIndicator": {
     "typingAlt": "Writing a response",
+    "typingMessages": [
+      "Looking into your question",
+      "Comparing plans",
+      "Preparing the best match for you"
+    ],
     "error": "Could not load the response."
   },
   "Rows": {
@@ -627,6 +969,17 @@
       "description": "As a guest, you can use AI consultation\nup to 3 times.\nLog in to keep chatting and\nsave your recommendations.",
       "primaryLabel": "Log in to continue",
       "secondaryLabel": "Later"
+    },
+    "endChatModal": {
+      "trigger": "End chat",
+      "heading": "End this chat?",
+      "description": "Next time you come back,\nyou'll start a new conversation.",
+      "primaryLabel": "End chat",
+      "secondaryLabel": "Cancel"
     }
+  },
+  "Splash": {
+    "logoAlt": "Yogoda",
+    "greeting": "Yogo will find the perfect plan for you"
   }
 }

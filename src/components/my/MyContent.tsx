@@ -1,6 +1,7 @@
 "use client";
 
 import { useSyncExternalStore } from "react";
+import Image from "next/image";
 
 import { useQuery } from "@tanstack/react-query";
 import { ChevronRight } from "lucide-react";
@@ -29,7 +30,8 @@ function formatPrice(amount: number, locale: string) {
 interface ManagementRowProps {
   label: string;
   value: string;
-  href?: "/benefits" | "/my/account" | "/my/benefits";
+  href?:
+    "/benefits" | "/my/account" | "/my/benefits" | "/my/coupons" | "/my/stores";
   emphasized?: boolean;
 }
 
@@ -172,23 +174,31 @@ export function MyContent() {
 
         <Link
           href="/ai"
-          className="flex min-h-[86px] items-center justify-between gap-lg rounded-lg bg-toast-background p-xl text-text-on-primary shadow-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-action-primary"
+          className="relative block min-h-[156px] overflow-hidden rounded-2xl border border-[#f6cbd3] bg-[#fcdee2] shadow-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-action-primary"
         >
-          <span className="min-w-0">
-            <span className="block font-sans text-caption-13-regular text-text-tertiary">
+          <Image
+            src="/yogoda-banners/savings-character-scene-v3.webp"
+            alt=""
+            width={382}
+            height={540}
+            sizes="106px"
+            className="pointer-events-none absolute bottom-[-4px] right-lg h-[150px] w-auto"
+          />
+          <span className="relative z-[1] flex min-h-[156px] w-[68%] flex-col justify-center px-xl py-lg text-[#17171c]">
+            <span className="block font-sans text-caption-13-regular text-[#6f6f79]">
               {t("savingEyebrow")}
             </span>
             <strong className="mt-xs block font-sans text-title-18-bold">
-              <span className="text-text-brand">{t("savingAmount")}</span>{" "}
+              <span className="text-[#e01485]">{t("savingAmount")}</span>{" "}
               {t("savingAvailable")}
             </strong>
-          </span>
-          <span className="shrink-0 text-right">
-            <strong className="block font-sans text-caption-12-bold text-text-brand">
-              {t("annualSaving")}
-            </strong>
-            <span className="mt-xs block font-sans text-micro-11-regular text-text-tertiary">
-              {t("viewDiagnosis")}
+            <span className="mt-md flex flex-wrap items-center gap-sm">
+              <strong className="whitespace-nowrap rounded-full bg-[#ffffff] px-sm py-xs font-sans text-caption-12-bold text-[#e01485] shadow-sm">
+                {t("annualSaving")}
+              </strong>
+              <span className="whitespace-nowrap font-sans text-caption-12-bold text-[#4b5563]">
+                {t("viewDiagnosis")}
+              </span>
             </span>
           </span>
         </Link>
@@ -242,13 +252,21 @@ export function MyContent() {
             href="/my/benefits"
             emphasized
           />
-          <ManagementRow label={t("couponWallet")} value={t("comingSoon")} />
+          <ManagementRow
+            label={t("couponWallet")}
+            value={t("viewCoupons")}
+            href="/my/coupons"
+          />
           <ManagementRow
             label={t("manageBenefits")}
             value={t("activeBenefitCount", { count: selectedBenefitCount })}
             href="/my/benefits"
           />
-          <ManagementRow label={t("stores")} value={t("comingSoon")} />
+          <ManagementRow
+            label={t("stores")}
+            value={t("findStores")}
+            href="/my/stores"
+          />
           <ManagementRow
             label={t("securityAccount")}
             value={t("loginPassword")}

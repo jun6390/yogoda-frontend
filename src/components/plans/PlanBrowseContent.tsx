@@ -6,7 +6,7 @@ import { useLocale, useTranslations } from "next-intl";
 
 import { Chip } from "@/components/ui/Chip/Chip";
 import { PlanRow } from "@/components/ui/PlanRow/PlanRow";
-import { getCurrentPlan, getPlans } from "@/lib/api/plan";
+import { getComparedPlans, getCurrentPlan, getPlans } from "@/lib/api/plan";
 import { useAuthStore } from "@/stores/useAuthStore";
 
 type PlanFilter = "popular" | "all" | "unlimited" | "priceHigh" | "priceLow";
@@ -23,8 +23,8 @@ export function PlanBrowseContent() {
     isPending,
     isError,
   } = useQuery({
-    queryKey: ["plans"],
-    queryFn: getPlans,
+    queryKey: ["plans", accessToken ? "member-compare" : "public"],
+    queryFn: () => (accessToken ? getComparedPlans() : getPlans()),
   });
 
   const { data: currentPlan } = useQuery({

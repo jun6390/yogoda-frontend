@@ -24,6 +24,7 @@
   --primitive-gray-600: #4b5563;
   --primitive-gray-700: #373741;
   --primitive-gray-800: #1f2937;
+  --primitive-gray-850: #1d2430;
   --primitive-gray-900: #17171c;
 
   --primitive-success: #199e63;
@@ -45,6 +46,7 @@
   --semantic-surface-subtle: var(--primitive-gray-100);
   --semantic-brand-soft: var(--primitive-brand-pink-50);
   --semantic-ai-soft: var(--primitive-ai-soft);
+  --semantic-glow-accent: var(--primitive-brand-pink-50);
 
   --semantic-text-on-primary: var(--primitive-white);
   --semantic-text-primary: var(--primitive-gray-900);
@@ -68,6 +70,8 @@
   --semantic-error: var(--primitive-error);
   --semantic-error-soft: var(--primitive-error-soft);
   --semantic-info: var(--primitive-info);
+  --semantic-carousel-dot-active: var(--primitive-brand-magenta);
+  --semantic-carousel-dot-inactive: var(--primitive-gray-300);
 
   --semantic-icon-default: var(--primitive-gray-900);
   --semantic-icon-secondary: var(--primitive-gray-500);
@@ -83,11 +87,12 @@
  * 컴포넌트 내부에 dark:bg-..., dark:text-...를 반복 작성하지 않음
  */
 .dark {
-  --semantic-background: var(--primitive-gray-900);
+  --semantic-background: var(--primitive-gray-850);
   --semantic-surface: var(--primitive-gray-800);
   --semantic-surface-subtle: var(--primitive-gray-700);
   --semantic-brand-soft: var(--primitive-brand-deep);
   --semantic-ai-soft: #2f2438;
+  --semantic-glow-accent: #2f3d5c;
 
   --semantic-text-on-primary: var(--primitive-white);
   --semantic-text-primary: var(--primitive-white);
@@ -111,6 +116,8 @@
   --semantic-error: var(--primitive-error-light);
   --semantic-error-soft: #3a2229;
   --semantic-info: var(--primitive-info-light);
+  --semantic-carousel-dot-active: var(--primitive-brand-magenta);
+  --semantic-carousel-dot-inactive: var(--primitive-gray-300);
 
   --semantic-icon-default: var(--primitive-white);
   --semantic-icon-secondary: var(--primitive-gray-300);
@@ -142,6 +149,7 @@
   --color-surface-subtle: var(--semantic-surface-subtle);
   --color-brand-soft: var(--semantic-brand-soft);
   --color-ai-soft: var(--semantic-ai-soft);
+  --color-glow-accent: var(--semantic-glow-accent);
 
   --color-text-on-primary: var(--semantic-text-on-primary);
   --color-text-primary: var(--semantic-text-primary);
@@ -165,6 +173,8 @@
   --color-error: var(--semantic-error);
   --color-error-soft: var(--semantic-error-soft);
   --color-info: var(--semantic-info);
+  --color-carousel-dot-active: var(--semantic-carousel-dot-active);
+  --color-carousel-dot-inactive: var(--semantic-carousel-dot-inactive);
 
   --color-icon-default: var(--semantic-icon-default);
   --color-icon-secondary: var(--semantic-icon-secondary);

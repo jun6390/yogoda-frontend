@@ -67,7 +67,8 @@ export default function proxy(request: NextRequest) {
 export const config = {
   /*
    * API, /auth(OAuth 콜백 - next.config.ts rewrite가 locale 라우트로 매핑하므로 여기서 제외),
+   * /admin(다국어가 필요 없는 별도 Root Layout이라 locale 라우팅 대상이 아님),
    * Next.js 내부 파일, 정적 파일은 locale 라우팅 대상에서 제외함
    */
-  matcher: "/((?!api|auth|_next|_vercel|.*\\..*).*)",
+  matcher: "/((?!api|auth|admin|_next|_vercel|.*\\..*).*)",
 };

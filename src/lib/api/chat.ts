@@ -12,7 +12,12 @@ export interface ChatSessionMessage {
 }
 
 export interface LatestSessionResponse {
-  session: { id: string; createdAt: string; updatedAt: string } | null;
+  session: {
+    id: string;
+    createdAt: string;
+    updatedAt: string;
+    endedAt: string | null;
+  } | null;
   messages: ChatSessionMessage[];
   collectedInfo: Record<string, string> | null;
   previousInteractionId: string | null;
@@ -48,5 +53,16 @@ export async function importGuestChatSession(
   return apiFetch<ImportGuestChatResponse>("/api/chats/sessions/import", {
     method: "POST",
     body: payload,
+  });
+}
+
+/**
+ * 회원이 "채팅 끝내기"를 눌러 현재 진행 중인 AI 채팅 세션을 종료합니다.
+ * 대화 내역은 삭제되지 않으며, 다음 접속 시 새 세션으로 시작됩니다.
+ */
+export async function endChatSession(sessionId: string): Promise<void> {
+  await apiFetch<{ message: string }>("/api/chats/sessions/end", {
+    method: "POST",
+    body: { sessionId },
   });
 }

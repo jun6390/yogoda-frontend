@@ -4,7 +4,8 @@ import type { SocialProvider } from "@/types/auth";
 
 /* provider 고유 브랜드 컬러는 공통 토큰으로 치환하지 않고 인증 UI에서만 사용함 */
 export const socialProviderButtonStyles: Record<SocialProvider, string> = {
-  google: "",
+  google:
+    "border-[#dadce0] bg-[#ffffff] text-[#191919] hover:border-[#dadce0] hover:bg-[#f8f9fa]",
   naver:
     "border-transparent bg-[#03C75A] text-text-on-primary hover:border-transparent hover:bg-[#02b350]",
   kakao:
@@ -12,7 +13,7 @@ export const socialProviderButtonStyles: Record<SocialProvider, string> = {
 };
 
 const providerIconSurfaceStyles: Record<SocialProvider, string> = {
-  google: "border border-border-default bg-surface",
+  google: "border border-[#dadce0] bg-[#ffffff]",
   naver: "bg-[#03C75A]",
   kakao: "bg-[#FEE500]",
 };

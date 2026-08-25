@@ -7,10 +7,12 @@ import { FigmaImage } from "../FigmaImage/FigmaImage";
 import { cn } from "@/lib/utils";
 
 interface ModalProps extends HTMLAttributes<HTMLDivElement> {
+  icon?: ReactNode;
   heading: ReactNode;
   description: ReactNode;
   primaryLabel: ReactNode;
   secondaryLabel?: ReactNode;
+  primaryLoading?: boolean;
   onClose?: ButtonHTMLAttributes<HTMLButtonElement>["onClick"];
   onPrimaryClick?: ButtonHTMLAttributes<HTMLButtonElement>["onClick"];
   onSecondaryClick?: ButtonHTMLAttributes<HTMLButtonElement>["onClick"];
@@ -20,10 +22,12 @@ const modalSparkles = "/figma-assets/icon-modal-sparkles.svg";
 const modalClose = "/figma-assets/icon-close.svg";
 
 export function Modal({
+  icon,
   heading,
   description,
   primaryLabel,
   secondaryLabel,
+  primaryLoading = false,
   onClose,
   onPrimaryClick,
   onSecondaryClick,
@@ -57,7 +61,7 @@ export function Modal({
       </button>
       <div className="h-3xl" />
       <div className="flex size-[40px] items-center justify-center rounded-full bg-brand-soft">
-        <FigmaImage alt="" src={modalSparkles} className="size-xl" />
+        {icon ?? <FigmaImage alt="" src={modalSparkles} className="size-xl" />}
       </div>
       <h2 className="mt-lg font-sans text-title-16-bold text-text-primary">
         {heading}
@@ -65,7 +69,11 @@ export function Modal({
       <p className="whitespace-pre-line py-2xl font-sans text-body-14-regular text-text-secondary">
         {description}
       </p>
-      <Button className="h-[48px] w-full rounded-lg" onClick={onPrimaryClick}>
+      <Button
+        className="h-[48px] w-full rounded-lg"
+        loading={primaryLoading}
+        onClick={onPrimaryClick}
+      >
         {primaryLabel}
       </Button>
       <button

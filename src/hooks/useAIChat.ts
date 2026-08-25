@@ -1,9 +1,15 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  useSyncExternalStore,
+} from "react";
 import { io, Socket } from "socket.io-client";
 
-import { getLatestChatSession } from "@/lib/api/chat";
+import { endChatSession, getLatestChatSession } from "@/lib/api/chat";
 import { useAuthStore } from "@/stores/useAuthStore";
 import {
   GUEST_CHAT_LIMIT,
@@ -20,6 +26,31 @@ const WELCOME_MESSAGE: ChatMessage = {
   type: "text",
   text: "안녕하세요! 사용자님에게 딱 맞는 베스트 요금제를 추천해 드릴게요. 평소 데이터 사용량이나 선호하시는 혜택(OTT 등)에 대해 편하게 말씀해 주세요!",
 };
+
+function subscribeToAuthHydration(onStoreChange: () => void) {
+  const unsubscribeHydrate = useAuthStore.persist.onHydrate(onStoreChange);
+  const unsubscribeFinishHydration =
+    useAuthStore.persist.onFinishHydration(onStoreChange);
+
+  return () => {
+    unsubscribeHydrate();
+    unsubscribeFinishHydration();
+  };
+}
+
+/*
+ * accessToken은 zustand persist로 localStorage에서 비동기 복원(hydration)되므로,
+ * 새로고침 직후 첫 렌더의 isLoggedIn만 보고 판단하면 항상 비회원으로 오판해
+ * 회원의 DB 대화 내역 복원이 실행되지 않음. hydration 완료 여부를 별도로 구독함
+ */
+function useAuthHydrated() {
+  return useSyncExternalStore(
+    subscribeToAuthHydration,
+    () => useAuthStore.persist.hasHydrated(),
+    () => false,
+  );
+}
+
 /**
  * AI 상담 채팅의 상태와 소켓 통신을 담당하는 훅.
  * - 로그인 여부에 따라 회원은 DB, 비회원은 로컬 스토리지에서 이전 대화를 복원함
@@ -41,6 +72,8 @@ export function useAIChat() {
   const [guestChatCount, setGuestChatCount] = useState(0);
   // 비회원이 무료 상담 횟수를 모두 소진한 직후 로그인 유도 팝업을 띄우기 위한 상태
   const [showGuestLimitModal, setShowGuestLimitModal] = useState(false);
+  // AI의 질문에 바로 탭해서 보낼 수 있는 빠른 답변 후보. 다음 메시지를 보내면 비워짐
+  const [quickReplies, setQuickReplies] = useState<string[]>([]);
 
   const socketRef = useRef<Socket | null>(null);
   // 회원의 경우 대화가 이어질 채팅 세션 id (최초 메시지 전송 시 서버가 발급, 화면 표시/기록용)
@@ -49,7 +82,7 @@ export function useAIChat() {
   const interactionIdRef = useRef<string | null>(null);
   // 지금까지 대화로 파악된 정보 (모델이 맥락을 놓치는 경우를 대비한 이중 안전장치)
   const collectedInfoRef = useRef<CollectedInfo | null>(null);
-  const initialIsLoggedInRef = useRef(isLoggedIn);
+  const isAuthHydrated = useAuthHydrated();
 
   const appendChars = useCallback((messageId: string, chars: string) => {
     setMessages((prev) =>
@@ -61,9 +94,12 @@ export function useAIChat() {
   const typewriter = useTypewriter(appendChars);
 
   // 마운트 시 이전 대화 내역 복원 (회원은 DB, 비회원은 로컬 스토리지에서)
+  // accessToken의 hydration이 끝나기 전까지는 로그인 여부를 신뢰할 수 없으므로 대기함
   useEffect(() => {
+    if (!isAuthHydrated) return;
+
     async function restoreHistory() {
-      if (initialIsLoggedInRef.current) {
+      if (isLoggedIn) {
         try {
           const {
             session,
@@ -72,7 +108,9 @@ export function useAIChat() {
             previousInteractionId,
           } = await getLatestChatSession();
 
-          if (!session || dbMessages.length === 0) return;
+          // 종료된 세션이면 복원하지 않고 웰컴 메시지로 새로 시작함
+          // (sessionIdRef를 비워둬야 다음 메시지 전송 시 서버가 새 세션을 발급함)
+          if (!session || session.endedAt || dbMessages.length === 0) return;
 
           sessionIdRef.current = session.id;
           collectedInfoRef.current = collectedInfo;
@@ -117,7 +155,8 @@ export function useAIChat() {
     }
 
     void restoreHistory();
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- 복원은 hydration 완료 후 한 번만 실행하면 되므로 isLoggedIn 변경(로그인/로그아웃) 시 재실행은 의도적으로 제외함
+  }, [isAuthHydrated]);
 
   // 비회원의 대화 내역을 로컬 스토리지에 동기화 (타자기 효과로 인한 잦은 쓰기를 막기 위해 디바운스)
   useEffect(() => {
@@ -206,6 +245,11 @@ export function useAIChat() {
         ]);
       });
 
+      // AI가 질문했을 때만 오며, 바로 탭해서 보낼 수 있는 답변 후보 목록임
+      socket.on("quickReplies", (data: string[]) => {
+        setQuickReplies(data);
+      });
+
       socket.on("done", () => {
         socket.disconnect();
       });
@@ -218,6 +262,7 @@ export function useAIChat() {
           ),
         );
         setIsTyping(false);
+        setQuickReplies([]);
         socket.disconnect();
       });
 
@@ -229,6 +274,7 @@ export function useAIChat() {
           ),
         );
         setIsTyping(false);
+        setQuickReplies([]);
       });
 
       socket.on("disconnect", () => {
@@ -259,6 +305,8 @@ export function useAIChat() {
         { id: aiMsgId, sender: "ai", type: "text", text: "" },
       ]);
       setIsTyping(true);
+      // 방금 보여준 빠른 답변 후보는 이번 메시지 전송으로 소비됐으므로 지움
+      setQuickReplies([]);
 
       if (!isLoggedIn) {
         // 한도를 채우는 이번 메시지도 AI 응답은 정상적으로 받아야 하므로, 카운트만
@@ -275,6 +323,32 @@ export function useAIChat() {
   const closeGuestLimitModal = useCallback(() => {
     setShowGuestLimitModal(false);
   }, []);
+
+  /*
+   * 회원이 "채팅 끝내기"를 누르면 현재 세션을 서버에 종료 처리하고(대화 내역은 삭제하지 않음),
+   * 화면을 웰컴 메시지로 초기화함. sessionId를 비워둬야 다음 메시지 전송 시
+   * 서버가 종료된 세션을 재사용하지 않고 새 세션을 발급함
+   */
+  const endCurrentChat = useCallback(async () => {
+    if (!isLoggedIn) return;
+
+    // 아직 서버에 발급된 세션이 없다면(메시지를 한 번도 안 보낸 상태) 종료 API를 부를 필요 없이
+    // 화면만 초기화하면 됨
+    if (sessionIdRef.current) {
+      try {
+        await endChatSession(sessionIdRef.current);
+      } catch (err) {
+        console.error("채팅 종료 실패:", err);
+        return;
+      }
+    }
+
+    sessionIdRef.current = null;
+    interactionIdRef.current = null;
+    collectedInfoRef.current = null;
+    setMessages([WELCOME_MESSAGE]);
+    setQuickReplies([]);
+  }, [isLoggedIn]);
 
   // interactionIdRef는 마지막으로 "성공"한 응답 기준으로만 갱신되므로, 실패한 턴을 다시 보내도
   // 자동으로 그 직전까지의 대화에 이어붙게 됨 (별도로 히스토리를 잘라낼 필요 없음)
@@ -293,6 +367,7 @@ export function useAIChat() {
         ),
       );
       setIsTyping(true);
+      setQuickReplies([]);
 
       startSocketStream(userMsg.text, failedAiMsgId);
     },
@@ -307,5 +382,8 @@ export function useAIChat() {
     guestChatCount,
     showGuestLimitModal,
     closeGuestLimitModal,
+    isLoggedIn,
+    endCurrentChat,
+    quickReplies,
   };
 }
