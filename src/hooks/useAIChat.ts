@@ -9,6 +9,7 @@ import {
 } from "react";
 import { io, Socket } from "socket.io-client";
 
+import { API_BASE_URL } from "@/lib/api/client";
 import { endChatSession, getLatestChatSession } from "@/lib/api/chat";
 import { useAuthStore } from "@/stores/useAuthStore";
 import {
@@ -179,8 +180,9 @@ export function useAIChat() {
 
   const startSocketStream = useCallback(
     (text: string, aiMsgId: string) => {
-      const apiBase =
-        process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000";
+      // socket.io는 REST(fetch)와 달리 빈 문자열로는 연결할 수 없어, client.ts와
+      // 같은 API_BASE_URL이 비어 있을 때만 로컬 개발 서버 주소로 대체함
+      const apiBase = API_BASE_URL || "http://localhost:8000";
 
       const socket = io(`${apiBase}/chat`, { transports: ["websocket"] });
       socketRef.current = socket;

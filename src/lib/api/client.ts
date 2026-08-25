@@ -1,6 +1,11 @@
 import { useAuthStore } from "@/stores/useAuthStore";
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? "";
+/*
+ * 서버 API의 base URL. REST 요청(fetch)은 빈 문자열이어도 상대경로로 정상 동작하지만,
+ * socket.io 연결(useAIChat, useNotifications 등)은 origin이 반드시 필요해 빈 값을 넘길 수
+ * 없으므로, 소켓을 여는 쪽에서는 이 값이 비어 있을 때 로컬 개발 서버 주소로 대체해서 씀
+ */
+export const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? "";
 
 export class ApiError extends Error {
   constructor(
