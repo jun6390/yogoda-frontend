@@ -1,7 +1,14 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import { ArrowLeft, LogOut, Send, ChevronRight } from "lucide-react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import {
+  ArrowLeft,
+  LogOut,
+  Mic,
+  MicOff,
+  Send,
+  ChevronRight,
+} from "lucide-react";
 import { useTranslations } from "next-intl";
 
 import { PlanRecommendationCards } from "@/components/chat/PlanRecommendationCards";
@@ -14,6 +21,7 @@ import { ChatMarkdown } from "@/components/ui/ChatMarkdown/ChatMarkdown";
 import { Input } from "@/components/ui/Input/Input";
 import { Modal } from "@/components/ui/Modal/Modal";
 import { useAIChat } from "@/hooks/useAIChat";
+import { useVoiceInput } from "@/hooks/useVoiceInput";
 import { useRouter } from "@/i18n/navigation";
 import { LOGIN_REDIRECT_STORAGE_KEY } from "@/lib/auth/loginRedirect";
 
@@ -35,6 +43,13 @@ export default function AIConsultationPage() {
   const [inputText, setInputText] = useState("");
   // 회원 전용 "채팅 끝내기" 확인 팝업 표시 여부
   const [showEndChatModal, setShowEndChatModal] = useState(false);
+
+  // 음성 인식이 확정한 문장을 기존 입력값 뒤에 이어붙임 (여러 번 끊어 말해도 계속 누적됨)
+  const handleVoiceResult = useCallback((text: string) => {
+    setInputText((prev) => (prev ? `${prev} ${text}` : text));
+  }, []);
+  const { isListening, isSupported, interimText, toggleListening } =
+    useVoiceInput({ onFinalResult: handleVoiceResult });
 
   // 메시지 추가 시 자동 스크롤을 위한 ref
   const chatEndRef = useRef<HTMLDivElement>(null);
@@ -180,11 +195,32 @@ export default function AIConsultationPage() {
           className="relative flex items-center w-full"
         >
           <Input
-            value={inputText}
+            value={isListening && interimText ? interimText : inputText}
             onChange={(e) => setInputText(e.target.value)}
+            // 인식 중에는 확정되지 않은 말이 실시간으로 보이므로, 직접 타이핑해서 덮어쓰지 못하게 막음
+            readOnly={isListening}
             placeholder={t("inputPlaceholder")}
-            className="w-full pr-[56px]"
+            className={isSupported ? "w-full pr-[96px]" : "w-full pr-[56px]"}
           />
+
+          {/* 브라우저가 음성 인식을 지원할 때만 마이크 버튼 노출 (사파리 등 미지원 브라우저 대비) */}
+          {isSupported && (
+            <button
+              type="button"
+              onClick={toggleListening}
+              aria-label={t(
+                isListening ? "voiceInput.stop" : "voiceInput.start",
+              )}
+              className={
+                isListening
+                  ? "absolute right-[48px] flex size-[36px] items-center justify-center rounded-full bg-error text-white animate-pulse"
+                  : "absolute right-[48px] flex size-[36px] items-center justify-center rounded-full bg-transparent text-text-secondary hover:bg-action-primary/10 hover:text-action-primary transition-all"
+              }
+            >
+              {isListening ? <MicOff size={18} /> : <Mic size={18} />}
+            </button>
+          )}
+
           <button
             type="submit"
             disabled={!inputText.trim()}
