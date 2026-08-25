@@ -264,6 +264,7 @@
     "english": "English",
     "lightMode": "Light mode",
     "darkMode": "Dark mode",
+    "adminPage": "Admin page",
     "logout": "Log out",
     "loggingOut": "Logging out"
   },

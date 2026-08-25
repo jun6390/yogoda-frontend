@@ -264,6 +264,7 @@
     "english": "English",
     "lightMode": "라이트 모드",
     "darkMode": "다크 모드",
+    "adminPage": "관리자 페이지",
     "logout": "로그아웃",
     "loggingOut": "로그아웃 중"
   },
