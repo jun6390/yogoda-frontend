@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { Sparkles } from "lucide-react";
+import Image from "next/image";
 import { cn } from "@/lib/utils";
 
 interface UserChatBubbleProps {
@@ -38,9 +38,13 @@ export function AIChatBubble({
 }: AIChatBubbleProps) {
   return (
     <div className="flex w-full justify-start items-start gap-sm">
-      <span className="flex size-[28px] shrink-0 items-center justify-center rounded-full bg-ai-soft text-text-brand mt-[2px]">
-        <Sparkles size={16} />
-      </span>
+      <Image
+        src="/yogoda-characters/chat-profile.png"
+        alt="AI 프로필"
+        width={32}
+        height={32}
+        className="shrink-0 rounded-full mt-[2px] object-cover"
+      />
       <div
         className={cn(
           !noBackground &&
