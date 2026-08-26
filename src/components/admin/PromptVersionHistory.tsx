@@ -10,7 +10,10 @@ import { ErrorState } from "@/components/ui/ErrorState/ErrorState";
 import { Button } from "@/components/admin/Button";
 import { Modal } from "@/components/admin/Modal";
 import { ApiError } from "@/lib/api/client";
-import { activatePromptVersion, getPromptHistory } from "@/lib/api/prompt";
+import {
+  activatePromptVersion,
+  getPromptHistory,
+} from "@/lib/api/admin/prompt";
 import { formatDateTime } from "@/lib/admin/format";
 import { ADMIN_PROMPT_QUERY_KEYS } from "@/lib/admin/queryKeys";
 import { cn } from "@/lib/utils";

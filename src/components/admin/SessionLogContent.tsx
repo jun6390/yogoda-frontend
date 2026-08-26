@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 
+import { useSearchParams } from "next/navigation";
+
 import { useQuery } from "@tanstack/react-query";
 
 import { Badge } from "@/components/ui/Badge/Badge";
@@ -10,7 +12,7 @@ import { Button } from "@/components/admin/Button";
 import { DateRangePicker } from "@/components/admin/DateRangePicker";
 import { Select } from "@/components/admin/Select";
 import { ApiError } from "@/lib/api/client";
-import { getSessionDetail, getSessions } from "@/lib/api/session";
+import { getSessionDetail, getSessions } from "@/lib/api/admin/session";
 import { formatDateTime, formatDuration } from "@/lib/admin/format";
 import { ADMIN_SESSION_QUERY_KEYS } from "@/lib/admin/queryKeys";
 import { cn } from "@/lib/utils";
@@ -69,9 +71,18 @@ const filterInputClassName = cn(
 );
 
 export function SessionLogContent() {
-  const [draftFilters, setDraftFilters] = useState<FilterState>(EMPTY_FILTERS);
+  // 대시보드의 "해당 로그 보기" 링크에서 ?drop_stage=xxx로 들어오면 그 단계로 미리 필터링해둠
+  const searchParams = useSearchParams();
+  const initialDropStage =
+    (searchParams.get("drop_stage") as SessionDropStage | null) ?? "all";
+  const initialFilters: FilterState = {
+    ...EMPTY_FILTERS,
+    dropStage: initialDropStage,
+  };
+
+  const [draftFilters, setDraftFilters] = useState<FilterState>(initialFilters);
   const [appliedFilters, setAppliedFilters] =
-    useState<FilterState>(EMPTY_FILTERS);
+    useState<FilterState>(initialFilters);
   const [selectedSessionId, setSelectedSessionId] = useState<string | null>(
     null,
   );

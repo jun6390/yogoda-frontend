@@ -1,5 +1,11 @@
+import { Suspense } from "react";
+
 import { SessionLogContent } from "@/components/admin/SessionLogContent";
 
 export default function AdminLogsPage() {
-  return <SessionLogContent />;
+  return (
+    <Suspense>
+      <SessionLogContent />
+    </Suspense>
+  );
 }
