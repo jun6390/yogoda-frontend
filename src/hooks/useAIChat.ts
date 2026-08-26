@@ -55,30 +55,36 @@ function useAuthHydrated() {
 /**
  * AI 상담 채팅의 상태와 소켓 통신을 담당하는 훅.
  * - 로그인 여부에 따라 회원은 DB, 비회원은 로컬 스토리지에서 이전 대화를 복원함
- * - sessionId만 소켓 연결 시 auth로 실어 보내면 서버가 그 세션에 연결된 대화 맥락
- *   (Gemini interaction, 파악된 정보 등)을 알아서 이어가므로, 프론트는 sessionId 하나만 들고 있으면 됨
+ * - 소켓은 페이지 진입 시 미리 연결해두고 메시지 전송 때마다 재연결하지 않아
+ *   첫 응답 도달 시간을 단축함
  */
 export function useAIChat() {
   const accessToken = useAuthStore((state) => state.accessToken);
   const isLoggedIn = !!accessToken;
 
-  // 로컬 스토리지(zustand persist)는 클라이언트에만 존재하므로, 초기 렌더는
-  // 서버/클라이언트 모두 동일하게 웰컴 메시지로 시작하고, 실제 복원은 마운트 후
-  // useEffect에서 처리해 하이드레이션 불일치를 방지함
+  // 소켓 이벤트 핸들러 클로저에서 isLoggedIn 최신 값을 참조하기 위한 ref
+  const isLoggedInRef = useRef(isLoggedIn);
+  useEffect(() => {
+    isLoggedInRef.current = isLoggedIn;
+  }, [isLoggedIn]);
+
   const [messages, setMessages] = useState<ChatMessage[]>([WELCOME_MESSAGE]);
   const [isTyping, setIsTyping] = useState(false);
+  // 이전 대화 내역을 불러오는 동안 스켈레톤 UI를 표시하기 위한 상태
+  const [isRestoringHistory, setIsRestoringHistory] = useState(true);
   // 초기값은 항상 0으로 시작(SSR-세이프)하고, 마운트 후 useEffect에서
   // localStorage에 저장된 실제 값으로 동기화함
   const [guestChatCount, setGuestChatCount] = useState(0);
   // 비회원이 무료 상담 횟수를 모두 소진한 직후 로그인 유도 팝업을 띄우기 위한 상태
   const [showGuestLimitModal, setShowGuestLimitModal] = useState(false);
-  // AI의 질문에 바로 탭해서 보낼 수 있는 빠른 답변 후보. 다음 메시지를 보내면 비워짐
+  // AI의 질문에 바로 탭해서 답할 수 있는 빠른 답변 후보. 다음 메시지를 보내면 비워짐
   const [quickReplies, setQuickReplies] = useState<string[]>([]);
 
   const socketRef = useRef<Socket | null>(null);
   // 대화가 이어질 채팅 세션 id. 소켓 연결 시 auth로 실어 보내면 서버가 같은 세션으로 이어감
-  // (회원은 최초 접속 시 DB에서 복원, 게스트는 localStorage에서 복원)
   const sessionIdRef = useRef<string | null>(null);
+  // 현재 수신 중인 AI 응답의 메시지 id. 소켓 이벤트 핸들러에서 어느 말풍선에 쓸지 식별함
+  const currentAiMsgIdRef = useRef<string | null>(null);
   const isAuthHydrated = useAuthHydrated();
 
   const appendChars = useCallback((messageId: string, chars: string) => {
@@ -90,62 +96,162 @@ export function useAIChat() {
   }, []);
   const typewriter = useTypewriter(appendChars);
 
-  // 마운트 시 이전 대화 내역 복원 (회원은 DB, 비회원은 로컬 스토리지에서)
+  /*
+   * 소켓을 열고 영구 이벤트 핸들러를 등록함.
+   * 메시지 전송마다 새로 연결하지 않고 한 번 맺은 연결을 재사용해
+   * 핸드셰이크 대기 시간을 제거함
+   */
+  const openSocket = useCallback(() => {
+    if (socketRef.current?.connected) return;
+
+    const apiBase = API_BASE_URL || "http://localhost:8000";
+    const { accessToken: token } = useAuthStore.getState();
+
+    const socket = io(`${apiBase}/chat`, {
+      transports: ["websocket"],
+      auth: {
+        token: token ?? undefined,
+        sessionId: sessionIdRef.current ?? undefined,
+      },
+    });
+    socketRef.current = socket;
+
+    socket.on(
+      "session_created",
+      (data: { sessionId: string; promptVersion: string }) => {
+        sessionIdRef.current = data.sessionId;
+        if (!isLoggedInRef.current) {
+          useChatHistoryStore.getState().setSessionId(data.sessionId);
+        }
+      },
+    );
+
+    socket.on("chunk", (data: string) => {
+      if (!currentAiMsgIdRef.current) return;
+      setIsTyping(false);
+      typewriter.push(currentAiMsgIdRef.current, data);
+    });
+
+    socket.on("plans", (data: ChatMessage["plans"]) => {
+      if (!currentAiMsgIdRef.current) return;
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: `${currentAiMsgIdRef.current}-plans`,
+          sender: "ai",
+          type: "plans",
+          plans: data,
+        },
+      ]);
+    });
+
+    socket.on("quickReplies", (data: string[]) => {
+      setQuickReplies(data);
+    });
+
+    socket.on("done", () => {
+      currentAiMsgIdRef.current = null;
+      setIsTyping(false);
+      // 소켓은 유지해서 다음 메시지도 핸드셰이크 없이 바로 보낼 수 있게 함
+    });
+
+    socket.on("error", () => {
+      const aiMsgId = currentAiMsgIdRef.current;
+      if (aiMsgId) {
+        typewriter.stop(aiMsgId);
+        setMessages((prev) =>
+          prev.map((msg) =>
+            msg.id === aiMsgId ? { ...msg, type: "error" } : msg,
+          ),
+        );
+        currentAiMsgIdRef.current = null;
+      }
+      setIsTyping(false);
+      setQuickReplies([]);
+    });
+
+    socket.on("connect_error", () => {
+      const aiMsgId = currentAiMsgIdRef.current;
+      if (aiMsgId) {
+        typewriter.stop(aiMsgId);
+        setMessages((prev) =>
+          prev.map((msg) =>
+            msg.id === aiMsgId ? { ...msg, type: "error" } : msg,
+          ),
+        );
+        currentAiMsgIdRef.current = null;
+      }
+      setIsTyping(false);
+      setQuickReplies([]);
+    });
+
+    socket.on("disconnect", () => {
+      setIsTyping(false);
+      socketRef.current = null;
+    });
+  }, [typewriter]);
+
+  // 마운트 시 이전 대화 내역 복원 후 소켓 미리 연결
   // accessToken의 hydration이 끝나기 전까지는 로그인 여부를 신뢰할 수 없으므로 대기함
   useEffect(() => {
     if (!isAuthHydrated) return;
 
-    async function restoreHistory() {
+    async function init() {
+      setIsRestoringHistory(true);
+
       if (isLoggedIn) {
         try {
           const { session, messages: dbMessages } =
             await getLatestChatSession();
 
           // 종료된 세션이면 복원하지 않고 웰컴 메시지로 새로 시작함
-          // (sessionIdRef를 비워둬야 다음 메시지 전송 시 서버가 새 세션을 발급함)
-          if (!session || session.endedAt || dbMessages.length === 0) return;
-
-          sessionIdRef.current = session.id;
-          setMessages(
-            dbMessages.flatMap((m) => {
-              const textMsg: ChatMessage = {
-                id: m.id,
-                sender: m.role === "user" ? "user" : "ai",
-                type: "text",
-                text: m.content,
-              };
-
-              // 요금제 추천 카드가 저장된 메시지는, 실시간 대화 때와 동일하게
-              // 텍스트 말풍선 뒤에 카드 메시지를 이어붙여 함께 복원함
-              if (m.plans && m.plans.length > 0) {
-                const plansMsg: ChatMessage = {
-                  id: `${m.id}-plans`,
-                  sender: "ai",
-                  type: "plans",
-                  plans: m.plans,
+          if (session && !session.endedAt && dbMessages.length > 0) {
+            sessionIdRef.current = session.id;
+            setMessages(
+              dbMessages.flatMap((m) => {
+                const textMsg: ChatMessage = {
+                  id: m.id,
+                  sender: m.role === "user" ? "user" : "ai",
+                  type: "text",
+                  text: m.content,
                 };
-                return [textMsg, plansMsg];
-              }
 
-              return [textMsg];
-            }),
-          );
+                // 요금제 추천 카드가 저장된 메시지는, 실시간 대화 때와 동일하게
+                // 텍스트 말풍선 뒤에 카드 메시지를 이어붙여 함께 복원함
+                if (m.plans && m.plans.length > 0) {
+                  const plansMsg: ChatMessage = {
+                    id: `${m.id}-plans`,
+                    sender: "ai",
+                    type: "plans",
+                    plans: m.plans,
+                  };
+                  return [textMsg, plansMsg];
+                }
+
+                return [textMsg];
+              }),
+            );
+          }
         } catch (err) {
           console.error("채팅 내역 조회 실패:", err);
         }
-        return;
+      } else {
+        const stored = useChatHistoryStore.getState();
+        sessionIdRef.current = stored.sessionId;
+        setGuestChatCount(stored.guestChatCount);
+        if (stored.messages.length > 0) {
+          setMessages(stored.messages);
+        }
       }
 
-      const stored = useChatHistoryStore.getState();
-      sessionIdRef.current = stored.sessionId;
-      setGuestChatCount(stored.guestChatCount);
-      if (stored.messages.length > 0) {
-        setMessages(stored.messages);
-      }
+      setIsRestoringHistory(false);
+
+      // 대화 내역 복원 후 소켓을 미리 연결해 첫 메시지 응답 속도를 개선함
+      openSocket();
     }
 
-    void restoreHistory();
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- 복원은 hydration 완료 후 한 번만 실행하면 되므로 isLoggedIn 변경(로그인/로그아웃) 시 재실행은 의도적으로 제외함
+    void init();
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- 복원 및 소켓 연결은 hydration 완료 후 한 번만 실행하면 되므로 isLoggedIn, openSocket 변경 시 재실행은 의도적으로 제외함
   }, [isAuthHydrated]);
 
   // 비회원의 대화 내역을 로컬 스토리지에 동기화 (타자기 효과로 인한 잦은 쓰기를 막기 위해 디바운스)
@@ -167,106 +273,32 @@ export function useAIChat() {
     };
   }, [typewriter]);
 
-  const startSocketStream = useCallback(
-    (text: string, aiMsgId: string) => {
-      // socket.io는 REST(fetch)와 달리 빈 문자열로는 연결할 수 없어, client.ts와
-      // 같은 API_BASE_URL이 비어 있을 때만 로컬 개발 서버 주소로 대체함
-      const apiBase = API_BASE_URL || "http://localhost:8000";
-
-      const { accessToken: token } = useAuthStore.getState();
-
-      // token/sessionId는 연결 시점에 한 번만 인증 정보로 실어 보냄
-      // (collectedInfo/interactionId는 서버가 세션에 연결해 직접 관리하므로 더 이상 프론트가 들고 있지 않음)
-      const socket = io(`${apiBase}/chat`, {
-        transports: ["websocket"],
-        auth: {
-          token: token ?? undefined,
-          sessionId: sessionIdRef.current ?? undefined,
+  /*
+   * 소켓이 연결돼 있으면 바로 emit하고, 끊겨 있으면 재연결 후 emit함.
+   * 페이지 진입 시 미리 연결해두므로 대부분의 경우 대기 없이 바로 전송됨
+   */
+  const emitMessage = useCallback(
+    (text: string) => {
+      const persona = usePersonaStore.getState();
+      const payload = {
+        message: text,
+        surveyContext: {
+          answers: persona.answers,
+          analysisResult: persona.analysisResult,
+          isSkipped: persona.isSkipped,
         },
-      });
-      socketRef.current = socket;
+      };
 
-      socket.on("connect", () => {
-        // 비로그인 사용자는 설문 결과가 로컬 스토리지(zustand persist)에만 있으므로
-        // 매 요청마다 함께 실어 보내서 AI가 이미 아는 정보를 다시 묻지 않게 함
-        const persona = usePersonaStore.getState();
-
-        socket.emit("message", {
-          message: text,
-          surveyContext: {
-            answers: persona.answers,
-            analysisResult: persona.analysisResult,
-            isSkipped: persona.isSkipped,
-          },
+      if (socketRef.current?.connected) {
+        socketRef.current.emit("message", payload);
+      } else {
+        openSocket();
+        socketRef.current?.once("connect", () => {
+          socketRef.current?.emit("message", payload);
         });
-      });
-
-      socket.on(
-        "session_created",
-        (data: { sessionId: string; promptVersion: string }) => {
-          // 이 세션 id를 다음 연결의 auth로 그대로 실어 보내면 서버가 같은 대화로 이어감
-          sessionIdRef.current = data.sessionId;
-          if (!isLoggedIn) {
-            useChatHistoryStore.getState().setSessionId(data.sessionId);
-          }
-        },
-      );
-
-      socket.on("chunk", (data: string) => {
-        setIsTyping(false);
-        typewriter.push(aiMsgId, data);
-      });
-
-      socket.on("plans", (data: ChatMessage["plans"]) => {
-        setMessages((prev) => [
-          ...prev,
-          {
-            id: `${aiMsgId}-plans`,
-            sender: "ai",
-            type: "plans",
-            plans: data,
-          },
-        ]);
-      });
-
-      // AI가 질문했을 때만 오며, 바로 탭해서 보낼 수 있는 답변 후보 목록임
-      socket.on("quickReplies", (data: string[]) => {
-        setQuickReplies(data);
-      });
-
-      socket.on("done", () => {
-        socket.disconnect();
-      });
-
-      socket.on("error", () => {
-        typewriter.stop(aiMsgId);
-        setMessages((prev) =>
-          prev.map((msg) =>
-            msg.id === aiMsgId ? { ...msg, type: "error" } : msg,
-          ),
-        );
-        setIsTyping(false);
-        setQuickReplies([]);
-        socket.disconnect();
-      });
-
-      socket.on("connect_error", () => {
-        typewriter.stop(aiMsgId);
-        setMessages((prev) =>
-          prev.map((msg) =>
-            msg.id === aiMsgId ? { ...msg, type: "error" } : msg,
-          ),
-        );
-        setIsTyping(false);
-        setQuickReplies([]);
-      });
-
-      socket.on("disconnect", () => {
-        setIsTyping(false);
-        socketRef.current = null;
-      });
+      }
     },
-    [isLoggedIn, typewriter],
+    [openSocket],
   );
 
   const sendMessage = useCallback(
@@ -274,7 +306,7 @@ export function useAIChat() {
       if (!text.trim()) return;
 
       // 비회원이 무료 상담 횟수(GUEST_CHAT_LIMIT)를 이미 다 썼다면, 메시지를
-      // 보내지 않고(소켓 연결도 시작하지 않고) 로그인 유도 팝업만 다시 띄움
+      // 보내지 않고(소켓 emit도 하지 않고) 로그인 유도 팝업만 다시 띄움
       if (!isLoggedIn && guestChatCount >= GUEST_CHAT_LIMIT) {
         setShowGuestLimitModal(true);
         return;
@@ -289,8 +321,8 @@ export function useAIChat() {
         { id: aiMsgId, sender: "ai", type: "text", text: "" },
       ]);
       setIsTyping(true);
-      // 방금 보여준 빠른 답변 후보는 이번 메시지 전송으로 소비됐으므로 지움
       setQuickReplies([]);
+      currentAiMsgIdRef.current = aiMsgId;
 
       if (!isLoggedIn) {
         // 한도를 채우는 이번 메시지도 AI 응답은 정상적으로 받아야 하므로, 카운트만
@@ -299,9 +331,9 @@ export function useAIChat() {
         setGuestChatCount((prev) => prev + 1);
       }
 
-      startSocketStream(text, aiMsgId);
+      emitMessage(text);
     },
-    [isLoggedIn, guestChatCount, startSocketStream],
+    [isLoggedIn, guestChatCount, emitMessage],
   );
 
   const closeGuestLimitModal = useCallback(() => {
@@ -310,14 +342,11 @@ export function useAIChat() {
 
   /*
    * 회원이 "채팅 끝내기"를 누르면 현재 세션을 서버에 종료 처리하고(대화 내역은 삭제하지 않음),
-   * 화면을 웰컴 메시지로 초기화함. sessionId를 비워둬야 다음 메시지 전송 시
-   * 서버가 종료된 세션을 재사용하지 않고 새 세션을 발급함
+   * 화면을 웰컴 메시지로 초기화함. 소켓을 재연결해 새 세션으로 이어갈 준비를 함
    */
   const endCurrentChat = useCallback(async () => {
     if (!isLoggedIn) return;
 
-    // 아직 서버에 발급된 세션이 없다면(메시지를 한 번도 안 보낸 상태) 종료 API를 부를 필요 없이
-    // 화면만 초기화하면 됨
     if (sessionIdRef.current) {
       try {
         await endChatSession(sessionIdRef.current);
@@ -327,10 +356,15 @@ export function useAIChat() {
       }
     }
 
+    // sessionId를 비워야 다음 소켓 연결 시 서버가 새 세션을 발급함
     sessionIdRef.current = null;
+    socketRef.current?.disconnect();
+    socketRef.current = null;
+    openSocket();
+
     setMessages([WELCOME_MESSAGE]);
     setQuickReplies([]);
-  }, [isLoggedIn]);
+  }, [isLoggedIn, openSocket]);
 
   // sessionIdRef는 마지막으로 "성공"한 응답 기준으로만 갱신되므로, 실패한 턴을 다시 보내도
   // 자동으로 그 직전까지의 대화에 이어붙게 됨 (별도로 히스토리를 잘라낼 필요 없음)
@@ -350,15 +384,17 @@ export function useAIChat() {
       );
       setIsTyping(true);
       setQuickReplies([]);
+      currentAiMsgIdRef.current = failedAiMsgId;
 
-      startSocketStream(userMsg.text, failedAiMsgId);
+      emitMessage(userMsg.text);
     },
-    [messages, startSocketStream, typewriter],
+    [messages, emitMessage, typewriter],
   );
 
   return {
     messages,
     isTyping,
+    isRestoringHistory,
     sendMessage,
     retryMessage,
     guestChatCount,
