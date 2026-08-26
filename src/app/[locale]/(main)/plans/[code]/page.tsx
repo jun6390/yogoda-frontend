@@ -19,6 +19,7 @@ import { useLocale, useTranslations } from "next-intl";
 import { useParams } from "next/navigation";
 
 import { PageContainer } from "@/components/layout/PageContainer";
+import { PageSpinner } from "@/components/ui/Spinner/Spinner";
 import { NergetPlanBadge } from "@/components/plans/NergetPlanBadge";
 import { Button } from "@/components/ui/Button/Button";
 import { useRouter } from "@/i18n/navigation";
@@ -167,13 +168,7 @@ function PlanDetailContent({ code }: PlanDetailContentProps) {
   }, [isExitModalOpen]);
 
   if (isPending) {
-    return (
-      <PageContainer className="py-xl">
-        <p className="text-caption-13-medium text-text-secondary">
-          {t("loading")}
-        </p>
-      </PageContainer>
-    );
+    return <PageSpinner label={t("loading")} />;
   }
 
   if (isError || !plan) {

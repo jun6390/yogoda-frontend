@@ -4,6 +4,7 @@ import { Fragment, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useLocale, useTranslations } from "next-intl";
 
+import { Spinner, PageSpinner } from "@/components/ui/Spinner/Spinner";
 import { Chip } from "@/components/ui/Chip/Chip";
 import { PlanRow } from "@/components/ui/PlanRow/PlanRow";
 import { getComparedPlans, getCurrentPlan, getPlans } from "@/lib/api/plan";
@@ -92,9 +93,13 @@ export function PlanBrowseContent() {
 
   if (isPending) {
     return (
-      <p className="mt-xl text-caption-13-medium text-text-secondary">
-        {t("loading")}
-      </p>
+      <div className="flex min-h-[50vh] items-center justify-center">
+        <Spinner
+          size="lg"
+          className="text-action-primary"
+          label={t("loading")}
+        />
+      </div>
     );
   }
 
