@@ -2,7 +2,7 @@ import type { HTMLAttributes, ReactNode } from "react";
 
 import { cn } from "@/lib/utils";
 
-type BadgeVariant = "default" | "accent" | "success" | "price";
+type BadgeVariant = "default" | "accent" | "success" | "price" | "error";
 
 interface BadgeProps extends HTMLAttributes<HTMLSpanElement> {
   variant?: BadgeVariant;
@@ -31,6 +31,8 @@ export function Badge({
         variant === "success" && "bg-success-soft text-success",
 
         variant === "price" && "bg-background text-action-primary",
+
+        variant === "error" && "bg-error-soft text-error",
 
         className,
       )}
