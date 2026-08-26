@@ -38,3 +38,14 @@ export async function readNotification(notificationId: string): Promise<void> {
     { method: "PATCH" },
   );
 }
+
+/**
+ * 알림 하나를 삭제합니다.
+ */
+export async function deleteNotification(
+  notificationId: string,
+): Promise<void> {
+  await apiFetch<{ message: string }>(`/api/notifications/${notificationId}`, {
+    method: "DELETE",
+  });
+}

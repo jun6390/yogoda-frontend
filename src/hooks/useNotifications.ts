@@ -7,6 +7,7 @@ import { API_BASE_URL } from "@/lib/api/client";
 import {
   getNotifications,
   readNotification,
+  deleteNotification,
   NOTIFICATION_LIST_LIMIT,
   type AppNotification,
 } from "@/lib/api/notification";
@@ -137,5 +138,29 @@ export function useNotifications() {
     [notifications],
   );
 
-  return { notifications, unreadCount, markAsRead };
+  /*
+   * 알림을 목록에서 삭제함. 안 읽은 알림이면 unreadCount도 함께 감소시킴.
+   * Optimistic update 방식으로 화면을 먼저 갱신하고 서버 요청을 보냄
+   */
+  const dismissNotification = useCallback(
+    async (notificationId: string) => {
+      const target = notifications.find((n) => n.id === notificationId);
+      if (!target) return;
+
+      if (!target.readAt) {
+        setUnreadCount((prev) => Math.max(0, prev - 1));
+      }
+
+      setNotifications((prev) => prev.filter((n) => n.id !== notificationId));
+
+      try {
+        await deleteNotification(notificationId);
+      } catch (err) {
+        console.error("알림 삭제 실패:", err);
+      }
+    },
+    [notifications],
+  );
+
+  return { notifications, unreadCount, markAsRead, dismissNotification };
 }

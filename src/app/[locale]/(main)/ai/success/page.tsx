@@ -5,6 +5,8 @@ import { useQuery } from "@tanstack/react-query";
 import { useLocale, useTranslations } from "next-intl";
 
 import { PageContainer } from "@/components/layout/PageContainer";
+import { PageSpinner } from "@/components/ui/Spinner/Spinner";
+import { ErrorState } from "@/components/ui/ErrorState/ErrorState";
 import { Link } from "@/i18n/navigation";
 import { getCurrentPlan, getPlanByCode } from "@/lib/api/plan";
 import { useAuthStore } from "@/stores/useAuthStore";
@@ -18,6 +20,7 @@ export default function PlanSuccessPage() {
     data: currentPlan,
     isPending,
     isError,
+    refetch,
   } = useQuery({
     queryKey: ["plans", "me", "current"],
     queryFn: getCurrentPlan,
@@ -39,21 +42,19 @@ export default function PlanSuccessPage() {
     new Intl.NumberFormat(locale).format(value);
 
   if (isPending) {
-    return (
-      <PageContainer className="flex min-h-full items-center justify-center py-5xl text-center">
-        <p className="font-sans text-body-14-regular text-text-secondary">
-          {t("loading")}
-        </p>
-      </PageContainer>
-    );
+    return <PageSpinner label={t("loading")} />;
   }
 
   if (isError) {
     return (
-      <PageContainer className="flex min-h-full items-center justify-center py-5xl text-center">
-        <p className="font-sans text-body-14-regular text-text-secondary">
-          {t("error")}
-        </p>
+      <PageContainer className="flex min-h-full flex-col items-center justify-center px-xl py-5xl">
+        <ErrorState
+          title={t("error")}
+          description={t("errorDescription")}
+          retryLabel={t("retry")}
+          onRetry={refetch}
+          className="w-full max-w-[360px]"
+        />
       </PageContainer>
     );
   }

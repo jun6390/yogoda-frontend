@@ -29,16 +29,16 @@ export function AdminSidebar() {
 
   return (
     <aside className="flex h-full w-[260px] shrink-0 flex-col border-r border-border-default bg-surface px-lg py-2xl">
-      <div className="flex items-center gap-sm px-sm">
-        <FigmaImage
-          alt="Yogoda"
-          src="/yogoda-logo.svg"
-          className="h-[20px] w-auto"
-        />
+      <Link
+        href="/"
+        aria-label="메인 화면으로 이동"
+        className="flex items-center gap-sm px-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-action-primary"
+      >
+        <FigmaImage alt="" src="/yogoda-logo.svg" className="h-[20px] w-auto" />
         <span className="font-sans text-caption-12-bold tracking-wide text-text-tertiary">
           ADMIN
         </span>
-      </div>
+      </Link>
 
       <nav className="mt-2xl flex flex-1 flex-col gap-xs">
         {ADMIN_NAV_ITEMS.map((item) => {

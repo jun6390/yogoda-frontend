@@ -306,6 +306,7 @@
     "loadError": "혜택을 불러오지 못했어요.",
     "loadErrorDescription": "잠시 후 다시 시도해 주세요.",
     "retry": "다시 불러오기",
+    "errorDescription": "잠시 후 다시 시도해 주세요.",
     "emptyTitle": "표시할 혜택이 없어요.",
     "emptyDescription": "다른 카테고리를 확인해 보세요.",
     "nearbyTitle": "내 주변 핫플레이스",
@@ -347,7 +348,8 @@
     "emptyDescription": "쿠폰을 받으면 만료 일정이 여기에 표시돼요.",
     "error": "혜택 일정을 불러오지 못했어요.",
     "errorDescription": "잠시 후 다시 시도해 주세요.",
-    "retry": "다시 불러오기"
+    "retry": "다시 불러오기",
+    "errorDescription": "잠시 후 다시 시도해 주세요."
   },
   "NearbyBenefits": {
     "title": "내 주변 혜택",
@@ -366,11 +368,15 @@
       "culture": "문화",
       "shopping": "쇼핑"
     },
-    "views": { "map": "지도", "list": "목록" },
+    "views": {
+      "map": "지도",
+      "list": "목록"
+    },
     "close": "닫기",
     "loadError": "주변 혜택을 불러오지 못했어요.",
     "loadErrorDescription": "잠시 후 다시 시도해 주세요.",
     "retry": "다시 불러오기",
+    "errorDescription": "잠시 후 다시 시도해 주세요.",
     "empty": "주변에 이용 가능한 혜택이 없어요.",
     "emptyDescription": "위치를 변경하거나 나중에 다시 확인해 주세요.",
     "mapError": "지도를 불러오지 못했어요.",
@@ -389,7 +395,8 @@
     "emptyDescription": "전체 혜택에서 관심 있는 항목을 찜해 보세요.",
     "error": "찜한 혜택을 불러오지 못했어요.",
     "errorDescription": "잠시 후 다시 시도해 주세요.",
-    "retry": "다시 불러오기"
+    "retry": "다시 불러오기",
+    "errorDescription": "잠시 후 다시 시도해 주세요."
   },
   "Missions": {
     "tabs": {
@@ -407,7 +414,10 @@
     "filterLabel": "미션 상태",
     "progressSummary": "내 미션 진행 현황",
     "progressCount": "진행 중 {active}개 · 보상 대기 {pending}개",
-    "filters": { "active": "진행 중", "done": "완료" },
+    "filters": {
+      "active": "진행 중",
+      "done": "완료"
+    },
     "status": {
       "available": "참여 가능",
       "in_progress": "진행 중",
@@ -430,6 +440,7 @@
     "loadError": "미션을 불러오지 못했어요.",
     "loadErrorDescription": "잠시 후 다시 시도해 주세요.",
     "retry": "다시 불러오기",
+    "errorDescription": "잠시 후 다시 시도해 주세요.",
     "empty": {
       "active": {
         "title": "참여할 미션이 없어요.",
@@ -453,7 +464,8 @@
     "monthly": "이번 달 {count}일 출석했어요",
     "error": "출석 기록을 불러오지 못했어요.",
     "errorDescription": "잠시 후 다시 시도해 주세요.",
-    "retry": "다시 불러오기"
+    "retry": "다시 불러오기",
+    "errorDescription": "잠시 후 다시 시도해 주세요."
   },
   "My": {
     "defaultUserName": "사용자",
@@ -466,6 +478,7 @@
     "planError": "내 요금제를 불러오지 못했어요.",
     "planErrorDescription": "잠시 후 다시 시도해 주세요.",
     "retry": "다시 불러오기",
+    "errorDescription": "잠시 후 다시 시도해 주세요.",
     "noPlan": "아직 가입한 요금제가 없어요",
     "explorePlans": "요금제 둘러보기",
     "savingEyebrow": "이번 달 아낄 수 있는 금액",
@@ -509,7 +522,10 @@
     "locationApplied": "가까운 순으로 정렬 중",
     "locationError": "위치 정보를 사용할 수 없어요. 브라우저 권한을 확인해 주세요.",
     "resultCount": "직영 매장 {count}곳",
-    "views": { "map": "지도", "list": "목록" },
+    "views": {
+      "map": "지도",
+      "list": "목록"
+    },
     "mapError": "지도를 불러오지 못했어요.",
     "mapErrorDescription": "지도 API 설정과 등록된 서비스 URL을 확인해 주세요.",
     "distance": "{distance}km",
@@ -518,6 +534,7 @@
     "detailError": "매장 정보를 불러오지 못했어요.",
     "loadErrorDescription": "잠시 후 다시 시도해 주세요.",
     "retry": "다시 불러오기",
+    "errorDescription": "잠시 후 다시 시도해 주세요.",
     "emptyTitle": "조건에 맞는 매장이 없어요.",
     "emptyDescription": "검색어나 필터를 변경해 보세요.",
     "availableServices": "이용 가능한 서비스",
@@ -582,6 +599,7 @@
     "loadError": "쿠폰함을 불러오지 못했어요.",
     "loadErrorDescription": "잠시 후 다시 시도해 주세요.",
     "retry": "다시 불러오기",
+    "errorDescription": "잠시 후 다시 시도해 주세요.",
     "expiresAt": "{date}까지",
     "usedAt": "{date} 사용",
     "close": "쿠폰 상세 닫기",
@@ -648,6 +666,7 @@
     "loadErrorDescription": "잠시 후 다시 시도해 주세요.",
     "detailError": "요금제 상세 정보를 불러오지 못했어요.",
     "retry": "다시 불러오기",
+    "errorDescription": "잠시 후 다시 시도해 주세요.",
     "noPlan": "현재 이용 중인 요금제가 없어요.",
     "explorePlans": "요금제 둘러보기",
     "cancelTitle": "현재 요금제를 해지할까요?",
@@ -688,7 +707,8 @@
     "viewPlan": "요금제 상세 보기",
     "loadError": "혜택 정보를 불러오지 못했어요.",
     "loadErrorDescription": "잠시 후 다시 시도해 주세요.",
-    "retry": "다시 불러오기"
+    "retry": "다시 불러오기",
+    "errorDescription": "잠시 후 다시 시도해 주세요."
   },
   "Login": {
     "back": "뒤로가기",
@@ -799,7 +819,9 @@
     "loading": "요금제를 불러오는 중이에요.",
     "error": "요금제를 불러오지 못했어요.",
     "monthlyPrice": "{amount}원 / 월",
-    "currentPlanBadge": "이용 중"
+    "currentPlanBadge": "이용 중",
+    "retry": "다시 불러오기",
+    "errorDescription": "잠시 후 다시 시도해 주세요."
   },
   "PlanDetail": {
     "back": "뒤로가기",
@@ -860,7 +882,9 @@
       "description": "선택한 혜택이 초기화돼요.",
       "cancel": "취소",
       "confirm": "확인"
-    }
+    },
+    "retry": "다시 불러오기",
+    "errorDescription": "잠시 후 다시 시도해 주세요."
   },
   "NotFound": {
     "label": "404 ERROR",
@@ -882,11 +906,14 @@
     "submitting": "가입 처리 중이에요...",
     "submit": "가입 완료하기",
     "joinError": "요금제 가입에 실패했어요. 다시 시도해 주세요.",
-    "changeError": "요금제 변경에 실패했어요. 다시 시도해 주세요."
+    "changeError": "요금제 변경에 실패했어요. 다시 시도해 주세요.",
+    "retry": "다시 시도하기"
   },
   "PlanSuccess": {
     "loading": "가입 결과를 불러오고 있어요.",
     "error": "가입 결과를 불러오지 못했어요.",
+    "retry": "다시 불러오기",
+    "errorDescription": "잠시 후 다시 시도해 주세요.",
     "empty": "아직 가입한 요금제가 없어요.",
     "title": "가입이 완료됐어요",
     "description": "새 요금제는 개통 반영 후 즉시 적용돼요.\nU+ AI가 혜택 이용 현황을 계속 진단해드릴게요.",
