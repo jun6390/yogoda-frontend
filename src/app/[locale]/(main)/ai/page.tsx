@@ -32,6 +32,7 @@ export default function AIConsultationPage() {
   const {
     messages,
     isTyping,
+    isRestoringHistory,
     sendMessage,
     retryMessage,
     showGuestLimitModal,
@@ -119,50 +120,54 @@ export default function AIConsultationPage() {
 
       {/* 대화 메세지 스크롤 영역 */}
       <div className="min-h-0 flex-1 overflow-y-auto p-lg flex flex-col gap-lg">
-        {messages.map((msg) => {
-          if (msg.sender === "user") {
-            return <UserChatBubble key={msg.id}>{msg.text}</UserChatBubble>;
-          }
+        {/* 이전 대화 내역을 불러오는 동안 말풍선 형태의 스켈레톤을 보여줌 */}
+        {isRestoringHistory ? (
+          <ChatHistorySkeleton />
+        ) : (
+          messages.map((msg) => {
+            if (msg.sender === "user") {
+              return <UserChatBubble key={msg.id}>{msg.text}</UserChatBubble>;
+            }
 
-          // 응답 대기 중인 빈 AI 자리표시 메시지는 렌더링하지 않음
-          // (하단의 타이핑 인디케이터가 대신 표시되므로, 그리지 않으면 말풍선이 2개로 보임)
-          if (msg.type === "text" && !msg.text) {
-            return null;
-          }
+            // 응답 대기 중인 빈 AI 자리표시 메시지는 렌더링하지 않음
+            // (하단의 타이핑 인디케이터가 대신 표시되므로, 그리지 않으면 말풍선이 2개로 보임)
+            if (msg.type === "text" && !msg.text) {
+              return null;
+            }
 
-          return (
-            <AIChatBubble
-              key={msg.id}
-              noBackground={msg.type !== "text"} // 텍스트 말풍선만 흰색 배경 유지
-            >
-              {/* 일반 텍스트 말풍선 (AI 응답의 마크다운 서식을 그대로 렌더링) */}
-              {msg.type === "text" && msg.text && (
-                <ChatMarkdown>{msg.text}</ChatMarkdown>
-              )}
+            return (
+              <AIChatBubble
+                key={msg.id}
+                noBackground={msg.type !== "text"} // 텍스트 말풍선만 흰색 배경 유지
+              >
+                {/* 일반 텍스트 말풍선 (AI 응답의 마크다운 서식을 그대로 렌더링) */}
+                {msg.type === "text" && msg.text && (
+                  <ChatMarkdown>{msg.text}</ChatMarkdown>
+                )}
 
-              {/* 추천 요금제 카드 */}
-              {msg.type === "plans" && msg.plans && (
-                <PlanRecommendationCards plans={msg.plans} />
-              )}
+                {/* 추천 요금제 카드 */}
+                {msg.type === "plans" && msg.plans && (
+                  <PlanRecommendationCards plans={msg.plans} />
+                )}
 
-              {/* 링크 이동 말풍선 */}
-              {msg.type === "link" && msg.textKey && (
-                <button className="flex items-center gap-xs font-sans text-caption-13-bold text-text-brand hover:underline self-start">
-                  {t(msg.textKey)} <ChevronRight size={16} />
-                </button>
-              )}
+                {/* 링크 이동 말풍선 */}
+                {msg.type === "link" && msg.textKey && (
+                  <button className="flex items-center gap-xs font-sans text-caption-13-bold text-text-brand hover:underline self-start">
+                    {t(msg.textKey)} <ChevronRight size={16} />
+                  </button>
+                )}
 
-              {/* 에러 발생 시 재시도 배너 */}
-              {msg.type === "error" && (
-                <AITypingIndicator
-                  state="error"
-                  onRetry={() => retryMessage(msg.id)}
-                />
-              )}
-            </AIChatBubble>
-          );
-        })}
-
+                {/* 에러 발생 시 재시도 배너 */}
+                {msg.type === "error" && (
+                  <AITypingIndicator
+                    state="error"
+                    onRetry={() => retryMessage(msg.id)}
+                  />
+                )}
+              </AIChatBubble>
+            );
+          })
+        )}
         {/* 타이핑 애니메이션 인디케이터 */}
         {isTyping && (
           <AIChatBubble noBackground>
@@ -269,5 +274,35 @@ export default function AIConsultationPage() {
         </div>
       )}
     </div>
+  );
+}
+
+function ChatHistorySkeleton() {
+  return (
+    <>
+      {/* AI 말풍선 스켈레톤 */}
+      <div className="flex w-full items-start gap-sm">
+        <div className="mt-[2px] size-[28px] shrink-0 animate-pulse rounded-full bg-surface-subtle" />
+        <div className="flex flex-col gap-xs rounded-[12px] rounded-tl-[4px] border border-border-default bg-surface px-lg py-md shadow-sm">
+          <div className="h-[14px] w-[200px] animate-pulse rounded-full bg-surface-subtle" />
+          <div className="h-[14px] w-[160px] animate-pulse rounded-full bg-surface-subtle" />
+          <div className="h-[14px] w-[120px] animate-pulse rounded-full bg-surface-subtle" />
+        </div>
+      </div>
+
+      {/* 유저 말풍선 스켈레톤 */}
+      <div className="flex w-full justify-end">
+        <div className="h-[42px] w-[140px] animate-pulse rounded-[12px] rounded-tr-[4px] bg-action-primary/20" />
+      </div>
+
+      {/* AI 말풍선 스켈레톤 */}
+      <div className="flex w-full items-start gap-sm">
+        <div className="mt-[2px] size-[28px] shrink-0 animate-pulse rounded-full bg-surface-subtle" />
+        <div className="flex flex-col gap-xs rounded-[12px] rounded-tl-[4px] border border-border-default bg-surface px-lg py-md shadow-sm">
+          <div className="h-[14px] w-[220px] animate-pulse rounded-full bg-surface-subtle" />
+          <div className="h-[14px] w-[180px] animate-pulse rounded-full bg-surface-subtle" />
+        </div>
+      </div>
+    </>
   );
 }

@@ -7,6 +7,8 @@ import { useLocale, useTranslations } from "next-intl";
 import { useParams } from "next/navigation";
 
 import { PageContainer } from "@/components/layout/PageContainer";
+import { ErrorState } from "@/components/ui/ErrorState/ErrorState";
+import { PageSpinner, Spinner } from "@/components/ui/Spinner/Spinner";
 import { Button } from "@/components/ui/Button/Button";
 import { useRouter } from "@/i18n/navigation";
 import {
@@ -83,13 +85,7 @@ function PlanJoinConfirmContent({ code }: PlanJoinConfirmContentProps) {
     new Intl.NumberFormat(locale).format(value);
 
   if (selectedBenefits === null || isPlanPending || !plan) {
-    return (
-      <PageContainer className="flex min-h-full items-center justify-center py-5xl text-center">
-        <p className="font-sans text-body-14-regular text-text-secondary">
-          {t("loading")}
-        </p>
-      </PageContainer>
-    );
+    return <PageSpinner label={t("loading")} />;
   }
 
   const isPlanChange =
@@ -246,12 +242,12 @@ function PlanJoinConfirmContent({ code }: PlanJoinConfirmContentProps) {
 
       <div className="fixed bottom-[72px] left-1/2 z-20 w-full max-w-[446px] -translate-x-1/2 bg-surface px-lg pb-xl pt-lg shadow-[0_-8px_28px_rgb(18_20_31_/_12%)]">
         {submitError && (
-          <p
-            role="alert"
-            className="mb-md text-center font-sans text-caption-13-medium text-error"
-          >
-            {submitError}
-          </p>
+          <ErrorState
+            className="mb-md"
+            title={submitError}
+            retryLabel={t("retry")}
+            onRetry={handleSubmit}
+          />
         )}
 
         <Button
@@ -259,7 +255,14 @@ function PlanJoinConfirmContent({ code }: PlanJoinConfirmContentProps) {
           disabled={isSubmitting}
           onClick={handleSubmit}
         >
-          {isSubmitting ? t("submitting") : t("submit")}
+          {isSubmitting ? (
+            <span className="flex items-center justify-center gap-sm">
+              <Spinner size="sm" className="text-white" />
+              {t("submitting")}
+            </span>
+          ) : (
+            t("submit")
+          )}
         </Button>
       </div>
     </>
