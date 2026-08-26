@@ -1,18 +1,32 @@
 "use client";
 
+import { useState } from "react";
+
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { RotateCcw } from "lucide-react";
 
 import { Badge } from "@/components/ui/Badge/Badge";
 import { ErrorState } from "@/components/ui/ErrorState/ErrorState";
 import { Button } from "@/components/admin/Button";
+import { Modal } from "@/components/admin/Modal";
 import { ApiError } from "@/lib/api/client";
-import { activatePromptVersion, getPromptHistory } from "@/lib/api/prompt";
+import {
+  activatePromptVersion,
+  getPromptHistory,
+} from "@/lib/api/admin/prompt";
 import { formatDateTime } from "@/lib/admin/format";
 import { ADMIN_PROMPT_QUERY_KEYS } from "@/lib/admin/queryKeys";
 import { cn } from "@/lib/utils";
 
+interface PendingRollback {
+  versionId: string;
+  version: string;
+}
+
 export function PromptVersionHistory() {
   const queryClient = useQueryClient();
+  const [pendingRollback, setPendingRollback] =
+    useState<PendingRollback | null>(null);
 
   const { data, isPending, isError, error, refetch } = useQuery({
     queryKey: ADMIN_PROMPT_QUERY_KEYS.history,
@@ -22,6 +36,7 @@ export function PromptVersionHistory() {
   const rollbackMutation = useMutation({
     mutationFn: activatePromptVersion,
     onSuccess: () => {
+      setPendingRollback(null);
       queryClient.invalidateQueries({
         queryKey: ADMIN_PROMPT_QUERY_KEYS.active,
       });
@@ -35,16 +50,12 @@ export function PromptVersionHistory() {
     ? rollbackMutation.variables
     : undefined;
 
-  const handleRollback = (version: string, versionId: string) => {
-    const confirmed = window.confirm(
-      `${version} 버전으로 되돌릴까요?\n지금 즉시 사용자 앱에 반영돼요.`,
-    );
-
-    if (!confirmed) {
+  const handleConfirmRollback = () => {
+    if (!pendingRollback) {
       return;
     }
 
-    rollbackMutation.mutate(versionId);
+    rollbackMutation.mutate(pendingRollback.versionId);
   };
 
   return (
@@ -150,7 +161,10 @@ export function PromptVersionHistory() {
                           loadingLabel="되돌리는 중..."
                           disabled={rollbackMutation.isPending}
                           onClick={() =>
-                            handleRollback(version.version, version.versionId)
+                            setPendingRollback({
+                              versionId: version.versionId,
+                              version: version.version,
+                            })
                           }
                         >
                           이 버전으로 되돌리기
@@ -172,6 +186,26 @@ export function PromptVersionHistory() {
           </p>
         )}
       </div>
+
+      {pendingRollback && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-lg"
+          onMouseDown={() => setPendingRollback(null)}
+        >
+          <Modal
+            onMouseDown={(e) => e.stopPropagation()}
+            icon={<RotateCcw aria-hidden="true" size={20} />}
+            heading={`${pendingRollback.version} 버전으로 되돌릴까요?`}
+            description="지금 즉시 사용자 앱에 반영돼요."
+            primaryLabel="되돌리기"
+            secondaryLabel="취소"
+            primaryLoading={rollbackMutation.isPending}
+            onClose={() => setPendingRollback(null)}
+            onPrimaryClick={handleConfirmRollback}
+            onSecondaryClick={() => setPendingRollback(null)}
+          />
+        </div>
+      )}
     </section>
   );
 }

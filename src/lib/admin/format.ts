@@ -17,3 +17,17 @@ export function formatDateTime(iso: string) {
 
   return `${get("year")}-${get("month")}-${get("day")} ${get("hour")}:${get("minute")}`;
 }
+
+/*
+ * 초 단위 상담 시간을 "4분 12초" 형태로 표시함
+ */
+export function formatDuration(seconds: number) {
+  const minutes = Math.floor(seconds / 60);
+  const remainSeconds = seconds % 60;
+
+  if (minutes === 0) {
+    return `${remainSeconds}초`;
+  }
+
+  return `${minutes}분 ${remainSeconds}초`;
+}

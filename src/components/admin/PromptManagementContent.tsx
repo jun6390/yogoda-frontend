@@ -9,7 +9,7 @@ import { ErrorState } from "@/components/ui/ErrorState/ErrorState";
 import { Button } from "@/components/admin/Button";
 import { PromptVersionHistory } from "@/components/admin/PromptVersionHistory";
 import { ApiError } from "@/lib/api/client";
-import { createPrompt, getActivePrompt } from "@/lib/api/prompt";
+import { createPrompt, getActivePrompt } from "@/lib/api/admin/prompt";
 import { formatDateTime } from "@/lib/admin/format";
 import { ADMIN_PROMPT_QUERY_KEYS } from "@/lib/admin/queryKeys";
 
