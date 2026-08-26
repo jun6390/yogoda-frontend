@@ -207,8 +207,9 @@ export function useAIChat() {
           // 종료된 세션이면 복원하지 않고 웰컴 메시지로 새로 시작함
           if (session && !session.endedAt && dbMessages.length > 0) {
             sessionIdRef.current = session.id;
-            setMessages(
-              dbMessages.flatMap((m) => {
+            setMessages([
+              WELCOME_MESSAGE,
+              ...dbMessages.flatMap((m) => {
                 const textMsg: ChatMessage = {
                   id: m.id,
                   sender: m.role === "user" ? "user" : "ai",
@@ -230,7 +231,7 @@ export function useAIChat() {
 
                 return [textMsg];
               }),
-            );
+            ]);
           }
         } catch (err) {
           console.error("채팅 내역 조회 실패:", err);
