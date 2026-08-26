@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/Badge/Badge";
 import { ErrorState } from "@/components/ui/ErrorState/ErrorState";
 import { Button } from "@/components/admin/Button";
 import { DateRangePicker } from "@/components/admin/DateRangePicker";
+import { Select } from "@/components/admin/Select";
 import { ApiError } from "@/lib/api/client";
 import { getSessionDetail, getSessions } from "@/lib/api/session";
 import { formatDateTime, formatDuration } from "@/lib/admin/format";
@@ -25,13 +26,15 @@ const STATUS_OPTIONS: { value: SessionStatus; label: string }[] = [
   { value: "dropped", label: "이탈" },
 ];
 
-const DROP_STAGE_OPTIONS: { value: SessionDropStage; label: string }[] = [
-  { value: "consultation_started", label: "상담 시작" },
-  { value: "recommendation_completed", label: "추천 완료" },
-  { value: "plan_comparison_viewed", label: "요금제 비교" },
-  { value: "signup_started", label: "가입 신청" },
-  { value: "signup_completed", label: "가입 완료" },
-];
+const DROP_STAGE_OPTIONS: { value: SessionDropStage | "all"; label: string }[] =
+  [
+    { value: "all", label: "전체 단계" },
+    { value: "consultation_started", label: "상담 시작" },
+    { value: "recommendation_completed", label: "추천 완료" },
+    { value: "plan_comparison_viewed", label: "요금제 비교" },
+    { value: "signup_started", label: "가입 신청" },
+    { value: "signup_completed", label: "가입 완료" },
+  ];
 
 interface FilterState {
   startDate: string;
@@ -59,7 +62,7 @@ function toListParams(filters: FilterState): SessionListParams {
   };
 }
 
-const selectClassName = cn(
+const filterInputClassName = cn(
   "h-[40px] rounded-md border border-border-default bg-background px-md",
   "font-sans text-body-14-regular text-text-primary",
   "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-action-primary",
@@ -131,45 +134,28 @@ export function SessionLogContent() {
           <span className="font-sans text-caption-12-bold text-text-tertiary">
             상태
           </span>
-          <select
+          <Select
             value={draftFilters.status}
-            onChange={(e) =>
-              setDraftFilters((prev) => ({
-                ...prev,
-                status: e.target.value as SessionStatus,
-              }))
+            options={STATUS_OPTIONS}
+            onChange={(status) =>
+              setDraftFilters((prev) => ({ ...prev, status }))
             }
-            className={selectClassName}
-          >
-            {STATUS_OPTIONS.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
+            className="w-[140px]"
+          />
         </label>
 
         <label className="flex flex-col gap-xs">
           <span className="font-sans text-caption-12-bold text-text-tertiary">
             이탈 단계
           </span>
-          <select
+          <Select
             value={draftFilters.dropStage}
-            onChange={(e) =>
-              setDraftFilters((prev) => ({
-                ...prev,
-                dropStage: e.target.value as SessionDropStage | "all",
-              }))
+            options={DROP_STAGE_OPTIONS}
+            onChange={(dropStage) =>
+              setDraftFilters((prev) => ({ ...prev, dropStage }))
             }
-            className={selectClassName}
-          >
-            <option value="all">전체 단계</option>
-            {DROP_STAGE_OPTIONS.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
+            className="w-[160px]"
+          />
         </label>
 
         <label className="flex flex-col gap-xs">
@@ -186,7 +172,7 @@ export function SessionLogContent() {
                 promptVersion: e.target.value,
               }))
             }
-            className={cn(selectClassName, "w-[100px]")}
+            className={cn(filterInputClassName, "w-[100px]")}
           />
         </label>
 
