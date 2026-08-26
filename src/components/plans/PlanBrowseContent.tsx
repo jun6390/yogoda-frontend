@@ -5,6 +5,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useLocale, useTranslations } from "next-intl";
 
 import { Spinner, PageSpinner } from "@/components/ui/Spinner/Spinner";
+import { ErrorState } from "@/components/ui/ErrorState/ErrorState";
 import { Chip } from "@/components/ui/Chip/Chip";
 import { PlanRow } from "@/components/ui/PlanRow/PlanRow";
 import { getComparedPlans, getCurrentPlan, getPlans } from "@/lib/api/plan";
@@ -23,6 +24,7 @@ export function PlanBrowseContent() {
     data: plans = [],
     isPending,
     isError,
+    refetch,
   } = useQuery({
     queryKey: ["plans", accessToken ? "member-compare" : "public"],
     queryFn: () => (accessToken ? getComparedPlans() : getPlans()),
@@ -105,9 +107,12 @@ export function PlanBrowseContent() {
 
   if (isError) {
     return (
-      <p className="mt-xl text-caption-13-medium text-text-secondary">
-        {t("error")}
-      </p>
+      <ErrorState
+        className="mt-xl"
+        title={t("error")}
+        retryLabel={t("retry")}
+        onRetry={refetch}
+      />
     );
   }
 

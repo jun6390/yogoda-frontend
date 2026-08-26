@@ -19,6 +19,7 @@ import { useLocale, useTranslations } from "next-intl";
 import { useParams } from "next/navigation";
 
 import { PageContainer } from "@/components/layout/PageContainer";
+import { ErrorState } from "@/components/ui/ErrorState/ErrorState";
 import { PageSpinner } from "@/components/ui/Spinner/Spinner";
 import { NergetPlanBadge } from "@/components/plans/NergetPlanBadge";
 import { Button } from "@/components/ui/Button/Button";
@@ -67,6 +68,7 @@ function PlanDetailContent({ code }: PlanDetailContentProps) {
     data: plan,
     isPending,
     isError,
+    refetch,
   } = useQuery({
     queryKey: ["plans", code],
     queryFn: () => getPlanByCode(code),
@@ -174,9 +176,11 @@ function PlanDetailContent({ code }: PlanDetailContentProps) {
   if (isError || !plan) {
     return (
       <PageContainer className="py-xl">
-        <p className="text-caption-13-medium text-text-secondary">
-          {t("error")}
-        </p>
+        <ErrorState
+          title={t("error")}
+          retryLabel={t("retry")}
+          onRetry={refetch}
+        />
       </PageContainer>
     );
   }

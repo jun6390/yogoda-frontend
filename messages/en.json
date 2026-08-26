@@ -243,7 +243,8 @@
     "loading": "Processing...",
     "close": "Close",
     "later": "Later",
-    "retry": "Try again"
+    "retry": "Try again",
+    "errorDescription": "Please try again in a moment."
   },
   "Navigation": {
     "home": "Home",
@@ -306,6 +307,7 @@
     "loadError": "Unable to load benefits.",
     "loadErrorDescription": "Please try again in a moment.",
     "retry": "Try again",
+    "errorDescription": "Please try again in a moment.",
     "emptyTitle": "No benefits to show.",
     "emptyDescription": "Try another category.",
     "nearbyTitle": "Nearby hotspots",
@@ -347,7 +349,8 @@
     "emptyDescription": "Coupon expiration dates will appear here.",
     "error": "Unable to load the schedule.",
     "errorDescription": "Please try again in a moment.",
-    "retry": "Try again"
+    "retry": "Try again",
+    "errorDescription": "Please try again in a moment."
   },
   "NearbyBenefits": {
     "title": "Nearby benefits",
@@ -366,11 +369,15 @@
       "culture": "Culture",
       "shopping": "Shopping"
     },
-    "views": { "map": "Map", "list": "List" },
+    "views": {
+      "map": "Map",
+      "list": "List"
+    },
     "close": "Close",
     "loadError": "Unable to load nearby benefits.",
     "loadErrorDescription": "Please try again in a moment.",
     "retry": "Try again",
+    "errorDescription": "Please try again in a moment.",
     "empty": "No nearby benefits are available.",
     "emptyDescription": "Try another location or check again later.",
     "mapError": "Unable to load the map.",
@@ -389,7 +396,8 @@
     "emptyDescription": "Save a benefit from the full list.",
     "error": "Unable to load saved benefits.",
     "errorDescription": "Please try again in a moment.",
-    "retry": "Try again"
+    "retry": "Try again",
+    "errorDescription": "Please try again in a moment."
   },
   "Missions": {
     "tabs": {
@@ -407,7 +415,10 @@
     "filterLabel": "Mission status",
     "progressSummary": "My mission progress",
     "progressCount": "{active} active · {pending} rewards to claim",
-    "filters": { "active": "In progress", "done": "Completed" },
+    "filters": {
+      "active": "In progress",
+      "done": "Completed"
+    },
     "status": {
       "available": "Available",
       "in_progress": "In progress",
@@ -430,6 +441,7 @@
     "loadError": "Unable to load missions.",
     "loadErrorDescription": "Please try again in a moment.",
     "retry": "Try again",
+    "errorDescription": "Please try again in a moment.",
     "empty": {
       "active": {
         "title": "No missions available.",
@@ -453,7 +465,8 @@
     "monthly": "Checked in {count} days this month",
     "error": "Unable to load attendance.",
     "errorDescription": "Please try again in a moment.",
-    "retry": "Try again"
+    "retry": "Try again",
+    "errorDescription": "Please try again in a moment."
   },
   "My": {
     "defaultUserName": "User",
@@ -466,6 +479,7 @@
     "planError": "Unable to load your plan.",
     "planErrorDescription": "Please try again in a moment.",
     "retry": "Try again",
+    "errorDescription": "Please try again in a moment.",
     "noPlan": "You have not joined a plan yet",
     "explorePlans": "Explore plans",
     "savingEyebrow": "Potential savings this month",
@@ -509,7 +523,10 @@
     "locationApplied": "Sorted by nearest",
     "locationError": "Location is unavailable. Check your browser permissions.",
     "resultCount": "{count} direct stores",
-    "views": { "map": "Map", "list": "List" },
+    "views": {
+      "map": "Map",
+      "list": "List"
+    },
     "mapError": "Unable to load the map.",
     "mapErrorDescription": "Check the map API settings and registered service URL.",
     "distance": "{distance} km",
@@ -518,6 +535,7 @@
     "detailError": "Unable to load store details.",
     "loadErrorDescription": "Please try again in a moment.",
     "retry": "Try again",
+    "errorDescription": "Please try again in a moment.",
     "emptyTitle": "No stores match your filters.",
     "emptyDescription": "Try changing the search or filters.",
     "availableServices": "Available services",
@@ -582,6 +600,7 @@
     "loadError": "Unable to load your coupons.",
     "loadErrorDescription": "Please try again in a moment.",
     "retry": "Try again",
+    "errorDescription": "Please try again in a moment.",
     "expiresAt": "Valid until {date}",
     "usedAt": "Used {date}",
     "close": "Close coupon details",
@@ -648,6 +667,7 @@
     "loadErrorDescription": "Please try again in a moment.",
     "detailError": "Unable to load plan details.",
     "retry": "Try again",
+    "errorDescription": "Please try again in a moment.",
     "noPlan": "You do not have an active plan.",
     "explorePlans": "Explore plans",
     "cancelTitle": "Cancel your current plan?",
@@ -688,7 +708,8 @@
     "viewPlan": "View plan details",
     "loadError": "Unable to load your benefits.",
     "loadErrorDescription": "Please try again in a moment.",
-    "retry": "Try again"
+    "retry": "Try again",
+    "errorDescription": "Please try again in a moment."
   },
   "Login": {
     "back": "Back",
@@ -799,7 +820,9 @@
     "loading": "Loading plans.",
     "error": "Unable to load plans.",
     "monthlyPrice": "{amount} KRW/month",
-    "currentPlanBadge": "Current"
+    "currentPlanBadge": "Current",
+    "retry": "Try again",
+    "errorDescription": "Please try again in a moment."
   },
   "PlanDetail": {
     "discountAmount": "Discount ₩{amount}/month",
@@ -860,7 +883,9 @@
       "description": "Your selected benefits will be reset.",
       "cancel": "Cancel",
       "confirm": "Confirm"
-    }
+    },
+    "retry": "Try again",
+    "errorDescription": "Please try again in a moment."
   },
   "NotFound": {
     "label": "404 ERROR",
@@ -882,11 +907,14 @@
     "submitting": "Processing your subscription...",
     "submit": "Complete subscription",
     "joinError": "Couldn't join the plan. Please try again.",
-    "changeError": "Couldn't change the plan. Please try again."
+    "changeError": "Couldn't change the plan. Please try again.",
+    "retry": "Retry"
   },
   "PlanSuccess": {
     "loading": "Loading your plan result.",
     "error": "Couldn't load your plan result.",
+    "retry": "Try again",
+    "errorDescription": "Please try again in a moment.",
     "empty": "You haven't joined a plan yet.",
     "title": "You're all set!",
     "description": "Your new plan applies as soon as activation is complete.\nYogo's AI will keep tracking your benefits for you.",
