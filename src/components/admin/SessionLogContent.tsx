@@ -7,6 +7,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Badge } from "@/components/ui/Badge/Badge";
 import { ErrorState } from "@/components/ui/ErrorState/ErrorState";
 import { Button } from "@/components/admin/Button";
+import { DateRangePicker } from "@/components/admin/DateRangePicker";
 import { ApiError } from "@/lib/api/client";
 import { getSessionDetail, getSessions } from "@/lib/api/session";
 import { formatDateTime, formatDuration } from "@/lib/admin/format";
@@ -117,31 +118,13 @@ export function SessionLogContent() {
           <span className="font-sans text-caption-12-bold text-text-tertiary">
             기간
           </span>
-          <div className="flex items-center gap-xs">
-            <input
-              type="date"
-              value={draftFilters.startDate}
-              onChange={(e) =>
-                setDraftFilters((prev) => ({
-                  ...prev,
-                  startDate: e.target.value,
-                }))
-              }
-              className={selectClassName}
-            />
-            <span className="text-text-tertiary">~</span>
-            <input
-              type="date"
-              value={draftFilters.endDate}
-              onChange={(e) =>
-                setDraftFilters((prev) => ({
-                  ...prev,
-                  endDate: e.target.value,
-                }))
-              }
-              className={selectClassName}
-            />
-          </div>
+          <DateRangePicker
+            startDate={draftFilters.startDate}
+            endDate={draftFilters.endDate}
+            onChange={(range) =>
+              setDraftFilters((prev) => ({ ...prev, ...range }))
+            }
+          />
         </label>
 
         <label className="flex flex-col gap-xs">
