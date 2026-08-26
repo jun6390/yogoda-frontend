@@ -1,3 +1,4 @@
+import type { AdminPeriod } from "@/types/admin";
 import type { DashboardPeriod } from "@/types/dashboard";
 import type { SessionListParams } from "@/types/session";
 
@@ -13,4 +14,8 @@ export const ADMIN_SESSION_QUERY_KEYS = {
 
 export const ADMIN_DASHBOARD_QUERY_KEYS = {
   summary: (period: DashboardPeriod) => ["admin", "dashboard", period],
+};
+
+export const ADMIN_UI_ELEMENTS_QUERY_KEYS = {
+  summary: (period: AdminPeriod) => ["admin", "ui-elements", period],
 };
