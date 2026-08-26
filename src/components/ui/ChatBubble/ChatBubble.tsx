@@ -41,8 +41,8 @@ export function AIChatBubble({
       <Image
         src="/yogoda-characters/chat-profile.png"
         alt="AI 프로필"
-        width={28}
-        height={28}
+        width={32}
+        height={32}
         className="shrink-0 rounded-full mt-[2px] object-cover"
       />
       <div

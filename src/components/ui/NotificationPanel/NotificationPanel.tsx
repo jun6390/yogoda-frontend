@@ -228,8 +228,7 @@ function NotificationItem({
             offset <= -(REVEAL_WIDTH / 2) ? "opacity-100" : "opacity-0",
           )}
         >
-          <Trash2 size={16} strokeWidth={2} />
-          <span className="font-sans text-micro-11-bold">삭제</span>
+          <Trash2 size={20} strokeWidth={2} />
         </button>
       )}
 
