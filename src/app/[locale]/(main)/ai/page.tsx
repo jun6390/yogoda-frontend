@@ -8,6 +8,7 @@ import {
   MicOff,
   Send,
   ChevronRight,
+  ArrowDown,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
 
@@ -44,6 +45,8 @@ export default function AIConsultationPage() {
   const [inputText, setInputText] = useState("");
   // 회원 전용 "채팅 끝내기" 확인 팝업 표시 여부
   const [showEndChatModal, setShowEndChatModal] = useState(false);
+  // 위로 스크롤 시 맨 아래로 이동 버튼 표시 여부
+  const [showScrollBottom, setShowScrollBottom] = useState(false);
 
   // 음성 인식이 확정한 문장을 기존 입력값 뒤에 이어붙임 (여러 번 끊어 말해도 계속 누적됨)
   const handleVoiceResult = useCallback((text: string) => {
@@ -52,11 +55,32 @@ export default function AIConsultationPage() {
   const { isListening, isSupported, interimText, toggleListening } =
     useVoiceInput({ onFinalResult: handleVoiceResult });
 
+  // 스크롤 영역 ref (맨 아래 여부 판단에 사용)
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
   // 메시지 추가 시 자동 스크롤을 위한 ref
   const chatEndRef = useRef<HTMLDivElement>(null);
-  useEffect(() => {
+
+  const isAtBottom = useCallback(() => {
+    const el = scrollContainerRef.current;
+    if (!el) return true;
+    return el.scrollHeight - el.scrollTop - el.clientHeight < 100;
+  }, []);
+
+  const scrollToBottom = useCallback(() => {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages, isTyping]);
+    setShowScrollBottom(false);
+  }, []);
+
+  // 맨 아래에 있을 때만 자동 스크롤 (위로 올라간 상태에선 강제 스크롤 안 함)
+  useEffect(() => {
+    if (isAtBottom()) {
+      chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    }
+  }, [messages, isTyping, isAtBottom]);
+
+  const handleScroll = useCallback(() => {
+    setShowScrollBottom(!isAtBottom());
+  }, [isAtBottom]);
 
   const handleBack = () => {
     router.push("/");
@@ -85,7 +109,7 @@ export default function AIConsultationPage() {
   };
 
   return (
-    <div className="flex h-full flex-col bg-background">
+    <div className="relative flex h-full flex-col bg-background">
       {/* 상단 헤더 */}
       <header className="flex h-[56px] w-full items-center justify-between border-b border-border-default bg-surface px-lg shrink-0">
         <div className="flex items-center gap-sm">
@@ -119,7 +143,11 @@ export default function AIConsultationPage() {
       </header>
 
       {/* 대화 메세지 스크롤 영역 */}
-      <div className="min-h-0 flex-1 overflow-y-auto p-lg flex flex-col gap-lg">
+      <div
+        ref={scrollContainerRef}
+        onScroll={handleScroll}
+        className="min-h-0 flex-1 overflow-y-auto p-lg flex flex-col gap-lg"
+      >
         {/* 이전 대화 내역을 불러오는 동안 말풍선 형태의 스켈레톤을 보여줌 */}
         {isRestoringHistory ? (
           <ChatHistorySkeleton />
@@ -177,6 +205,18 @@ export default function AIConsultationPage() {
         <div ref={chatEndRef} />
       </div>
 
+      {/* 위로 스크롤 시 맨 아래로 이동하는 버튼 */}
+      {showScrollBottom && (
+        <button
+          type="button"
+          onClick={scrollToBottom}
+          aria-label="맨 아래로"
+          className="absolute bottom-[120px] right-lg z-10 flex size-[36px] items-center justify-center rounded-full border-2 border-action-primary bg-surface text-action-primary shadow-md hover:bg-action-primary/5 transition-colors"
+        >
+          <ArrowDown size={18} />
+        </button>
+      )}
+
       {/* AI의 질문에 바로 탭해서 답할 수 있는 빠른 답변 후보 (입력창 바로 위, 흰 배경 없이 고정) */}
       {quickReplies.length > 0 && (
         <div className="flex flex-wrap gap-xs px-lg pt-lg pb-md shrink-0">
@@ -210,26 +250,36 @@ export default function AIConsultationPage() {
 
           {/* 브라우저가 음성 인식을 지원할 때만 마이크 버튼 노출 (사파리 등 미지원 브라우저 대비) */}
           {isSupported && (
-            <button
-              type="button"
-              onClick={toggleListening}
-              aria-label={t(
-                isListening ? "voiceInput.stop" : "voiceInput.start",
+            <div className="absolute right-[48px] flex items-center justify-center">
+              {/* 녹음 중일 때 바깥으로 퍼지는 링 효과 */}
+              {isListening && (
+                <span className="absolute size-[36px] rounded-full bg-action-primary/20 animate-ping" />
               )}
-              className={
-                isListening
-                  ? "absolute right-[48px] flex size-[36px] items-center justify-center rounded-full bg-error text-white animate-pulse"
-                  : "absolute right-[48px] flex size-[36px] items-center justify-center rounded-full bg-transparent text-text-secondary hover:bg-action-primary/10 hover:text-action-primary transition-all"
-              }
-            >
-              {isListening ? <MicOff size={18} /> : <Mic size={18} />}
-            </button>
+              <button
+                type="button"
+                onClick={toggleListening}
+                aria-label={t(
+                  isListening ? "voiceInput.stop" : "voiceInput.start",
+                )}
+                className={
+                  isListening
+                    ? "relative flex size-[36px] items-center justify-center text-action-primary transition-colors"
+                    : "relative flex size-[36px] items-center justify-center text-text-tertiary hover:text-text-primary transition-colors"
+                }
+              >
+                {isListening ? <MicOff size={18} /> : <Mic size={18} />}
+              </button>
+            </div>
           )}
 
           <button
             type="submit"
             disabled={!inputText.trim()}
-            className="absolute right-sm flex size-[36px] items-center justify-center rounded-full bg-transparent text-text-secondary hover:bg-action-primary hover:text-white active:bg-action-primary-hover active:text-white active:scale-90 disabled:bg-transparent disabled:text-icon-disabled disabled:cursor-not-allowed transition-all"
+            className={
+              inputText.trim()
+                ? "absolute right-sm flex size-[36px] items-center justify-center text-action-primary transition-colors active:scale-90"
+                : "absolute right-sm flex size-[36px] items-center justify-center text-text-tertiary cursor-not-allowed transition-colors"
+            }
           >
             <Send size={18} />
           </button>
@@ -282,25 +332,25 @@ function ChatHistorySkeleton() {
     <>
       {/* AI 말풍선 스켈레톤 */}
       <div className="flex w-full items-start gap-sm">
-        <div className="mt-[2px] size-[28px] shrink-0 animate-pulse rounded-full bg-surface-subtle" />
-        <div className="flex flex-col gap-xs rounded-[12px] rounded-tl-[4px] border border-border-default bg-surface px-lg py-md shadow-sm">
-          <div className="h-[14px] w-[200px] animate-pulse rounded-full bg-surface-subtle" />
-          <div className="h-[14px] w-[160px] animate-pulse rounded-full bg-surface-subtle" />
-          <div className="h-[14px] w-[120px] animate-pulse rounded-full bg-surface-subtle" />
+        <div className="mt-[2px] size-[32px] shrink-0 animate-pulse rounded-full bg-surface-subtle" />
+        <div className="flex w-[85%] flex-col gap-xs rounded-[12px] rounded-tl-[4px] border border-border-default bg-surface px-lg py-md shadow-sm">
+          <div className="h-[14px] w-full animate-pulse rounded-full bg-surface-subtle" />
+          <div className="h-[14px] w-4/5 animate-pulse rounded-full bg-surface-subtle" />
+          <div className="h-[14px] w-3/5 animate-pulse rounded-full bg-surface-subtle" />
         </div>
       </div>
 
       {/* 유저 말풍선 스켈레톤 */}
       <div className="flex w-full justify-end">
-        <div className="h-[42px] w-[140px] animate-pulse rounded-[12px] rounded-tr-[4px] bg-action-primary/20" />
+        <div className="h-[42px] w-[80%] animate-pulse rounded-[12px] rounded-tr-[4px] bg-action-primary/20" />
       </div>
 
       {/* AI 말풍선 스켈레톤 */}
       <div className="flex w-full items-start gap-sm">
-        <div className="mt-[2px] size-[28px] shrink-0 animate-pulse rounded-full bg-surface-subtle" />
-        <div className="flex flex-col gap-xs rounded-[12px] rounded-tl-[4px] border border-border-default bg-surface px-lg py-md shadow-sm">
-          <div className="h-[14px] w-[220px] animate-pulse rounded-full bg-surface-subtle" />
-          <div className="h-[14px] w-[180px] animate-pulse rounded-full bg-surface-subtle" />
+        <div className="mt-[2px] size-[32px] shrink-0 animate-pulse rounded-full bg-surface-subtle" />
+        <div className="flex w-[85%] flex-col gap-xs rounded-[12px] rounded-tl-[4px] border border-border-default bg-surface px-lg py-md shadow-sm">
+          <div className="h-[14px] w-full animate-pulse rounded-full bg-surface-subtle" />
+          <div className="h-[14px] w-4/5 animate-pulse rounded-full bg-surface-subtle" />
         </div>
       </div>
     </>
