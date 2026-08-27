@@ -31,7 +31,12 @@ export function PromptManagementContent() {
   const [summary, setSummary] = useState("");
   const [deployedMessage, setDeployedMessage] = useState<string | null>(null);
 
-  const [syncedVersionId, setSyncedVersionId] = useState(prompt?.versionId);
+  // prompt?.versionId로 초기화하면, 다른 탭 갔다 왔을 때 TanStack Query 캐시가
+  // 첫 렌더부터 데이터를 즉시 채워줘서 아래 동기화 조건이 처음부터 거짓이 되어버림
+  // (그러면 content가 절대 채워지지 않음). 항상 값이 달라지는 상태로 시작해야 함
+  const [syncedVersionId, setSyncedVersionId] = useState<string | undefined>(
+    undefined,
+  );
 
   /*
    * conversionRate 같은 통계값은 배경에서 계속 refetch되며 바뀔 수 있어서
