@@ -216,13 +216,6 @@ export default function PlanSuccessPage() {
           >
             {t("backToChat")}
           </Link>
-
-          <Link
-            href={`/plans/${currentPlan.planCode}`}
-            className="flex h-[44px] w-full items-center justify-center rounded-lg font-sans text-label-14-bold text-text-secondary hover:text-text-primary"
-          >
-            {t("goToPlanDetail")}
-          </Link>
         </div>
       </div>
     </PageContainer>

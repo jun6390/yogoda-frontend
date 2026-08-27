@@ -349,8 +349,7 @@
     "emptyDescription": "Coupon expiration dates will appear here.",
     "error": "Unable to load the schedule.",
     "errorDescription": "Please try again in a moment.",
-    "retry": "Try again",
-    "errorDescription": "Please try again in a moment."
+    "retry": "Try again"
   },
   "NearbyBenefits": {
     "title": "Nearby benefits",
@@ -396,8 +395,7 @@
     "emptyDescription": "Save a benefit from the full list.",
     "error": "Unable to load saved benefits.",
     "errorDescription": "Please try again in a moment.",
-    "retry": "Try again",
-    "errorDescription": "Please try again in a moment."
+    "retry": "Try again"
   },
   "Missions": {
     "tabs": {
@@ -465,8 +463,7 @@
     "monthly": "Checked in {count} days this month",
     "error": "Unable to load attendance.",
     "errorDescription": "Please try again in a moment.",
-    "retry": "Try again",
-    "errorDescription": "Please try again in a moment."
+    "retry": "Try again"
   },
   "My": {
     "defaultUserName": "User",
@@ -1019,5 +1016,42 @@
   "Splash": {
     "logoAlt": "Yogoda",
     "greeting": "Yogo will find the perfect plan for you"
+  },
+  "PlanCompare": {
+    "title": "Compare Plans",
+    "back": "Back",
+    "loading": "Loading plan info...",
+    "error": "Could not load plan info.",
+    "retry": "Retry",
+    "heroText": "Let's quickly compare\nwhat's different",
+    "myPlan": "My Plan",
+    "monthlyFee": "Monthly Fee",
+    "data": "Data",
+    "voice": "Voice",
+    "sms": "SMS",
+    "tethering": "Tethering",
+    "benefits": "Key Benefits",
+    "comparison": "vs Current",
+    "unlimited": "Unlimited",
+    "same": "Same",
+    "cheaper": "-{amount} KRW",
+    "more": "+{amount} KRW",
+    "selectPlan": "Continue with Recommended Plan",
+    "currentBadge": "Current",
+    "aiBadge": "AI Pick",
+    "ctaSavingsNote": "Save {amount}₩/mo vs current",
+    "ctaExpensiveNote": "{amount}₩/mo more than current",
+    "ctaSameNote": "Same price as current plan",
+    "network": "Network",
+    "additionalVoice": "Extra Voice",
+    "familyData": "Family Data",
+    "membership": "Membership",
+    "perks": "Key Benefits",
+    "none": "None",
+    "analyzing": "AI is analyzing both plans...",
+    "aiJudgeTitle": "AI Analysis",
+    "recommendCurrent": "Your current plan is better",
+    "recommendSelected": "Switching is recommended",
+    "recommendTie": "Both plans are similar"
   }
 }

@@ -148,3 +148,19 @@ export interface PlanCancelResult {
   message?: string;
   canceledPlanId?: string;
 }
+
+export type PlanComparisonWinner = "current" | "selected" | "tie" | "none";
+
+export interface PlanComparisonRow {
+  label: string;
+  current: string;
+  selected: string;
+  winner: PlanComparisonWinner;
+}
+
+export interface PlanComparisonResult {
+  rows: PlanComparisonRow[];
+  oneLineSummary: string;
+  recommendation: "current" | "selected" | "tie";
+  summaryReason: string;
+}
