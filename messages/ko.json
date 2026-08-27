@@ -1046,6 +1046,11 @@
     "familyData": "가족 데이터",
     "membership": "멤버십",
     "perks": "주요 혜택",
-    "none": "없음"
+    "none": "없음",
+    "analyzing": "AI가 두 요금제를 분석하고 있어요...",
+    "aiJudgeTitle": "AI 분석 결과",
+    "recommendCurrent": "현재 요금제가 더 유리해요",
+    "recommendSelected": "추천 요금제로 바꾸는 게 좋아요",
+    "recommendTie": "두 요금제가 비슷해요"
   }
 }

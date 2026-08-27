@@ -105,11 +105,7 @@ export function PlanRecommendationCards({
               {hasCurrentPlan && (
                 <button
                   type="button"
-                  onClick={() =>
-                    router.push(
-                      `/ai/compare?code=${plan.code}&reason=${encodeURIComponent(plan.savings)}`,
-                    )
-                  }
+                  onClick={() => router.push(`/ai/compare?code=${plan.code}`)}
                   className="flex items-center gap-xs font-sans text-caption-12-medium text-text-secondary hover:text-text-primary"
                 >
                   {t("comparePlan")} <ChevronRight size={14} />

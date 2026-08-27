@@ -1047,6 +1047,11 @@
     "familyData": "Family Data",
     "membership": "Membership",
     "perks": "Key Benefits",
-    "none": "None"
+    "none": "None",
+    "analyzing": "AI is analyzing both plans...",
+    "aiJudgeTitle": "AI Analysis",
+    "recommendCurrent": "Your current plan is better",
+    "recommendSelected": "Switching is recommended",
+    "recommendTie": "Both plans are similar"
   }
 }
