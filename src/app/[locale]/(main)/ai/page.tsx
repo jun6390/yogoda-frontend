@@ -141,9 +141,6 @@ export default function AIConsultationPage() {
               className="flex items-center gap-2xs text-text-secondary hover:text-text-primary"
             >
               <LogOut size={18} />
-              <span className="font-sans text-caption-13-medium">
-                {t("endChatModal.trigger")}
-              </span>
             </button>
           </div>
         )}
