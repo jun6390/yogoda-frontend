@@ -3,10 +3,13 @@
 import { useRef, useState } from "react";
 import { ChevronRight } from "lucide-react";
 import { useTranslations } from "next-intl";
+import { useQuery } from "@tanstack/react-query";
 
 import { Badge } from "@/components/ui/Badge/Badge";
 import { Link, useRouter } from "@/i18n/navigation";
 import { cn } from "@/lib/utils";
+import { getCurrentPlan } from "@/lib/api/plan";
+import { useAuthStore } from "@/stores/useAuthStore";
 import type { ChatPlanCard } from "@/types/chat";
 
 interface PlanRecommendationCardsProps {
@@ -24,6 +27,21 @@ export function PlanRecommendationCards({
   const router = useRouter();
   const [activeIdx, setActiveIdx] = useState(0);
   const cardRefs = useRef<(HTMLDivElement | null)[]>([]);
+
+  const accessToken = useAuthStore((state) => state.accessToken);
+
+  /*
+   * 비교 버튼은 현재 가입 요금제가 있는 사용자에게만 표시함
+   * 가입 이력이 없으면 비교 대상이 없으므로 버튼을 숨김
+   */
+  const { data: currentPlan } = useQuery({
+    queryKey: ["plans", "me", "current"],
+    queryFn: getCurrentPlan,
+    enabled: Boolean(accessToken),
+    retry: false,
+  });
+
+  const hasCurrentPlan = Boolean(currentPlan?.planCode);
 
   const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
     const { scrollLeft, clientWidth } = e.currentTarget;
@@ -83,13 +101,16 @@ export function PlanRecommendationCards({
                 {plan.savings}
               </span>
 
-              <button
-                type="button"
-                onClick={() => router.push("/ai/compare")}
-                className="flex items-center gap-xs font-sans text-caption-12-medium text-text-secondary hover:text-text-primary"
-              >
-                {t("comparePlan")} <ChevronRight size={14} />
-              </button>
+              {/* 현재 가입 요금제가 있을 때만 비교 버튼 표시 */}
+              {hasCurrentPlan && (
+                <button
+                  type="button"
+                  onClick={() => router.push(`/ai/compare?code=${plan.code}`)}
+                  className="flex items-center gap-xs font-sans text-caption-12-medium text-text-secondary hover:text-text-primary"
+                >
+                  {t("comparePlan")} <ChevronRight size={14} />
+                </button>
+              )}
 
               <button
                 type="button"
