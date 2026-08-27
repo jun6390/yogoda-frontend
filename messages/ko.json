@@ -348,8 +348,7 @@
     "emptyDescription": "쿠폰을 받으면 만료 일정이 여기에 표시돼요.",
     "error": "혜택 일정을 불러오지 못했어요.",
     "errorDescription": "잠시 후 다시 시도해 주세요.",
-    "retry": "다시 불러오기",
-    "errorDescription": "잠시 후 다시 시도해 주세요."
+    "retry": "다시 불러오기"
   },
   "NearbyBenefits": {
     "title": "내 주변 혜택",
@@ -395,8 +394,7 @@
     "emptyDescription": "전체 혜택에서 관심 있는 항목을 찜해 보세요.",
     "error": "찜한 혜택을 불러오지 못했어요.",
     "errorDescription": "잠시 후 다시 시도해 주세요.",
-    "retry": "다시 불러오기",
-    "errorDescription": "잠시 후 다시 시도해 주세요."
+    "retry": "다시 불러오기"
   },
   "Missions": {
     "tabs": {
@@ -464,8 +462,7 @@
     "monthly": "이번 달 {count}일 출석했어요",
     "error": "출석 기록을 불러오지 못했어요.",
     "errorDescription": "잠시 후 다시 시도해 주세요.",
-    "retry": "다시 불러오기",
-    "errorDescription": "잠시 후 다시 시도해 주세요."
+    "retry": "다시 불러오기"
   },
   "My": {
     "defaultUserName": "사용자",
@@ -1018,5 +1015,37 @@
   "Splash": {
     "logoAlt": "요고다",
     "greeting": "요고가 딱 맞는 요금제를 찾아드릴게요"
+  },
+  "PlanCompare": {
+    "title": "요금제 비교",
+    "back": "뒤로가기",
+    "loading": "요금제 정보를 불러오고 있어요.",
+    "error": "요금제 정보를 불러오지 못했어요.",
+    "retry": "다시 불러오기",
+    "heroText": "차이가 있는 항목만\n빠르게 비교해볼게요",
+    "myPlan": "내 요금제",
+    "monthlyFee": "월 요금",
+    "data": "데이터",
+    "voice": "통화",
+    "sms": "문자",
+    "tethering": "테더링",
+    "benefits": "주요 혜택",
+    "comparison": "현재 대비",
+    "unlimited": "무제한",
+    "same": "동일",
+    "cheaper": "-{amount}원",
+    "more": "+{amount}원",
+    "selectPlan": "추천 요금제로 계속",
+    "currentBadge": "현재",
+    "aiBadge": "AI 추천",
+    "ctaSavingsNote": "현재보다 월 {amount}원 절약",
+    "ctaExpensiveNote": "현재보다 월 {amount}원 추가",
+    "ctaSameNote": "현재 요금제와 동일한 요금",
+    "network": "네트워크",
+    "additionalVoice": "부가통화",
+    "familyData": "가족 데이터",
+    "membership": "멤버십",
+    "perks": "주요 혜택",
+    "none": "없음"
   }
 }
