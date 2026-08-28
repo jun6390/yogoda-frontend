@@ -72,7 +72,7 @@ export function PlanRecommendationCards({
             ref={(el) => {
               cardRefs.current[idx] = el;
             }}
-            className="flex flex-col gap-sm rounded-lg bg-surface border border-border-default p-lg shadow-sm w-[250px] shrink-0 snap-start"
+            className="flex flex-col rounded-lg bg-surface border border-border-default p-lg shadow-sm w-[250px] shrink-0 snap-start h-[260px]"
           >
             <div className="flex items-center justify-between">
               {/* 순위 뱃지 */}
@@ -84,7 +84,7 @@ export function PlanRecommendationCards({
               </span>
             </div>
 
-            <div className="space-y-xs">
+            <div className="flex-1 space-y-xs">
               <strong className="block font-sans text-title-18-bold text-text-primary">
                 {plan.name}
               </strong>
@@ -94,13 +94,12 @@ export function PlanRecommendationCards({
               <p className="font-sans text-[10px] leading-[13px] text-text-secondary">
                 {plan.specs}
               </p>
+              <p className="font-sans text-caption-12-bold text-success pt-xs">
+                {plan.savings}
+              </p>
             </div>
 
-            <div className="border-t border-border-default pt-md space-y-md">
-              <span className="block font-sans text-caption-12-bold text-success">
-                {plan.savings}
-              </span>
-
+            <div className="border-t border-border-default pt-md space-y-md mt-md">
               {/* 현재 가입 요금제가 있을 때만 비교 버튼 표시 */}
               {hasCurrentPlan && (
                 <button
