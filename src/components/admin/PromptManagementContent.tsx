@@ -98,7 +98,7 @@ export function PromptManagementContent() {
       </p>
 
       <section className="mt-xl rounded-lg border border-border-default bg-surface p-lg">
-        <div className="flex items-center justify-between gap-md">
+        <div className="flex flex-wrap items-center justify-between gap-md">
           <div className="flex items-center gap-sm">
             <h2 className="font-sans text-title-18-bold text-text-primary">
               현재 적용 중인 프롬프트
@@ -148,7 +148,7 @@ export function PromptManagementContent() {
                 className="mt-md w-full rounded-md border border-border-default bg-background px-md py-sm font-sans text-body-14-regular text-text-primary placeholder:text-text-tertiary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-action-primary"
               />
 
-              <div className="mt-md flex items-center justify-between gap-md">
+              <div className="mt-md flex flex-wrap items-center justify-between gap-md">
                 <p className="font-sans text-caption-12-regular text-text-tertiary">
                   {content.length}자 · 전환율 {prompt.conversionRate}% ·{" "}
                   {prompt.sessionCount.toLocaleString("ko-KR")}건 세션 · 저장 시

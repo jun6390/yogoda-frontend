@@ -27,9 +27,11 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
       <body className={`${notoSansKr.variable} font-sans antialiased`}>
         <QueryProvider>
           <AdminGuard>
-            <div className="flex h-dvh w-full overflow-hidden bg-background">
+            <div className="flex h-dvh w-full flex-col overflow-hidden bg-background md:flex-row">
               <AdminSidebar />
-              <main className="min-w-0 flex-1 overflow-y-auto">{children}</main>
+              <main className="min-h-0 min-w-0 flex-1 overflow-y-auto">
+                {children}
+              </main>
             </div>
           </AdminGuard>
         </QueryProvider>
