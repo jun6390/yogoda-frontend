@@ -71,6 +71,13 @@ export default function AIConsultationPage() {
     setShowScrollBottom(false);
   }, []);
 
+  // 채팅 내역 복원 완료 시 즉시 맨 아래로 스크롤
+  useEffect(() => {
+    if (!isRestoringHistory) {
+      chatEndRef.current?.scrollIntoView({ behavior: "instant" });
+    }
+  }, [isRestoringHistory]);
+
   // 맨 아래에 있을 때만 자동 스크롤 (위로 올라간 상태에선 강제 스크롤 안 함)
   useEffect(() => {
     if (isAtBottom()) {
@@ -134,9 +141,6 @@ export default function AIConsultationPage() {
               className="flex items-center gap-2xs text-text-secondary hover:text-text-primary"
             >
               <LogOut size={18} />
-              <span className="font-sans text-caption-13-medium">
-                {t("endChatModal.trigger")}
-              </span>
             </button>
           </div>
         )}

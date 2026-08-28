@@ -2,6 +2,7 @@
 
 import { useMutation } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
+import Image from "next/image";
 import { useSearchParams } from "next/navigation";
 import { useEffect, useRef } from "react";
 
@@ -12,6 +13,8 @@ import {
   loginWithNaver,
 } from "@/lib/api/auth";
 import { importGuestChatSession } from "@/lib/api/chat";
+import { PageContainer } from "@/components/layout/PageContainer";
+import { Spinner } from "@/components/ui/Spinner/Spinner";
 import { useRouter } from "@/i18n/navigation";
 import { LOGIN_REDIRECT_STORAGE_KEY } from "@/lib/auth/loginRedirect";
 import { useAuthStore } from "@/stores/useAuthStore";
@@ -95,19 +98,55 @@ export function CallbackHandler({ provider }: CallbackHandlerProps) {
     mutate(code);
   }, [code, loginFn, mutate]);
 
-  if (!loginFn) {
-    return <div>{t("unsupportedProvider")}</div>;
-  }
+  const message = !loginFn
+    ? t("unsupportedProvider")
+    : !code
+      ? t("invalidAccess")
+      : error
+        ? error instanceof ApiError
+          ? error.message
+          : t("authFailed")
+        : t("processing");
+  const isLoading = Boolean(loginFn && code && !error);
 
-  if (!code) {
-    return <div>{t("invalidAccess")}</div>;
-  }
+  return (
+    <PageContainer className="relative flex min-h-full flex-col items-center justify-center overflow-hidden py-5xl text-center">
+      <div
+        aria-hidden
+        className="pointer-events-none absolute top-[6%] left-1/2 h-[300px] w-[300px] -translate-x-1/2 rounded-full bg-glow-accent opacity-80 blur-3xl"
+      />
 
-  if (error) {
-    const message = error instanceof ApiError ? error.message : t("authFailed");
+      <div className="relative flex flex-col items-center">
+        <div
+          className={
+            isLoading
+              ? "motion-safe:animate-[float404_3.2s_ease-in-out_infinite]"
+              : ""
+          }
+        >
+          <Image
+            src="/yogoda-characters/login.webp"
+            alt=""
+            width={220}
+            height={247}
+            className="h-[247px] w-[220px] object-contain drop-shadow-[0_10px_14px_rgba(224,20,133,0.16)]"
+            priority
+          />
+        </div>
 
-    return <div>{message}</div>;
-  }
-
-  return <div>{t("processing")}</div>;
+        <div className="mt-xl flex items-center gap-sm">
+          {isLoading && (
+            <Spinner
+              size="md"
+              className="text-action-primary"
+              label={message}
+            />
+          )}
+          <p className="font-sans text-body-14-regular text-text-secondary">
+            {message}
+          </p>
+        </div>
+      </div>
+    </PageContainer>
+  );
 }

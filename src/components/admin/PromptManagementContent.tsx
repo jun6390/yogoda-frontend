@@ -31,7 +31,12 @@ export function PromptManagementContent() {
   const [summary, setSummary] = useState("");
   const [deployedMessage, setDeployedMessage] = useState<string | null>(null);
 
-  const [syncedVersionId, setSyncedVersionId] = useState(prompt?.versionId);
+  // prompt?.versionId로 초기화하면, 다른 탭 갔다 왔을 때 TanStack Query 캐시가
+  // 첫 렌더부터 데이터를 즉시 채워줘서 아래 동기화 조건이 처음부터 거짓이 되어버림
+  // (그러면 content가 절대 채워지지 않음). 항상 값이 달라지는 상태로 시작해야 함
+  const [syncedVersionId, setSyncedVersionId] = useState<string | undefined>(
+    undefined,
+  );
 
   /*
    * conversionRate 같은 통계값은 배경에서 계속 refetch되며 바뀔 수 있어서
@@ -93,7 +98,7 @@ export function PromptManagementContent() {
       </p>
 
       <section className="mt-xl rounded-lg border border-border-default bg-surface p-lg">
-        <div className="flex items-center justify-between gap-md">
+        <div className="flex flex-wrap items-center justify-between gap-md">
           <div className="flex items-center gap-sm">
             <h2 className="font-sans text-title-18-bold text-text-primary">
               현재 적용 중인 프롬프트
@@ -143,7 +148,7 @@ export function PromptManagementContent() {
                 className="mt-md w-full rounded-md border border-border-default bg-background px-md py-sm font-sans text-body-14-regular text-text-primary placeholder:text-text-tertiary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-action-primary"
               />
 
-              <div className="mt-md flex items-center justify-between gap-md">
+              <div className="mt-md flex flex-wrap items-center justify-between gap-md">
                 <p className="font-sans text-caption-12-regular text-text-tertiary">
                   {content.length}자 · 전환율 {prompt.conversionRate}% ·{" "}
                   {prompt.sessionCount.toLocaleString("ko-KR")}건 세션 · 저장 시

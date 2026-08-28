@@ -36,7 +36,7 @@ export function UiAnalysisContent() {
 
   return (
     <div className="p-2xl">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-md sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="font-sans text-title-24-bold text-text-primary">
             UI 행동 분석
@@ -46,7 +46,7 @@ export function UiAnalysisContent() {
           </p>
         </div>
 
-        <div className="grid grid-cols-3 gap-xs rounded-lg bg-surface-subtle p-xs">
+        <div className="grid grid-cols-3 gap-xs rounded-lg bg-surface-subtle p-xs sm:inline-grid">
           {PERIOD_OPTIONS.map((option) => {
             const isSelected = period === option.value;
 
@@ -87,7 +87,7 @@ export function UiAnalysisContent() {
 
       {data && (
         <>
-          <div className="mt-xl flex gap-lg">
+          <div className="mt-xl flex flex-col gap-lg sm:flex-row">
             <div className="flex-1 rounded-lg border border-border-default bg-surface p-lg">
               {lowestCtrElement ? (
                 <>
@@ -135,7 +135,7 @@ export function UiAnalysisContent() {
           </div>
 
           <section className="mt-xl rounded-lg border border-border-default bg-surface p-lg">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-wrap items-center justify-between gap-xs">
               <h2 className="font-sans text-title-18-bold text-text-primary">
                 UI 요소별 성과
               </h2>

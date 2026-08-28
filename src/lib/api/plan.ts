@@ -4,6 +4,7 @@ import type {
   CurrentPlan,
   Plan,
   PlanCancelResult,
+  PlanComparisonResult,
   PlanSubscriptionResponse,
   SelectedPlanOptions,
 } from "@/types/plan";
@@ -53,4 +54,10 @@ export function cancelCurrentPlan() {
   return apiFetch<PlanCancelResult | null>("/api/plans/me/current", {
     method: "DELETE",
   });
+}
+
+export function getAIPlanComparison(currentCode: string, selectedCode: string) {
+  return apiFetch<PlanComparisonResult>(
+    `/api/plans/ai-compare?current=${encodeURIComponent(currentCode)}&selected=${encodeURIComponent(selectedCode)}`,
+  );
 }
