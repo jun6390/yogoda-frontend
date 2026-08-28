@@ -25,7 +25,6 @@ import { NergetPlanBadge } from "@/components/plans/NergetPlanBadge";
 import { Button } from "@/components/ui/Button/Button";
 import { useRouter } from "@/i18n/navigation";
 import { getCurrentPlan, getPlanByCode } from "@/lib/api/plan";
-import { getPlanJoinDraftKey } from "@/lib/plan-join-draft";
 import { useAuthStore } from "@/stores/useAuthStore";
 import type { PlanChoiceBenefit, PlanChoiceBenefitOption } from "@/types/plan";
 
@@ -434,26 +433,22 @@ function PlanDetailContent({ code }: PlanDetailContentProps) {
     router.back();
   };
 
-  /*
-   * 실제 가입/변경 API 호출은 확인 페이지에서 처리함
-   * 여기서는 선택한 혜택을 세션에 저장하고 확인 페이지로 이동만 담당함
-   */
-  const handlePlanAction = () => {
-    if (isCurrentPlan) {
-      return;
-    }
-
+  /* AI 채팅을 통한 가입 플로우 시작 */
+  const handleAISignup = () => {
+    if (isCurrentPlan) return;
     if (!accessToken) {
       router.push("/login");
       return;
     }
-
-    window.sessionStorage.setItem(
-      getPlanJoinDraftKey(code),
-      JSON.stringify(selectedBenefits),
+    sessionStorage.setItem(
+      "preselectedPlan",
+      JSON.stringify({
+        code: plan.code,
+        name: plan.name,
+        monthlyFee: plan.monthlyFee,
+      }),
     );
-
-    router.push(`/plans/${code}/confirm`);
+    router.push("/ai");
   };
 
   return (
@@ -740,15 +735,15 @@ function PlanDetailContent({ code }: PlanDetailContentProps) {
                 isCurrentPlan ||
                 (Boolean(accessToken) && isCurrentPlanPending)
               }
-              onClick={handlePlanAction}
+              onClick={handleAISignup}
             >
               {Boolean(accessToken) && isCurrentPlanPending
                 ? t("loading")
                 : isCurrentPlan
                   ? t("currentPlan")
                   : isPlanChange
-                    ? t("changePlan")
-                    : t("join")}
+                    ? "AI와 요금제 변경하기"
+                    : "AI와 가입하기"}
             </Button>
           </div>
         </div>

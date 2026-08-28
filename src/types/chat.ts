@@ -9,12 +9,54 @@ export interface ChatPlanCard {
   matchRate: string;
 }
 
+// 가입 플로우 단계
+export type SignupStep =
+  | "confirm_plan"
+  | "fraud_warning"
+  | "terms_agreement"
+  | "collect_info"
+  | "select_benefits"
+  | "select_payment"
+  | "final_confirm"
+  | "completed";
+
+// 가입 플로우 중 수집된 데이터 (단계별로 점진적으로 채워짐)
+export interface SignupCollectedData {
+  signupType?: "신규가입" | "번호이동";
+  fraudWarningAcknowledged?: boolean;
+  agreedToTerms?: boolean;
+  name?: string;
+  birth?: string;
+  selectedBenefits?: Record<string, string[]>;
+  paymentMethod?:
+    "계좌이체" | "신용카드" | "카카오페이" | "네이버페이" | "토스";
+}
+
+// 가입 플로우에서 사용하는 요금제 정보
+export interface PreselectedPlan {
+  code: string;
+  name: string;
+  monthlyFee: number;
+}
+
 // 채팅 화면에 표시되는 메시지 한 건
 export interface ChatMessage {
   id: string;
   sender: "ai" | "user";
-  type: "text" | "plans" | "link" | "error";
+  type:
+    | "text"
+    | "plans"
+    | "link"
+    | "error"
+    | "fraud_warning"
+    | "terms"
+    | "signup_summary"
+    | "signup_complete";
   text?: string;
   textKey?: string;
   plans?: ChatPlanCard[];
+  // 가입 플로우 전용 필드
+  signupStep?: SignupStep;
+  signupData?: SignupCollectedData;
+  preselectedPlan?: PreselectedPlan;
 }
