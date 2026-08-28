@@ -13,6 +13,10 @@ import {
 import { useTranslations } from "next-intl";
 
 import { PlanRecommendationCards } from "@/components/chat/PlanRecommendationCards";
+import { FraudWarningCard } from "@/components/chat/FraudWarningCard";
+import { TermsAgreementCard } from "@/components/chat/TermsAgreementCard";
+import { SignupSummaryCard } from "@/components/chat/SignupSummaryCard";
+import { SignupCompleteCard } from "@/components/chat/SignupCompleteCard";
 import { AITypingIndicator } from "@/components/ui/AITypingIndicator/AITypingIndicator";
 import {
   UserChatBubble,
@@ -25,10 +29,30 @@ import { useAIChat } from "@/hooks/useAIChat";
 import { useVoiceInput } from "@/hooks/useVoiceInput";
 import { useRouter } from "@/i18n/navigation";
 import { LOGIN_REDIRECT_STORAGE_KEY } from "@/lib/auth/loginRedirect";
+import type { PreselectedPlan } from "@/types/chat";
 
 export default function AIConsultationPage() {
   const router = useRouter();
   const t = useTranslations("AIChat");
+  // 요금제 상세 페이지에서 "AI와 가입하기"를 눌렀을 때 sessionStorage에 저장된 정보를 읽음
+  // URL 노출 없이 안전하게 전달하고, 읽은 즉시 삭제함
+  const [preselectedPlan, setPreselectedPlan] = useState<
+    PreselectedPlan | undefined
+  >(undefined);
+
+  useEffect(() => {
+    try {
+      const stored = sessionStorage.getItem("preselectedPlan");
+      if (stored) {
+        const parsed = JSON.parse(stored) as PreselectedPlan;
+        // eslint-disable-next-line react-hooks/set-state-in-effect
+        setPreselectedPlan(parsed);
+        // 읽은 즉시 삭제하지 않음 — 새로고침 시 복원을 위해 가입 완료 후 삭제
+      }
+    } catch {
+      // sessionStorage 접근 불가 환경에서는 무시
+    }
+  }, []);
 
   const {
     messages,
@@ -41,7 +65,12 @@ export default function AIConsultationPage() {
     isLoggedIn,
     endCurrentChat,
     quickReplies,
-  } = useAIChat();
+    isSignupFlow,
+    isSignupComplete,
+    currentSignupStep,
+    sendMessageSilent,
+  } = useAIChat({ preselectedPlan });
+
   const [inputText, setInputText] = useState("");
   // 회원 전용 "채팅 끝내기" 확인 팝업 표시 여부
   const [showEndChatModal, setShowEndChatModal] = useState(false);
@@ -115,6 +144,10 @@ export default function AIConsultationPage() {
     void endCurrentChat();
   };
 
+  // 가입 완료 후에는 입력창 비활성화
+  const isInputDisabled =
+    isSignupComplete || currentSignupStep === "terms_agreement";
+
   return (
     <div className="relative flex h-full flex-col bg-background">
       {/* 상단 헤더 */}
@@ -128,11 +161,11 @@ export default function AIConsultationPage() {
             <ArrowLeft size={24} />
           </button>
           <h1 className="select-none font-sans text-title-16-bold text-text-primary">
-            {t("headerTitle")}
+            {isSignupFlow ? "요금제 가입" : t("headerTitle")}
           </h1>
         </div>
 
-        {isLoggedIn && (
+        {isLoggedIn && !isSignupFlow && (
           <div className="flex items-center gap-md">
             <button
               type="button"
@@ -168,10 +201,7 @@ export default function AIConsultationPage() {
             }
 
             return (
-              <AIChatBubble
-                key={msg.id}
-                noBackground={msg.type !== "text"} // 텍스트 말풍선만 흰색 배경 유지
-              >
+              <AIChatBubble key={msg.id} noBackground={msg.type !== "text"}>
                 {/* 일반 텍스트 말풍선 (AI 응답의 마크다운 서식을 그대로 렌더링) */}
                 {msg.type === "text" && msg.text && (
                   <ChatMarkdown>{msg.text}</ChatMarkdown>
@@ -180,6 +210,29 @@ export default function AIConsultationPage() {
                 {/* 추천 요금제 카드 */}
                 {msg.type === "plans" && msg.plans && (
                   <PlanRecommendationCards plans={msg.plans} />
+                )}
+
+                {/* 명의도용 방지 안내 카드 */}
+                {msg.type === "fraud_warning" && <FraudWarningCard />}
+
+                {/* 약관 동의 카드 */}
+                {msg.type === "terms" && (
+                  <TermsAgreementCard onAgree={sendMessageSilent} />
+                )}
+
+                {/* 가입 정보 최종 확인 카드 */}
+                {msg.type === "signup_summary" && (
+                  <SignupSummaryCard
+                    signupData={msg.signupData ?? {}}
+                    plan={msg.preselectedPlan ?? preselectedPlan}
+                  />
+                )}
+
+                {/* 가입 완료 카드 */}
+                {msg.type === "signup_complete" && (
+                  <SignupCompleteCard
+                    plan={msg.preselectedPlan ?? preselectedPlan}
+                  />
                 )}
 
                 {/* 링크 이동 말풍선 */}
@@ -221,8 +274,8 @@ export default function AIConsultationPage() {
         </button>
       )}
 
-      {/* AI의 질문에 바로 탭해서 답할 수 있는 빠른 답변 후보 (입력창 바로 위, 흰 배경 없이 고정) */}
-      {quickReplies.length > 0 && (
+      {/* AI의 질문에 바로 탭해서 답할 수 있는 빠른 답변 후보 */}
+      {quickReplies.length > 0 && !isInputDisabled && (
         <div className="flex flex-wrap gap-xs px-lg pt-lg pb-md shrink-0">
           {quickReplies.map((reply) => (
             <button
@@ -239,55 +292,58 @@ export default function AIConsultationPage() {
 
       {/* 하단 입력 폼 영역 */}
       <div className="border-t border-border-default bg-surface p-lg shrink-0">
-        <form
-          onSubmit={handleSubmit}
-          className="relative flex items-center w-full"
-        >
-          <Input
-            value={isListening && interimText ? interimText : inputText}
-            onChange={(e) => setInputText(e.target.value)}
-            // 인식 중에는 확정되지 않은 말이 실시간으로 보이므로, 직접 타이핑해서 덮어쓰지 못하게 막음
-            readOnly={isListening}
-            placeholder={t("inputPlaceholder")}
-            className={isSupported ? "w-full pr-[96px]" : "w-full pr-[56px]"}
-          />
-
-          {/* 브라우저가 음성 인식을 지원할 때만 마이크 버튼 노출 (사파리 등 미지원 브라우저 대비) */}
-          {isSupported && (
-            <div className="absolute right-[48px] flex items-center justify-center">
-              {/* 녹음 중일 때 바깥으로 퍼지는 링 효과 */}
-              {isListening && (
-                <span className="absolute size-[36px] rounded-full bg-action-primary/20 animate-ping" />
-              )}
-              <button
-                type="button"
-                onClick={toggleListening}
-                aria-label={t(
-                  isListening ? "voiceInput.stop" : "voiceInput.start",
-                )}
-                className={
-                  isListening
-                    ? "relative flex size-[36px] items-center justify-center text-action-primary transition-colors"
-                    : "relative flex size-[36px] items-center justify-center text-text-tertiary hover:text-text-primary transition-colors"
-                }
-              >
-                {isListening ? <MicOff size={18} /> : <Mic size={18} />}
-              </button>
-            </div>
-          )}
-
-          <button
-            type="submit"
-            disabled={!inputText.trim()}
-            className={
-              inputText.trim()
-                ? "absolute right-sm flex size-[36px] items-center justify-center text-action-primary transition-colors active:scale-90"
-                : "absolute right-sm flex size-[36px] items-center justify-center text-text-tertiary cursor-not-allowed transition-colors"
-            }
+        {isInputDisabled ? (
+          <p className="text-center font-sans text-caption-12-medium text-text-tertiary py-xs">
+            가입이 완료되었습니다.
+          </p>
+        ) : (
+          <form
+            onSubmit={handleSubmit}
+            className="relative flex items-center w-full"
           >
-            <Send size={18} />
-          </button>
-        </form>
+            <Input
+              value={isListening && interimText ? interimText : inputText}
+              onChange={(e) => setInputText(e.target.value)}
+              readOnly={isListening}
+              placeholder={t("inputPlaceholder")}
+              className={isSupported ? "w-full pr-[96px]" : "w-full pr-[56px]"}
+            />
+
+            {isSupported && (
+              <div className="absolute right-[48px] flex items-center justify-center">
+                {isListening && (
+                  <span className="absolute size-[36px] rounded-full bg-action-primary/20 animate-ping" />
+                )}
+                <button
+                  type="button"
+                  onClick={toggleListening}
+                  aria-label={t(
+                    isListening ? "voiceInput.stop" : "voiceInput.start",
+                  )}
+                  className={
+                    isListening
+                      ? "relative flex size-[36px] items-center justify-center text-action-primary transition-colors"
+                      : "relative flex size-[36px] items-center justify-center text-text-tertiary hover:text-text-primary transition-colors"
+                  }
+                >
+                  {isListening ? <MicOff size={18} /> : <Mic size={18} />}
+                </button>
+              </div>
+            )}
+
+            <button
+              type="submit"
+              disabled={!inputText.trim()}
+              className={
+                inputText.trim()
+                  ? "absolute right-sm flex size-[36px] items-center justify-center text-action-primary transition-colors active:scale-90"
+                  : "absolute right-sm flex size-[36px] items-center justify-center text-text-tertiary cursor-not-allowed transition-colors"
+              }
+            >
+              <Send size={18} />
+            </button>
+          </form>
+        )}
       </div>
 
       {/* 비회원 무료 상담 소진 안내 팝업 */}
