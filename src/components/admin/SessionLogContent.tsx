@@ -195,8 +195,8 @@ export function SessionLogContent() {
         </div>
       </section>
 
-      <div className="mt-xl flex gap-lg">
-        <section className="flex h-[600px] w-[360px] shrink-0 flex-col rounded-lg border border-border-default bg-surface p-lg">
+      <div className="mt-xl flex flex-col gap-lg md:flex-row">
+        <section className="flex h-[400px] w-full shrink-0 flex-col rounded-lg border border-border-default bg-surface p-lg md:h-[600px] md:w-[360px]">
           <h2 className="font-sans text-title-18-bold text-text-primary">
             세션 목록
             {listData && (
@@ -281,7 +281,7 @@ export function SessionLogContent() {
           </div>
         </section>
 
-        <section className="flex h-[600px] flex-1 flex-col rounded-lg border border-border-default bg-surface p-lg">
+        <section className="flex h-[500px] flex-col rounded-lg border border-border-default bg-surface p-lg md:h-[600px] md:flex-1">
           {!selectedSessionId && (
             <p className="font-sans text-body-14-regular text-text-secondary">
               왼쪽 목록에서 세션을 선택하면 대화 내용을 볼 수 있어요.
@@ -309,7 +309,7 @@ export function SessionLogContent() {
 
           {detail && (
             <>
-              <header className="flex items-center justify-between gap-md border-b border-border-default pb-md">
+              <header className="flex flex-wrap items-center justify-between gap-md border-b border-border-default pb-md">
                 <div>
                   <p className="font-sans text-title-18-bold text-text-primary">
                     {detail.userName}

@@ -106,7 +106,7 @@ export function DashboardContent() {
 
   return (
     <div className="p-2xl">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-md sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="font-sans text-title-24-bold text-text-primary">
             대시보드
@@ -116,7 +116,7 @@ export function DashboardContent() {
           </p>
         </div>
 
-        <div className="grid grid-cols-3 gap-xs rounded-lg bg-surface-subtle p-xs">
+        <div className="grid grid-cols-3 gap-xs rounded-lg bg-surface-subtle p-xs sm:inline-grid">
           {PERIOD_OPTIONS.map((option) => {
             const isSelected = period === option.value;
 
@@ -158,7 +158,7 @@ export function DashboardContent() {
       {data && (
         <>
           {showDropStageAlert && (
-            <div className="mt-xl flex items-center gap-md rounded-lg border border-error-soft bg-error-soft px-lg py-md">
+            <div className="mt-xl flex flex-wrap items-center gap-md rounded-lg border border-error-soft bg-error-soft px-lg py-md">
               <AlertTriangle
                 aria-hidden="true"
                 size={20}
@@ -196,7 +196,7 @@ export function DashboardContent() {
             </div>
           )}
 
-          <div className="mt-xl flex gap-lg">
+          <div className="mt-xl flex flex-col gap-lg sm:flex-row">
             <KpiCard
               title="추천 건수"
               value={data.kpi.consultationCount}

@@ -1,9 +1,12 @@
 "use client";
 
+import { useState } from "react";
+
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 
 import { useMutation } from "@tanstack/react-query";
+import { Menu, X } from "lucide-react";
 
 import { LogoutButton } from "@/components/auth/LogoutButton";
 import { FigmaImage } from "@/components/ui/FigmaImage/FigmaImage";
@@ -12,7 +15,11 @@ import { logout } from "@/lib/api/auth";
 import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/stores/useAuthStore";
 
-export function AdminSidebar() {
+interface SidebarBodyProps {
+  onNavigate?: () => void;
+}
+
+function SidebarBody({ onNavigate }: SidebarBodyProps) {
   const pathname = usePathname();
   const router = useRouter();
 
@@ -28,10 +35,11 @@ export function AdminSidebar() {
   });
 
   return (
-    <aside className="flex h-full w-[260px] shrink-0 flex-col border-r border-border-default bg-surface px-lg py-2xl">
+    <>
       <Link
         href="/"
         aria-label="메인 화면으로 이동"
+        onClick={onNavigate}
         className="flex items-center gap-sm px-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-action-primary"
       >
         <FigmaImage alt="" src="/yogoda-logo.svg" className="h-[20px] w-auto" />
@@ -49,6 +57,7 @@ export function AdminSidebar() {
             <Link
               key={item.href}
               href={item.href}
+              onClick={onNavigate}
               className={cn(
                 "flex h-[44px] items-center gap-sm rounded-lg px-md",
                 "font-sans text-label-14-bold transition-colors",
@@ -87,6 +96,85 @@ export function AdminSidebar() {
           onClick={() => requestLogout()}
         />
       </div>
-    </aside>
+    </>
+  );
+}
+
+export function AdminSidebar() {
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+
+  return (
+    <>
+      {/* md 미만에서는 고정폭 사이드바 대신 상단바 + 오프캔버스 메뉴로 전환함 */}
+      <div className="flex h-[56px] shrink-0 items-center justify-between border-b border-border-default bg-surface px-lg md:hidden">
+        <Link
+          href="/"
+          aria-label="메인 화면으로 이동"
+          className="flex items-center gap-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-action-primary"
+        >
+          <FigmaImage
+            alt=""
+            src="/yogoda-logo.svg"
+            className="h-[18px] w-auto"
+          />
+          <span className="font-sans text-caption-12-bold tracking-wide text-text-tertiary">
+            ADMIN
+          </span>
+        </Link>
+
+        <button
+          type="button"
+          aria-label="메뉴 열기"
+          onClick={() => setIsMenuOpen(true)}
+          className="flex size-touch items-center justify-center text-text-primary"
+        >
+          <Menu aria-hidden="true" size={22} />
+        </button>
+      </div>
+
+      <div
+        inert={!isMenuOpen}
+        className={cn(
+          "fixed inset-0 z-50 transition-opacity duration-200 ease-out md:hidden",
+          isMenuOpen ? "opacity-100" : "pointer-events-none opacity-0",
+        )}
+      >
+        <button
+          type="button"
+          aria-label="메뉴 닫기"
+          disabled={!isMenuOpen}
+          onClick={() => setIsMenuOpen(false)}
+          className="absolute inset-0 bg-black/40"
+        />
+
+        <aside
+          role="dialog"
+          aria-modal="true"
+          aria-label="관리자 메뉴"
+          className={cn(
+            "absolute left-0 top-0",
+            "flex h-full w-[260px] max-w-[calc(100vw-40px)] flex-col",
+            "border-r border-border-default bg-surface px-lg py-2xl",
+            "transition-transform duration-[250ms] ease-out",
+            isMenuOpen ? "translate-x-0" : "-translate-x-full",
+          )}
+        >
+          <button
+            type="button"
+            aria-label="메뉴 닫기"
+            onClick={() => setIsMenuOpen(false)}
+            className="ml-auto flex size-touch items-center justify-center text-text-primary"
+          >
+            <X aria-hidden="true" size={20} />
+          </button>
+
+          <SidebarBody onNavigate={() => setIsMenuOpen(false)} />
+        </aside>
+      </div>
+
+      <aside className="hidden h-full w-[260px] shrink-0 flex-col border-r border-border-default bg-surface px-lg py-2xl md:flex">
+        <SidebarBody />
+      </aside>
+    </>
   );
 }
