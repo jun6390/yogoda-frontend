@@ -6,6 +6,7 @@ import { useTranslations } from "next-intl";
 import { useQuery } from "@tanstack/react-query";
 
 import { Badge } from "@/components/ui/Badge/Badge";
+import { Button } from "@/components/ui/Button/Button";
 import { Link, useRouter } from "@/i18n/navigation";
 import { cn } from "@/lib/utils";
 import { getCurrentPlan } from "@/lib/api/plan";
@@ -111,13 +112,13 @@ export function PlanRecommendationCards({
                 </button>
               )}
 
-              <button
-                type="button"
+              <Button
+                variant="secondary"
+                className="w-full h-[40px]"
                 onClick={() => router.push(`/plans/${plan.code}`)}
-                className="w-full h-[40px] rounded-lg bg-action-primary text-text-on-primary font-sans text-caption-13-bold hover:bg-action-primary-hover transition-colors"
               >
                 {t("selectBtn")}
-              </button>
+              </Button>
             </div>
           </div>
         ))}

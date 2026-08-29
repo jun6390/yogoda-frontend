@@ -1,23 +1,30 @@
 "use client";
 
-import { AlertTriangle } from "lucide-react";
+import { ShieldAlert } from "lucide-react";
+import { Button } from "@/components/ui/Button/Button";
+
+interface FraudWarningCardProps {
+  onConfirm?: () => void;
+}
 
 /**
  * 명의도용 방지 안내 카드.
  * 가입 플로우 fraud_warning 단계에서 AI 말풍선 아래에 표시됨.
- * 사용자가 "확인했습니다"라고 답하면 다음 단계로 진행됨.
+ * "확인했습니다" 버튼을 누르면 다음 단계로 진행됨.
  */
-export function FraudWarningCard() {
+export function FraudWarningCard({ onConfirm }: FraudWarningCardProps) {
   return (
-    <div className="w-[290px] rounded-lg border border-warning/40 bg-warning/5 p-lg flex flex-col gap-md">
-      <div className="flex items-center gap-sm">
-        <AlertTriangle size={18} className="text-warning shrink-0" />
+    <div className="w-[290px] rounded-xl border border-warning/50 bg-warning/8 flex flex-col overflow-hidden shadow-sm">
+      {/* 헤더 */}
+      <div className="flex items-center gap-sm bg-warning/15 px-lg py-md">
+        <ShieldAlert size={16} className="text-warning shrink-0" />
         <strong className="font-sans text-caption-13-bold text-text-primary">
           명의도용 방지 서비스 안내
         </strong>
       </div>
 
-      <ul className="flex flex-col gap-xs">
+      {/* 항목 */}
+      <ul className="flex flex-col gap-sm px-lg py-md">
         {[
           "본인 명의로만 가입이 가능합니다.",
           "타인 명의 도용 시 법적 처벌을 받을 수 있습니다.",
@@ -26,21 +33,24 @@ export function FraudWarningCard() {
         ].map((text) => (
           <li
             key={text}
-            className="flex items-start gap-xs font-sans text-caption-12-medium text-text-secondary"
+            className="flex items-start gap-sm font-sans text-caption-12-medium text-text-secondary"
           >
-            <span className="mt-[3px] shrink-0 size-[5px] rounded-full bg-text-tertiary" />
+            <span className="mt-[4px] shrink-0 size-[4px] rounded-full bg-warning" />
             {text}
           </li>
         ))}
       </ul>
 
-      <p className="font-sans text-[10px] leading-[14px] text-text-tertiary border-t border-border-default pt-md">
-        위 내용을 확인하셨으면 채팅창에{" "}
-        <strong className="text-text-secondary">
-          &quot;확인했습니다&quot;
-        </strong>
-        라고 입력해 주세요.
-      </p>
+      {/* 확인 버튼 */}
+      <div className="px-lg pb-lg pt-xs">
+        <Button
+          variant="secondary"
+          className="w-full h-[36px]"
+          onClick={onConfirm}
+        >
+          확인했습니다
+        </Button>
+      </div>
     </div>
   );
 }
