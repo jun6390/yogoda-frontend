@@ -192,7 +192,7 @@ export default function AIConsultationPage() {
       <div
         ref={scrollContainerRef}
         onScroll={handleScroll}
-        className="min-h-0 flex-1 overflow-y-auto p-lg flex flex-col gap-lg"
+        className="min-h-0 flex-1 overflow-y-auto p-lg pb-[32px] flex flex-col gap-lg"
       >
         {/* 이전 대화 내역을 불러오는 동안 말풍선 형태의 스켈레톤을 보여줌 */}
         {isRestoringHistory ? (
@@ -271,6 +271,22 @@ export default function AIConsultationPage() {
         <div ref={chatEndRef} />
       </div>
 
+      {/* AI의 질문에 바로 탭해서 답할 수 있는 빠른 답변 후보 */}
+      {quickReplies.length > 0 && !isInputDisabled && (
+        <div className="absolute bottom-[88px] left-0 right-0 flex gap-xs px-lg pb-xs z-10 overflow-x-auto scrollbar-hide">
+          {quickReplies.map((reply) => (
+            <button
+              key={reply}
+              type="button"
+              onClick={() => handleQuickReplyClick(reply)}
+              className="rounded-full border border-border-default bg-surface px-md py-xs font-sans text-caption-13-medium text-text-secondary transition-colors hover:border-action-primary hover:text-action-primary active:border-action-primary active:text-action-primary"
+            >
+              {reply}
+            </button>
+          ))}
+        </div>
+      )}
+
       {/* 위로 스크롤 시 맨 아래로 이동하는 버튼 */}
       {showScrollBottom && (
         <button
@@ -283,76 +299,54 @@ export default function AIConsultationPage() {
         </button>
       )}
 
-      {/* AI의 질문에 바로 탭해서 답할 수 있는 빠른 답변 후보 */}
-      {quickReplies.length > 0 && !isInputDisabled && (
-        <div className="flex flex-wrap gap-xs px-lg pt-lg pb-md shrink-0">
-          {quickReplies.map((reply) => (
-            <button
-              key={reply}
-              type="button"
-              onClick={() => handleQuickReplyClick(reply)}
-              className="rounded-full border border-border-default bg-surface px-md py-xs font-sans text-caption-13-medium text-text-secondary transition-colors hover:border-action-primary hover:text-action-primary"
-            >
-              {reply}
-            </button>
-          ))}
-        </div>
-      )}
-
       {/* 하단 입력 폼 영역 */}
       <div className="border-t border-border-default bg-surface p-lg shrink-0">
-        {isInputDisabled ? (
-          <p className="text-center font-sans text-caption-12-medium text-text-tertiary py-xs">
-            가입이 완료되었습니다.
-          </p>
-        ) : (
-          <form
-            onSubmit={handleSubmit}
-            className="relative flex items-center w-full"
-          >
-            <Input
-              value={isListening && interimText ? interimText : inputText}
-              onChange={(e) => setInputText(e.target.value)}
-              readOnly={isListening}
-              placeholder={t("inputPlaceholder")}
-              className={isSupported ? "w-full pr-[96px]" : "w-full pr-[56px]"}
-            />
+        <form
+          onSubmit={handleSubmit}
+          className="relative flex items-center w-full"
+        >
+          <Input
+            value={isListening && interimText ? interimText : inputText}
+            onChange={(e) => setInputText(e.target.value)}
+            readOnly={isListening}
+            placeholder={t("inputPlaceholder")}
+            className={isSupported ? "w-full pr-[96px]" : "w-full pr-[56px]"}
+          />
 
-            {isSupported && (
-              <div className="absolute right-[48px] flex items-center justify-center">
-                {isListening && (
-                  <span className="absolute size-[36px] rounded-full bg-action-primary/20 animate-ping" />
+          {isSupported && (
+            <div className="absolute right-[48px] flex items-center justify-center">
+              {isListening && (
+                <span className="absolute size-[36px] rounded-full bg-action-primary/20 animate-ping" />
+              )}
+              <button
+                type="button"
+                onClick={toggleListening}
+                aria-label={t(
+                  isListening ? "voiceInput.stop" : "voiceInput.start",
                 )}
-                <button
-                  type="button"
-                  onClick={toggleListening}
-                  aria-label={t(
-                    isListening ? "voiceInput.stop" : "voiceInput.start",
-                  )}
-                  className={
-                    isListening
-                      ? "relative flex size-[36px] items-center justify-center text-action-primary transition-colors"
-                      : "relative flex size-[36px] items-center justify-center text-text-tertiary hover:text-text-primary transition-colors"
-                  }
-                >
-                  {isListening ? <MicOff size={18} /> : <Mic size={18} />}
-                </button>
-              </div>
-            )}
+                className={
+                  isListening
+                    ? "relative flex size-[36px] items-center justify-center text-action-primary transition-colors"
+                    : "relative flex size-[36px] items-center justify-center text-text-tertiary hover:text-text-primary transition-colors"
+                }
+              >
+                {isListening ? <MicOff size={18} /> : <Mic size={18} />}
+              </button>
+            </div>
+          )}
 
-            <button
-              type="submit"
-              disabled={!inputText.trim()}
-              className={
-                inputText.trim()
-                  ? "absolute right-sm flex size-[36px] items-center justify-center text-action-primary transition-colors active:scale-90"
-                  : "absolute right-sm flex size-[36px] items-center justify-center text-text-tertiary cursor-not-allowed transition-colors"
-              }
-            >
-              <Send size={18} />
-            </button>
-          </form>
-        )}
+          <button
+            type="submit"
+            disabled={!inputText.trim()}
+            className={
+              inputText.trim()
+                ? "absolute right-sm flex size-[36px] items-center justify-center text-action-primary transition-colors active:scale-90"
+                : "absolute right-sm flex size-[36px] items-center justify-center text-text-tertiary cursor-not-allowed transition-colors"
+            }
+          >
+            <Send size={18} />
+          </button>
+        </form>
       </div>
 
       {/* 비회원 무료 상담 소진 안내 팝업 */}
