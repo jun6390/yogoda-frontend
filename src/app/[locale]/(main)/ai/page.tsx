@@ -88,6 +88,8 @@ export default function AIConsultationPage() {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   // 메시지 추가 시 자동 스크롤을 위한 ref
   const chatEndRef = useRef<HTMLDivElement>(null);
+  // 새 메시지 렌더링 직전에 바닥에 있었는지 기억 (DOM 갱신 후 isAtBottom()을 쓰면 늦음)
+  const wasAtBottomRef = useRef(true);
 
   const isAtBottom = useCallback(() => {
     const el = scrollContainerRef.current;
@@ -107,15 +109,15 @@ export default function AIConsultationPage() {
     }
   }, [isRestoringHistory]);
 
-  // 맨 아래에 있을 때만 자동 스크롤 (위로 올라간 상태에선 강제 스크롤 안 함)
+  // 새 메시지·타이핑 표시 변경 시 항상 맨 아래로 스크롤
   useEffect(() => {
-    if (isAtBottom()) {
-      chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
-    }
-  }, [messages, isTyping, isAtBottom]);
+    chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages, isTyping]);
 
   const handleScroll = useCallback(() => {
-    setShowScrollBottom(!isAtBottom());
+    const atBottom = isAtBottom();
+    wasAtBottomRef.current = atBottom;
+    setShowScrollBottom(!atBottom);
   }, [isAtBottom]);
 
   const handleBack = () => {
@@ -126,10 +128,17 @@ export default function AIConsultationPage() {
     e.preventDefault();
     sendMessage(inputText);
     setInputText("");
+    // 전송 즉시 맨 아래로 이동 (useEffect 보다 한 틱 빠르게)
+    setTimeout(() => {
+      chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    }, 0);
   };
 
   const handleQuickReplyClick = (reply: string) => {
     sendMessage(reply);
+    setTimeout(() => {
+      chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    }, 0);
   };
 
   const handleGuestLimitLogin = () => {
