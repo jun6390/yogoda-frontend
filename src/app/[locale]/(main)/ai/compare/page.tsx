@@ -15,6 +15,7 @@ import { PageContainer } from "@/components/layout/PageContainer";
 import { ErrorState } from "@/components/ui/ErrorState/ErrorState";
 import { PageSpinner } from "@/components/ui/Spinner/Spinner";
 import { Button } from "@/components/ui/Button/Button";
+import { BackToChatButton } from "@/components/chat/BackToChatButton";
 import { useRouter } from "@/i18n/navigation";
 import {
   getCurrentPlan,
@@ -244,6 +245,8 @@ export default function PlanComparePage() {
           </p>
         </PageContainer>
       </div>
+
+      <BackToChatButton />
 
       {/* 하단 고정 CTA */}
       <div className="fixed bottom-[72px] left-1/2 z-20 w-full max-w-[446px] -translate-x-1/2 rounded-t-[20px] bg-surface shadow-[0_-8px_28px_rgb(18_20_31_/_12%)]">
