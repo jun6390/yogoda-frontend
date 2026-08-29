@@ -105,7 +105,9 @@ export function PlanRecommendationCards({
               {hasCurrentPlan && (
                 <button
                   type="button"
-                  onClick={() => router.push(`/ai/compare?code=${plan.code}`)}
+                  onClick={() =>
+                    router.push(`/ai/compare?code=${plan.code}&from=chat`)
+                  }
                   className="flex items-center gap-xs font-sans text-caption-12-medium text-text-secondary hover:text-text-primary"
                 >
                   {t("comparePlan")} <ChevronRight size={14} />
@@ -115,7 +117,7 @@ export function PlanRecommendationCards({
               <Button
                 variant="secondary"
                 className="w-full h-[40px]"
-                onClick={() => router.push(`/plans/${plan.code}`)}
+                onClick={() => router.push(`/plans/${plan.code}?from=chat`)}
               >
                 {t("selectBtn")}
               </Button>
@@ -148,7 +150,7 @@ export function PlanRecommendationCards({
 
       {/* 다른 요금제 탐색하기: 요금제 전체 목록 페이지로 이동 */}
       <Link
-        href="/plans"
+        href="/plans?from=chat"
         className="flex items-center gap-xs font-sans text-caption-13-bold text-text-secondary hover:text-text-primary"
       >
         {t("explorePlans")} <ChevronRight size={16} />

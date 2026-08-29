@@ -1,13 +1,17 @@
 "use client";
 
 import { MessageCircle } from "lucide-react";
+import { useSearchParams } from "next/navigation";
 import { Link } from "@/i18n/navigation";
 
 /**
- * 요금제 탐색 페이지 등에서 AI 채팅으로 돌아가는 플로팅 버튼.
- * 모바일 컨테이너(max-w-[446px]) 안 우상단에 고정 표시됨.
+ * 채팅에서 요금제 페이지로 이동했을 때만 표시되는 플로팅 버튼.
+ * ?from=chat 파라미터가 있을 때만 렌더링됨.
  */
 export function BackToChatButton() {
+  const searchParams = useSearchParams();
+  if (searchParams.get("from") !== "chat") return null;
+
   return (
     <div className="fixed top-[72px] left-1/2 z-30 w-full max-w-[446px] -translate-x-1/2 flex justify-end px-lg pointer-events-none">
       <Link
