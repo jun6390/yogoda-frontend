@@ -22,7 +22,6 @@ export function SignupSummaryCard({
   plan,
 }: SignupSummaryCardProps) {
   const rows: SummaryRow[] = [
-    { label: "가입 유형", value: signupData.signupType },
     { label: "요금제", value: plan?.name },
     {
       label: "월 요금",

@@ -44,10 +44,8 @@ export default function AIConsultationPage() {
     try {
       const stored = sessionStorage.getItem("preselectedPlan");
       if (stored) {
-        const parsed = JSON.parse(stored) as PreselectedPlan;
         // eslint-disable-next-line react-hooks/set-state-in-effect
-        setPreselectedPlan(parsed);
-        // 읽은 즉시 삭제하지 않음 — 새로고침 시 복원을 위해 가입 완료 후 삭제
+        setPreselectedPlan(JSON.parse(stored) as PreselectedPlan);
       }
     } catch {
       // sessionStorage 접근 불가 환경에서는 무시
@@ -88,6 +86,8 @@ export default function AIConsultationPage() {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   // 메시지 추가 시 자동 스크롤을 위한 ref
   const chatEndRef = useRef<HTMLDivElement>(null);
+  // 새 메시지 렌더링 직전에 바닥에 있었는지 기억 (DOM 갱신 후 isAtBottom()을 쓰면 늦음)
+  const wasAtBottomRef = useRef(true);
 
   const isAtBottom = useCallback(() => {
     const el = scrollContainerRef.current;
@@ -107,15 +107,15 @@ export default function AIConsultationPage() {
     }
   }, [isRestoringHistory]);
 
-  // 맨 아래에 있을 때만 자동 스크롤 (위로 올라간 상태에선 강제 스크롤 안 함)
+  // 새 메시지·타이핑 표시 변경 시 항상 맨 아래로 스크롤
   useEffect(() => {
-    if (isAtBottom()) {
-      chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
-    }
-  }, [messages, isTyping, isAtBottom]);
+    chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages, isTyping]);
 
   const handleScroll = useCallback(() => {
-    setShowScrollBottom(!isAtBottom());
+    const atBottom = isAtBottom();
+    wasAtBottomRef.current = atBottom;
+    setShowScrollBottom(!atBottom);
   }, [isAtBottom]);
 
   const handleBack = () => {
@@ -126,10 +126,17 @@ export default function AIConsultationPage() {
     e.preventDefault();
     sendMessage(inputText);
     setInputText("");
+    // 전송 즉시 맨 아래로 이동 (useEffect 보다 한 틱 빠르게)
+    setTimeout(() => {
+      chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    }, 0);
   };
 
   const handleQuickReplyClick = (reply: string) => {
     sendMessage(reply);
+    setTimeout(() => {
+      chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    }, 0);
   };
 
   const handleGuestLimitLogin = () => {
@@ -165,7 +172,7 @@ export default function AIConsultationPage() {
           </h1>
         </div>
 
-        {isLoggedIn && !isSignupFlow && (
+        {isLoggedIn && (
           <div className="flex items-center gap-md">
             <button
               type="button"
@@ -183,7 +190,7 @@ export default function AIConsultationPage() {
       <div
         ref={scrollContainerRef}
         onScroll={handleScroll}
-        className="min-h-0 flex-1 overflow-y-auto p-lg flex flex-col gap-lg"
+        className="min-h-0 flex-1 overflow-y-auto p-lg pb-[32px] flex flex-col gap-lg"
       >
         {/* 이전 대화 내역을 불러오는 동안 말풍선 형태의 스켈레톤을 보여줌 */}
         {isRestoringHistory ? (
@@ -200,6 +207,11 @@ export default function AIConsultationPage() {
               return null;
             }
 
+            // 가입 완료 카드는 풀너비 페이지형으로 AIChatBubble 밖에서 독립 렌더링
+            if (msg.type === "signup_complete") {
+              return <SignupCompleteCard key={msg.id} />;
+            }
+
             return (
               <AIChatBubble key={msg.id} noBackground={msg.type !== "text"}>
                 {/* 일반 텍스트 말풍선 (AI 응답의 마크다운 서식을 그대로 렌더링) */}
@@ -213,7 +225,11 @@ export default function AIConsultationPage() {
                 )}
 
                 {/* 명의도용 방지 안내 카드 */}
-                {msg.type === "fraud_warning" && <FraudWarningCard />}
+                {msg.type === "fraud_warning" && (
+                  <FraudWarningCard
+                    onConfirm={() => sendMessageSilent("확인했습니다")}
+                  />
+                )}
 
                 {/* 약관 동의 카드 */}
                 {msg.type === "terms" && (
@@ -224,13 +240,6 @@ export default function AIConsultationPage() {
                 {msg.type === "signup_summary" && (
                   <SignupSummaryCard
                     signupData={msg.signupData ?? {}}
-                    plan={msg.preselectedPlan ?? preselectedPlan}
-                  />
-                )}
-
-                {/* 가입 완료 카드 */}
-                {msg.type === "signup_complete" && (
-                  <SignupCompleteCard
                     plan={msg.preselectedPlan ?? preselectedPlan}
                   />
                 )}
@@ -262,6 +271,22 @@ export default function AIConsultationPage() {
         <div ref={chatEndRef} />
       </div>
 
+      {/* AI의 질문에 바로 탭해서 답할 수 있는 빠른 답변 후보 */}
+      {quickReplies.length > 0 && !isInputDisabled && (
+        <div className="absolute bottom-[88px] left-0 right-0 flex flex-nowrap gap-xs px-lg pb-xs z-10 overflow-x-auto scrollbar-hide">
+          {quickReplies.map((reply) => (
+            <button
+              key={reply}
+              type="button"
+              onClick={() => handleQuickReplyClick(reply)}
+              className="shrink-0 whitespace-nowrap rounded-full border border-border-default bg-surface px-md py-xs font-sans text-caption-13-medium text-text-secondary transition-colors hover:border-action-primary hover:text-action-primary active:border-action-primary active:text-action-primary"
+            >
+              {reply}
+            </button>
+          ))}
+        </div>
+      )}
+
       {/* 위로 스크롤 시 맨 아래로 이동하는 버튼 */}
       {showScrollBottom && (
         <button
@@ -274,76 +299,54 @@ export default function AIConsultationPage() {
         </button>
       )}
 
-      {/* AI의 질문에 바로 탭해서 답할 수 있는 빠른 답변 후보 */}
-      {quickReplies.length > 0 && !isInputDisabled && (
-        <div className="flex flex-wrap gap-xs px-lg pt-lg pb-md shrink-0">
-          {quickReplies.map((reply) => (
-            <button
-              key={reply}
-              type="button"
-              onClick={() => handleQuickReplyClick(reply)}
-              className="rounded-full border border-border-default bg-surface px-md py-xs font-sans text-caption-13-medium text-text-secondary transition-colors hover:border-action-primary hover:text-action-primary"
-            >
-              {reply}
-            </button>
-          ))}
-        </div>
-      )}
-
       {/* 하단 입력 폼 영역 */}
       <div className="border-t border-border-default bg-surface p-lg shrink-0">
-        {isInputDisabled ? (
-          <p className="text-center font-sans text-caption-12-medium text-text-tertiary py-xs">
-            가입이 완료되었습니다.
-          </p>
-        ) : (
-          <form
-            onSubmit={handleSubmit}
-            className="relative flex items-center w-full"
-          >
-            <Input
-              value={isListening && interimText ? interimText : inputText}
-              onChange={(e) => setInputText(e.target.value)}
-              readOnly={isListening}
-              placeholder={t("inputPlaceholder")}
-              className={isSupported ? "w-full pr-[96px]" : "w-full pr-[56px]"}
-            />
+        <form
+          onSubmit={handleSubmit}
+          className="relative flex items-center w-full"
+        >
+          <Input
+            value={isListening && interimText ? interimText : inputText}
+            onChange={(e) => setInputText(e.target.value)}
+            readOnly={isListening}
+            placeholder={t("inputPlaceholder")}
+            className={isSupported ? "w-full pr-[96px]" : "w-full pr-[56px]"}
+          />
 
-            {isSupported && (
-              <div className="absolute right-[48px] flex items-center justify-center">
-                {isListening && (
-                  <span className="absolute size-[36px] rounded-full bg-action-primary/20 animate-ping" />
+          {isSupported && (
+            <div className="absolute right-[48px] flex items-center justify-center">
+              {isListening && (
+                <span className="absolute size-[36px] rounded-full bg-action-primary/20 animate-ping" />
+              )}
+              <button
+                type="button"
+                onClick={toggleListening}
+                aria-label={t(
+                  isListening ? "voiceInput.stop" : "voiceInput.start",
                 )}
-                <button
-                  type="button"
-                  onClick={toggleListening}
-                  aria-label={t(
-                    isListening ? "voiceInput.stop" : "voiceInput.start",
-                  )}
-                  className={
-                    isListening
-                      ? "relative flex size-[36px] items-center justify-center text-action-primary transition-colors"
-                      : "relative flex size-[36px] items-center justify-center text-text-tertiary hover:text-text-primary transition-colors"
-                  }
-                >
-                  {isListening ? <MicOff size={18} /> : <Mic size={18} />}
-                </button>
-              </div>
-            )}
+                className={
+                  isListening
+                    ? "relative flex size-[36px] items-center justify-center text-action-primary transition-colors"
+                    : "relative flex size-[36px] items-center justify-center text-text-tertiary hover:text-text-primary transition-colors"
+                }
+              >
+                {isListening ? <MicOff size={18} /> : <Mic size={18} />}
+              </button>
+            </div>
+          )}
 
-            <button
-              type="submit"
-              disabled={!inputText.trim()}
-              className={
-                inputText.trim()
-                  ? "absolute right-sm flex size-[36px] items-center justify-center text-action-primary transition-colors active:scale-90"
-                  : "absolute right-sm flex size-[36px] items-center justify-center text-text-tertiary cursor-not-allowed transition-colors"
-              }
-            >
-              <Send size={18} />
-            </button>
-          </form>
-        )}
+          <button
+            type="submit"
+            disabled={!inputText.trim()}
+            className={
+              inputText.trim()
+                ? "absolute right-sm flex size-[36px] items-center justify-center text-action-primary transition-colors active:scale-90"
+                : "absolute right-sm flex size-[36px] items-center justify-center text-text-tertiary cursor-not-allowed transition-colors"
+            }
+          >
+            <Send size={18} />
+          </button>
+        </form>
       </div>
 
       {/* 비회원 무료 상담 소진 안내 팝업 */}

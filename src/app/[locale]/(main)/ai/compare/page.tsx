@@ -15,6 +15,7 @@ import { PageContainer } from "@/components/layout/PageContainer";
 import { ErrorState } from "@/components/ui/ErrorState/ErrorState";
 import { PageSpinner } from "@/components/ui/Spinner/Spinner";
 import { Button } from "@/components/ui/Button/Button";
+import { BackToChatButton } from "@/components/chat/BackToChatButton";
 import { useRouter } from "@/i18n/navigation";
 import {
   getCurrentPlan,
@@ -142,9 +143,7 @@ export default function PlanComparePage() {
               <p className="mt-sm font-sans text-label-14-bold leading-snug text-text-primary">
                 {currentPlan?.planName ?? t("myPlan")}
               </p>
-              <p
-                className={`mt-xs font-sans text-title-20-bold ${feeDiff !== null && feeDiff > 0 ? "text-action-primary" : "text-text-primary"}`}
-              >
+              <p className="mt-xs font-sans text-title-20-bold text-text-primary">
                 {currentPlan ? `${fmt(currentPlan.monthlyFee)}원` : "-"}
               </p>
             </div>
@@ -162,11 +161,9 @@ export default function PlanComparePage() {
               >
                 {fmt(selectedPlan.monthlyFee)}원
               </p>
-              {feeDiff !== null && feeDiff !== 0 && (
+              {feeDiff !== null && feeDiff < 0 && (
                 <p className="mt-xs font-sans text-caption-12-medium text-text-tertiary">
-                  {feeDiff < 0
-                    ? t("ctaSavingsNote", { amount: fmt(Math.abs(feeDiff)) })
-                    : t("ctaExpensiveNote", { amount: fmt(feeDiff) })}
+                  {t("ctaSavingsNote", { amount: fmt(Math.abs(feeDiff)) })}
                 </p>
               )}
             </div>
@@ -249,6 +246,8 @@ export default function PlanComparePage() {
         </PageContainer>
       </div>
 
+      <BackToChatButton />
+
       {/* 하단 고정 CTA */}
       <div className="fixed bottom-[72px] left-1/2 z-20 w-full max-w-[446px] -translate-x-1/2 rounded-t-[20px] bg-surface shadow-[0_-8px_28px_rgb(18_20_31_/_12%)]">
         <div className="px-lg pb-lg pt-lg">
@@ -260,13 +259,9 @@ export default function PlanComparePage() {
               <strong className="font-sans text-title-18-bold text-text-primary">
                 {fmt(selectedPlan.monthlyFee)}원/월
               </strong>
-              {feeDiff !== null && feeDiff !== 0 && (
-                <p
-                  className={`mt-[2px] font-sans text-micro-11-medium ${feeDiff < 0 ? "text-success" : "text-action-primary"}`}
-                >
-                  {feeDiff < 0
-                    ? t("ctaSavingsNote", { amount: fmt(Math.abs(feeDiff)) })
-                    : t("ctaExpensiveNote", { amount: fmt(feeDiff) })}
+              {feeDiff !== null && feeDiff < 0 && (
+                <p className="mt-[2px] font-sans text-micro-11-medium text-success">
+                  {t("ctaSavingsNote", { amount: fmt(Math.abs(feeDiff)) })}
                 </p>
               )}
             </div>
