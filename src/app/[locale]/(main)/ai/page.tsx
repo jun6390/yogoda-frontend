@@ -174,7 +174,7 @@ export default function AIConsultationPage() {
           </h1>
         </div>
 
-        {isLoggedIn && !isSignupFlow && (
+        {isLoggedIn && (
           <div className="flex items-center gap-md">
             <button
               type="button"
