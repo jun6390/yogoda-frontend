@@ -44,10 +44,8 @@ export default function AIConsultationPage() {
     try {
       const stored = sessionStorage.getItem("preselectedPlan");
       if (stored) {
-        const parsed = JSON.parse(stored) as PreselectedPlan;
         // eslint-disable-next-line react-hooks/set-state-in-effect
-        setPreselectedPlan(parsed);
-        // 읽은 즉시 삭제하지 않음 — 새로고침 시 복원을 위해 가입 완료 후 삭제
+        setPreselectedPlan(JSON.parse(stored) as PreselectedPlan);
       }
     } catch {
       // sessionStorage 접근 불가 환경에서는 무시
@@ -209,6 +207,11 @@ export default function AIConsultationPage() {
               return null;
             }
 
+            // 가입 완료 카드는 풀너비 페이지형으로 AIChatBubble 밖에서 독립 렌더링
+            if (msg.type === "signup_complete") {
+              return <SignupCompleteCard key={msg.id} />;
+            }
+
             return (
               <AIChatBubble key={msg.id} noBackground={msg.type !== "text"}>
                 {/* 일반 텍스트 말풍선 (AI 응답의 마크다운 서식을 그대로 렌더링) */}
@@ -222,7 +225,11 @@ export default function AIConsultationPage() {
                 )}
 
                 {/* 명의도용 방지 안내 카드 */}
-                {msg.type === "fraud_warning" && <FraudWarningCard />}
+                {msg.type === "fraud_warning" && (
+                  <FraudWarningCard
+                    onConfirm={() => sendMessageSilent("확인했습니다")}
+                  />
+                )}
 
                 {/* 약관 동의 카드 */}
                 {msg.type === "terms" && (
@@ -233,13 +240,6 @@ export default function AIConsultationPage() {
                 {msg.type === "signup_summary" && (
                   <SignupSummaryCard
                     signupData={msg.signupData ?? {}}
-                    plan={msg.preselectedPlan ?? preselectedPlan}
-                  />
-                )}
-
-                {/* 가입 완료 카드 */}
-                {msg.type === "signup_complete" && (
-                  <SignupCompleteCard
                     plan={msg.preselectedPlan ?? preselectedPlan}
                   />
                 )}
@@ -273,13 +273,13 @@ export default function AIConsultationPage() {
 
       {/* AI의 질문에 바로 탭해서 답할 수 있는 빠른 답변 후보 */}
       {quickReplies.length > 0 && !isInputDisabled && (
-        <div className="absolute bottom-[88px] left-0 right-0 flex gap-xs px-lg pb-xs z-10 overflow-x-auto scrollbar-hide">
+        <div className="absolute bottom-[88px] left-0 right-0 flex flex-nowrap gap-xs px-lg pb-xs z-10 overflow-x-auto scrollbar-hide">
           {quickReplies.map((reply) => (
             <button
               key={reply}
               type="button"
               onClick={() => handleQuickReplyClick(reply)}
-              className="rounded-full border border-border-default bg-surface px-md py-xs font-sans text-caption-13-medium text-text-secondary transition-colors hover:border-action-primary hover:text-action-primary active:border-action-primary active:text-action-primary"
+              className="shrink-0 whitespace-nowrap rounded-full border border-border-default bg-surface px-md py-xs font-sans text-caption-13-medium text-text-secondary transition-colors hover:border-action-primary hover:text-action-primary active:border-action-primary active:text-action-primary"
             >
               {reply}
             </button>
