@@ -122,6 +122,10 @@ export function useAIChat({ preselectedPlan }: UseAIChatOptions = {}) {
   // 가입 플로우 진행 중 수집된 데이터 (단계별 카드 렌더링에 사용)
   const [signupCollectedData, setSignupCollectedData] =
     useState<SignupCollectedData>({});
+  // 최신 signupCollectedData를 동기적으로 참조하기 위한 ref
+  // (socket 이벤트 핸들러 내 functional setState 내부에서 setMessages 중첩 호출 시
+  //  React StrictMode가 updater를 2회 실행해 카드가 중복 삽입되는 문제를 방지)
+  const signupCollectedDataRef = useRef<SignupCollectedData>({});
   // 가입 완료 여부
   const [isSignupComplete, setIsSignupComplete] = useState(false);
   // 현재 가입 단계 (terms_agreement 등에서 입력창 비활성화에 사용)
@@ -139,8 +143,9 @@ export function useAIChat({ preselectedPlan }: UseAIChatOptions = {}) {
     }
   }, [currentSignupStep]);
 
-  // signupCollectedData 변경 시 sessionStorage에 저장 (새로고침 복원용)
+  // signupCollectedData 변경 시 ref 동기화 + sessionStorage 저장 (새로고침 복원용)
   useEffect(() => {
+    signupCollectedDataRef.current = signupCollectedData;
     if (!signupCollectedData || Object.keys(signupCollectedData).length === 0)
       return;
     try {
@@ -336,17 +341,23 @@ export function useAIChat({ preselectedPlan }: UseAIChatOptions = {}) {
             },
           ]);
         } else if (signupStep === "final_confirm") {
-          setMessages((prev) => [
-            ...prev,
+          // ref(최신 누적 상태)와 현재 턴 signupData를 머지
+          // nested setState를 쓰면 React StrictMode에서 updater가 2회 호출돼
+          // setMessages도 2회 실행되므로, ref를 통해 분리 호출함
+          const merged = { ...signupCollectedDataRef.current, ...signupData };
+          setSignupCollectedData(merged);
+          setMessages((prevMsgs) => [
+            ...prevMsgs,
             {
               id: `${aiMsgId ?? Date.now()}-summary`,
-              sender: "ai",
-              type: "signup_summary",
+              sender: "ai" as const,
+              type: "signup_summary" as const,
               signupStep: "final_confirm",
-              signupData,
+              signupData: merged,
               preselectedPlan: preselectedPlanRef.current,
             },
           ]);
+          return; // 아래 공통 setSignupCollectedData 중복 방지
         }
       },
     );

@@ -327,7 +327,7 @@ export default function AIConsultationPage() {
                     : "relative flex size-[36px] items-center justify-center text-text-tertiary hover:text-text-primary transition-colors"
                 }
               >
-                {isListening ? <MicOff size={18} /> : <Mic size={18} />}
+                {isListening ? <MicOff size={16} /> : <Mic size={16} />}
               </button>
             </div>
           )}
