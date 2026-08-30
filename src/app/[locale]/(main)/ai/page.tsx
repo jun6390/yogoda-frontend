@@ -72,6 +72,8 @@ export default function AIConsultationPage() {
   const [inputText, setInputText] = useState("");
   // 회원 전용 "채팅 끝내기" 확인 팝업 표시 여부
   const [showEndChatModal, setShowEndChatModal] = useState(false);
+  // 채팅 끝내기 → 새 채팅 전환 시 메시지 영역 페이드 아웃/인 제어
+  const [isFadingOut, setIsFadingOut] = useState(false);
   // 위로 스크롤 시 맨 아래로 이동 버튼 표시 여부
   const [showScrollBottom, setShowScrollBottom] = useState(false);
 
@@ -148,8 +150,13 @@ export default function AIConsultationPage() {
 
   const handleEndChatConfirm = () => {
     setShowEndChatModal(false);
-    setPreselectedPlan(undefined);
-    void endCurrentChat();
+    setIsFadingOut(true);
+    setTimeout(() => {
+      setPreselectedPlan(undefined);
+      void endCurrentChat().finally(() => {
+        setIsFadingOut(false);
+      });
+    }, 280);
   };
 
   // 가입 완료 후에는 입력창 비활성화
@@ -191,7 +198,11 @@ export default function AIConsultationPage() {
       <div
         ref={scrollContainerRef}
         onScroll={handleScroll}
-        className="min-h-0 flex-1 overflow-y-auto p-lg pb-[32px] flex flex-col gap-lg"
+        className={[
+          "min-h-0 flex-1 overflow-y-auto p-lg pb-[32px] flex flex-col gap-lg",
+          "transition-all duration-300 ease-in-out",
+          isFadingOut ? "opacity-0 translate-y-2" : "opacity-100 translate-y-0",
+        ].join(" ")}
       >
         {/* 이전 대화 내역을 불러오는 동안 말풍선 형태의 스켈레톤을 보여줌 */}
         {isRestoringHistory ? (
