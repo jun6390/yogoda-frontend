@@ -1,15 +1,13 @@
 "use client";
 
 import { useEffect, useSyncExternalStore } from "react";
+import type { LucideIcon } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import {
-  BarChart3,
   BadgeCheck,
   Bell,
-  CalendarDays,
+  ChartNoAxesColumn,
   ChevronRight,
-  CreditCard,
-  Gift,
   ReceiptText,
   Search,
   Sparkles,
@@ -19,7 +17,9 @@ import { useLocale, useTranslations } from "next-intl";
 
 import { HomeBannerCarousel } from "@/components/home/HomeBannerCarousel";
 import { PageContainer } from "@/components/layout/PageContainer";
+import { CurrentPlanSummaryCard } from "@/components/plans/CurrentPlanSummaryCard";
 import { ErrorState } from "@/components/ui/ErrorState/ErrorState";
+import { usageReport } from "@/data/usageReport";
 import { ApiError } from "@/lib/api/client";
 import { getMyCoupons } from "@/lib/api/coupon";
 import { getCurrentPlan, getPlanByCode } from "@/lib/api/plan";
@@ -33,6 +33,7 @@ type HomeLinkHref =
   | "/my"
   | "/my/benefits"
   | "/my/coupons"
+  | "/my/plan"
   | "/my/usage"
   | "/plans";
 
@@ -40,12 +41,7 @@ interface TodoItem {
   href: HomeLinkHref;
   title: string;
   description: string;
-  icon: typeof CalendarDays;
-}
-
-interface PlanStatProps {
-  label: string;
-  value: string;
+  icon: LucideIcon;
 }
 
 function subscribeToAuthHydration(onStoreChange: () => void) {
@@ -168,29 +164,6 @@ export function HomeContent() {
       })
     : t("currentPlanPricePending");
 
-  const quickActions = [
-    {
-      href: "/my",
-      label: t("quickPlan"),
-      icon: ReceiptText,
-    },
-    {
-      href: "/benefits",
-      label: t("quickBenefit"),
-      icon: Gift,
-    },
-    {
-      href: "/my/usage",
-      label: t("quickAnalysis"),
-      icon: BarChart3,
-    },
-    {
-      href: "/ai",
-      label: t("quickConsulting"),
-      icon: Sparkles,
-    },
-  ] as const;
-
   const expiringCoupon = couponQuery.data?.coupons.find(
     (coupon) => coupon.status === "available" && coupon.expiringSoon,
   );
@@ -200,12 +173,6 @@ export function HomeContent() {
 
   const todoItems: TodoItem[] = hasCurrentPlan
     ? [
-        {
-          href: "/my",
-          title: t("todoContractTitle"),
-          description: t("todoContractDescription"),
-          icon: CalendarDays,
-        },
         ...(expiringCoupon
           ? [
               {
@@ -242,16 +209,26 @@ export function HomeContent() {
 
   const todoCount = t("todoCount", { count: todoItems.length });
 
-  const billingAmount = planDetail
-    ? t("billingAmountDynamic", {
-        amount: numberFormatter.format(planDetail.monthlyFee),
-      })
-    : hasCurrentPlan
-      ? t("currentPlanPricePending")
-      : t("noPlanBillingAmount");
+  const usageRate = Math.min(
+    100,
+    Math.round((usageReport.dataUsed / usageReport.dataLimit) * 100),
+  );
+  const remainingData = Math.max(
+    0,
+    usageReport.dataLimit - usageReport.dataUsed,
+  );
+  const remainingDataLabel = numberFormatter.format(
+    Number(remainingData.toFixed(1)),
+  );
 
-  const billingDescription = hasCurrentPlan
-    ? t("billingDueDate")
+  const analysisAmount = hasCurrentPlan
+    ? t("analysisSavingsAmount", {
+        amount: numberFormatter.format(usageReport.potentialSavings),
+      })
+    : t("noPlanBillingAmount");
+
+  const analysisDescription = hasCurrentPlan
+    ? t("analysisSavingsDescription")
     : t("noPlanBillingDescription");
 
   const couponCount = hasCurrentPlan
@@ -286,159 +263,167 @@ export function HomeContent() {
     : t("noPlanMembershipAction");
 
   return (
-    <PageContainer className="flex flex-col gap-2xl pb-2xl pt-md">
+    <PageContainer className="flex flex-col gap-xl pb-2xl pt-md">
       <HomeBannerCarousel />
 
-      {isCheckingPlan ? (
-        <CurrentPlanLoading />
-      ) : isCurrentPlanError ? (
-        <CurrentPlanError onRetry={() => refetchCurrentPlan()} />
-      ) : currentPlan ? (
-        <CurrentPlanCard
-          planCode={currentPlan.planCode}
-          planName={planDetail?.name ?? currentPlan.planName}
-          monthlyFeeLabel={monthlyFeeLabel}
-          dataLabel={
-            isPlanDetailError
-              ? t("currentPlanDetailError")
-              : (planDetail?.data.display ?? t("currentPlanPricePending"))
-          }
-          voiceLabel={planDetail?.voice ?? t("currentPlanPricePending")}
-          selectedBenefitCount={selectedBenefitCount}
-          joinedAtLabel={joinedAtLabel}
-        />
-      ) : (
-        <NoPlanCard />
-      )}
+      <div className="flex flex-col gap-lg">
+        {isCheckingPlan ? (
+          <CurrentPlanLoading />
+        ) : isCurrentPlanError ? (
+          <CurrentPlanError onRetry={() => refetchCurrentPlan()} />
+        ) : currentPlan ? (
+          <CurrentPlanSummaryCard
+            href="/my/plan"
+            planName={planDetail?.name ?? currentPlan.planName}
+            monthlyFeeLabel={monthlyFeeLabel}
+            dataLabel={
+              isPlanDetailError
+                ? t("currentPlanDetailError")
+                : (planDetail?.data.display ?? t("currentPlanPricePending"))
+            }
+            voiceLabel={planDetail?.voice ?? t("currentPlanPricePending")}
+            selectedBenefitCount={selectedBenefitCount}
+            joinedAtLabel={joinedAtLabel}
+          />
+        ) : (
+          <NoPlanCard />
+        )}
 
-      <section className="grid grid-cols-2 gap-sm">
-        <Link
-          href={hasCurrentPlan ? "/my" : "/plans"}
-          className="flex min-h-[132px] flex-col justify-between rounded-lg bg-surface p-lg shadow-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-action-primary"
-        >
-          <div className="flex items-start justify-between gap-sm">
-            <span className="flex size-[32px] shrink-0 items-center justify-center rounded-sm bg-brand-soft text-icon-brand">
-              <CreditCard size={20} strokeWidth={1.8} />
-            </span>
-            <ChevronRight
-              aria-hidden="true"
-              className="shrink-0 text-icon-secondary"
-              size={18}
-            />
-          </div>
-
-          <div>
-            <p className="font-sans text-caption-12-bold text-text-secondary">
-              {t("billingTitle")}
-            </p>
-            <p className="mt-xs font-sans text-title-20-bold text-text-primary">
-              {billingAmount}
-            </p>
-            <p className="mt-xs font-sans text-micro-11-regular text-text-tertiary">
-              {billingDescription}
-            </p>
-          </div>
-        </Link>
-
-        <Link
-          href={hasCurrentPlan ? "/my/coupons" : "/plans"}
-          className="flex min-h-[132px] flex-col justify-between rounded-lg bg-surface p-lg shadow-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-action-primary"
-        >
-          <div className="flex items-start justify-between gap-sm">
-            <span className="flex size-[32px] shrink-0 items-center justify-center rounded-sm bg-brand-soft text-icon-brand">
-              <TicketPercent size={20} strokeWidth={1.8} />
-            </span>
-            <ChevronRight
-              aria-hidden="true"
-              className="shrink-0 text-icon-secondary"
-              size={18}
-            />
-          </div>
-
-          <div>
-            <p className="font-sans text-caption-12-bold text-text-secondary">
-              {t("couponTitle")}
-            </p>
-            <p className="mt-xs font-sans text-title-20-bold text-text-primary">
-              {couponCount}
-            </p>
-            <p className="mt-xs font-sans text-micro-11-regular text-text-tertiary">
-              {couponDescription}
-            </p>
-          </div>
-        </Link>
-      </section>
-
-      <section className="flex flex-col gap-md">
-        <div className="flex items-center justify-between gap-md">
-          <h2 className="font-sans text-title-16-bold text-text-primary">
-            {t("todoTitle")}
-          </h2>
-          <span className="font-sans text-caption-12-bold text-action-primary">
-            {todoCount}
-          </span>
-        </div>
-
-        <div className="flex flex-col rounded-lg bg-surface shadow-sm">
-          {todoItems.map(({ href, title, description, icon: Icon }) => (
-            <Link
-              key={title}
-              href={href}
-              className="flex min-h-[72px] items-center gap-md border-b border-border-default px-lg py-md last:border-b-0 focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-action-primary"
-            >
-              <span className="flex size-[36px] shrink-0 items-center justify-center rounded-sm bg-surface-subtle text-icon-brand">
-                <Icon size={20} strokeWidth={1.8} />
-              </span>
-
-              <span className="min-w-0 flex-1">
-                <span className="block truncate font-sans text-label-14-bold text-text-primary">
-                  {title}
+        {hasCurrentPlan && (
+          <section className="rounded-lg border border-border-default bg-surface p-lg shadow-sm">
+            <div className="flex items-baseline justify-between gap-lg">
+              <h2 className="font-sans text-label-14-bold text-text-primary">
+                {t("dataSummaryTitle")}
+              </h2>
+              <p className="flex shrink-0 items-baseline gap-xs">
+                <strong className="font-sans text-title-24-bold text-text-primary">
+                  {t("analysisDataAmount", {
+                    amount: numberFormatter.format(usageReport.dataUsed),
+                  })}
+                </strong>
+                <span className="font-sans text-caption-12-regular text-text-secondary">
+                  /{" "}
+                  {t("dataSummaryLimit", {
+                    amount: numberFormatter.format(usageReport.dataLimit),
+                  })}
                 </span>
-                <span className="mt-xs block truncate font-sans text-caption-12-regular text-text-secondary">
-                  {description}
-                </span>
-              </span>
+              </p>
+            </div>
 
+            <div className="mt-lg h-[8px] overflow-hidden rounded-full bg-border-default">
+              <div
+                className="h-full rounded-full bg-action-primary"
+                style={{ width: `${usageRate}%` }}
+              />
+            </div>
+
+            <div className="mt-sm flex items-center justify-between gap-lg font-sans text-caption-12-regular">
+              <span className="text-text-secondary">
+                {t("dataSummaryUsageRate", { rate: usageRate })}
+              </span>
+              <strong className="text-success">
+                {t("dataSummaryRemainingData", {
+                  amount: remainingDataLabel,
+                })}
+              </strong>
+            </div>
+          </section>
+        )}
+
+        <section className="grid grid-cols-2 gap-lg">
+          <Link
+            href={hasCurrentPlan ? "/my/usage" : "/plans"}
+            className="flex min-h-[148px] flex-col rounded-lg border border-border-default bg-surface p-lg shadow-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-action-primary"
+          >
+            <div className="flex items-start justify-between gap-sm">
+              <HomeIconTile icon={ChartNoAxesColumn} />
               <ChevronRight
                 aria-hidden="true"
                 className="shrink-0 text-icon-secondary"
                 size={18}
               />
-            </Link>
-          ))}
-        </div>
-      </section>
+            </div>
 
-      <section className="flex flex-col gap-md">
-        <div className="flex items-center justify-between gap-md">
-          <h2 className="font-sans text-title-16-bold text-text-primary">
-            {t("quickTitle")}
-          </h2>
-          <Link
-            href="/my"
-            className="font-sans text-caption-12-medium text-text-tertiary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-action-primary"
-          >
-            {t("viewAll")} ›
+            <div className="mt-lg">
+              <p className="font-sans text-caption-12-bold text-text-secondary">
+                {t("billingTitle")}
+              </p>
+              <p className="mt-xs font-sans text-title-20-bold text-text-primary">
+                {analysisAmount}
+              </p>
+              <p className="mt-xs font-sans text-micro-11-regular text-text-tertiary">
+                {analysisDescription}
+              </p>
+            </div>
           </Link>
-        </div>
 
-        <div className="grid grid-cols-4 justify-between gap-sm">
-          {quickActions.map(({ href, label, icon: Icon }) => (
-            <Link
-              key={label}
-              href={href}
-              className="flex h-[72px] flex-col items-center justify-center gap-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-action-primary"
-            >
-              <span className="flex size-[32px] items-center justify-center rounded-sm bg-brand-soft text-icon-brand">
-                <Icon size={24} strokeWidth={1.8} />
-              </span>
-              <span className="whitespace-nowrap font-sans text-caption-12-bold text-text-primary">
-                {label}
-              </span>
-            </Link>
-          ))}
-        </div>
-      </section>
+          <Link
+            href={hasCurrentPlan ? "/my/coupons" : "/plans"}
+            className="flex min-h-[148px] flex-col rounded-lg border border-border-default bg-surface p-lg shadow-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-action-primary"
+          >
+            <div className="flex items-start justify-between gap-sm">
+              <HomeIconTile icon={TicketPercent} />
+              <ChevronRight
+                aria-hidden="true"
+                className="shrink-0 text-icon-secondary"
+                size={18}
+              />
+            </div>
+
+            <div className="mt-lg">
+              <p className="font-sans text-caption-12-bold text-text-secondary">
+                {t("couponTitle")}
+              </p>
+              <p className="mt-xs font-sans text-title-20-bold text-text-primary">
+                {couponCount}
+              </p>
+              <p className="mt-xs font-sans text-micro-11-regular text-text-tertiary">
+                {couponDescription}
+              </p>
+            </div>
+          </Link>
+        </section>
+      </div>
+
+      {todoItems.length > 0 && (
+        <section className="flex flex-col gap-md">
+          <div className="flex items-center justify-between gap-md">
+            <h2 className="font-sans text-title-16-bold text-text-primary">
+              {t("todoTitle")}
+            </h2>
+            <span className="font-sans text-caption-12-bold text-action-primary">
+              {todoCount}
+            </span>
+          </div>
+
+          <div className="flex flex-col rounded-lg border border-border-default bg-surface shadow-sm">
+            {todoItems.map(({ href, title, description, icon: Icon }) => (
+              <Link
+                key={title}
+                href={href}
+                className="flex min-h-[72px] items-center gap-md border-b border-border-default px-lg py-md last:border-b-0 focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-action-primary"
+              >
+                <HomeIconTile icon={Icon} />
+
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate font-sans text-label-14-bold text-text-primary">
+                    {title}
+                  </span>
+                  <span className="mt-xs block truncate font-sans text-caption-12-regular text-text-secondary">
+                    {description}
+                  </span>
+                </span>
+
+                <ChevronRight
+                  aria-hidden="true"
+                  className="shrink-0 text-icon-secondary"
+                  size={18}
+                />
+              </Link>
+            ))}
+          </div>
+        </section>
+      )}
 
       <section className="flex flex-col gap-md">
         <div className="flex items-center justify-between gap-md">
@@ -446,7 +431,7 @@ export function HomeContent() {
             {t("membershipTitle")}
           </h2>
           <Link
-            href={hasCurrentPlan ? "/benefits" : "/plans"}
+            href={hasCurrentPlan ? "/my/benefits" : "/plans"}
             className="font-sans text-caption-12-medium text-text-tertiary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-action-primary"
           >
             {t("viewAll")} ›
@@ -455,12 +440,10 @@ export function HomeContent() {
 
         <Link
           href={hasCurrentPlan ? "/my/benefits" : "/plans"}
-          className="flex items-center justify-between gap-lg rounded-lg bg-surface p-lg shadow-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-action-primary"
+          className="flex items-center justify-between gap-lg rounded-lg border border-border-default bg-surface p-lg shadow-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-action-primary"
         >
           <div className="flex min-w-0 items-center gap-md">
-            <span className="flex size-[44px] shrink-0 items-center justify-center rounded-lg bg-brand-soft text-icon-brand">
-              <BadgeCheck size={26} strokeWidth={1.7} />
-            </span>
+            <HomeIconTile icon={BadgeCheck} />
 
             <div className="min-w-0">
               <p className="truncate font-sans text-title-16-bold text-text-primary">
@@ -477,28 +460,6 @@ export function HomeContent() {
           </span>
         </Link>
       </section>
-
-      <Link
-        href={hasCurrentPlan ? "/benefits" : "/plans"}
-        className="flex items-center justify-between gap-lg py-lg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-action-primary"
-      >
-        <div className="min-w-0">
-          <h2 className="truncate font-sans text-title-16-bold text-text-primary">
-            {hasCurrentPlan
-              ? t("personalBenefitTitle")
-              : t("noPlanPersonalBenefitTitle")}
-          </h2>
-          <p className="mt-xs truncate font-sans text-body-14-regular text-text-secondary">
-            {hasCurrentPlan
-              ? t("personalBenefitDescription")
-              : t("noPlanPersonalBenefitDescription")}
-          </p>
-        </div>
-
-        <span className="shrink-0 font-sans text-label-14-bold text-action-primary">
-          {t("view")} →
-        </span>
-      </Link>
     </PageContainer>
   );
 }
@@ -507,7 +468,7 @@ function CurrentPlanLoading() {
   const t = useTranslations("Home");
 
   return (
-    <section className="rounded-lg bg-surface p-lg shadow-sm">
+    <section className="min-h-[226px] rounded-lg border border-border-default bg-surface p-lg shadow-sm">
       <p className="font-sans text-caption-13-bold text-text-secondary">
         {t("currentPlanLoading")}
       </p>
@@ -534,83 +495,13 @@ function CurrentPlanError({ onRetry }: { onRetry: () => void }) {
   );
 }
 
-function CurrentPlanCard({
-  planCode,
-  planName,
-  monthlyFeeLabel,
-  dataLabel,
-  voiceLabel,
-  selectedBenefitCount,
-  joinedAtLabel,
-}: {
-  planCode: string;
-  planName: string;
-  monthlyFeeLabel: string;
-  dataLabel: string;
-  voiceLabel: string;
-  selectedBenefitCount: number;
-  joinedAtLabel: string | null;
-}) {
-  const t = useTranslations("Home");
-
-  return (
-    <Link
-      href={`/plans/${planCode}`}
-      className="flex flex-col gap-lg rounded-lg bg-surface p-lg shadow-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-action-primary"
-    >
-      <div className="flex items-center justify-between gap-md">
-        <span className="font-sans text-caption-12-bold text-text-secondary">
-          {t("currentPlanEyebrow")}
-        </span>
-      </div>
-
-      <div className="flex items-start justify-between gap-lg">
-        <div className="min-w-0">
-          <h2 className="truncate font-sans text-title-20-bold text-text-primary">
-            {planName}
-          </h2>
-          <p className="mt-xs font-sans text-caption-13-bold text-action-primary">
-            {monthlyFeeLabel}
-          </p>
-          {joinedAtLabel && (
-            <p className="mt-xs font-sans text-micro-11-regular text-text-tertiary">
-              {t("currentPlanJoinedAt", {
-                date: joinedAtLabel,
-              })}
-            </p>
-          )}
-        </div>
-
-        <ChevronRight
-          aria-hidden="true"
-          className="mt-xs shrink-0 text-icon-secondary"
-          size={20}
-        />
-      </div>
-
-      <div className="grid grid-cols-3 gap-sm">
-        <PlanStat label={t("currentPlanData")} value={dataLabel} />
-        <PlanStat label={t("currentPlanVoice")} value={voiceLabel} />
-        <PlanStat
-          label={t("currentPlanBenefits")}
-          value={t("currentPlanBenefitCount", {
-            count: selectedBenefitCount,
-          })}
-        />
-      </div>
-    </Link>
-  );
-}
-
 function NoPlanCard() {
   const t = useTranslations("Home");
 
   return (
-    <section className="rounded-lg bg-surface p-lg shadow-sm">
+    <section className="rounded-lg border border-border-default bg-surface p-lg shadow-sm">
       <div className="flex items-start gap-md">
-        <span className="flex size-[40px] shrink-0 items-center justify-center rounded-sm bg-brand-soft text-icon-brand">
-          <ReceiptText size={24} strokeWidth={1.8} />
-        </span>
+        <HomeIconTile icon={ReceiptText} />
         <div className="min-w-0">
           <h2 className="font-sans text-title-20-bold leading-snug text-text-primary">
             {t("noPlanTitle")}
@@ -639,15 +530,10 @@ function NoPlanCard() {
   );
 }
 
-function PlanStat({ label, value }: PlanStatProps) {
+function HomeIconTile({ icon: Icon }: { icon: LucideIcon }) {
   return (
-    <div className="min-w-0 rounded-md bg-surface-subtle px-sm py-md">
-      <p className="truncate font-sans text-micro-11-regular text-text-tertiary">
-        {label}
-      </p>
-      <p className="mt-xs truncate font-sans text-caption-12-bold text-text-primary">
-        {value}
-      </p>
-    </div>
+    <span className="flex size-[36px] shrink-0 items-center justify-center rounded-sm bg-brand-soft text-icon-brand">
+      <Icon aria-hidden="true" size={20} strokeWidth={1.8} />
+    </span>
   );
 }

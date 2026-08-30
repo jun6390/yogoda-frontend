@@ -110,7 +110,7 @@ export function BenefitsContent() {
         ) : benefitQuery.data?.benefits.length ? (
           <section
             aria-labelledby="benefit-list-title"
-            className="rounded-lg bg-surface p-lg shadow-sm"
+            className="rounded-lg border border-border-default bg-surface p-lg shadow-sm"
           >
             <div className="mb-xl flex items-center justify-between">
               <h2
@@ -159,7 +159,7 @@ export function BenefitsContent() {
                         )}
                       >
                         {benefit.eligible ? t("available") : t("unavailable")}
-                        <ChevronRight aria-hidden="true" size={16} />
+                        <ChevronRight aria-hidden="true" size={18} />
                       </span>
                     }
                     className="max-w-none"
@@ -177,13 +177,13 @@ export function BenefitsContent() {
 
         <Link
           href="/benefits/nearby"
-          className="block rounded-lg border border-border-default bg-surface p-lg"
+          className="flex items-center justify-between gap-md rounded-lg border border-border-default bg-surface p-lg shadow-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-action-primary"
         >
-          <div className="flex items-start gap-md">
-            <span className="flex size-[40px] shrink-0 items-center justify-center rounded-sm bg-brand-soft text-icon-brand">
-              <MapPin aria-hidden="true" size={21} />
+          <div className="flex min-w-0 items-start gap-md">
+            <span className="flex size-[36px] shrink-0 items-center justify-center rounded-sm bg-brand-soft text-icon-brand">
+              <MapPin aria-hidden="true" size={20} />
             </span>
-            <div>
+            <div className="min-w-0">
               <h2 className="font-sans text-label-14-bold text-text-primary">
                 {t("nearbyTitle")}
               </h2>
@@ -192,6 +192,11 @@ export function BenefitsContent() {
               </p>
             </div>
           </div>
+          <ChevronRight
+            aria-hidden="true"
+            className="shrink-0 text-icon-secondary"
+            size={18}
+          />
         </Link>
       </div>
 
@@ -328,8 +333,8 @@ function DetailRow({ label, value }: { label: string; value: string }) {
 function BenefitSkeleton() {
   return (
     <div className="space-y-md" aria-hidden="true">
-      <div className="h-[210px] animate-pulse rounded-lg bg-surface-subtle" />
-      <div className="h-[88px] animate-pulse rounded-lg bg-surface-subtle" />
+      <div className="h-[210px] animate-pulse rounded-lg border border-border-default bg-surface-subtle shadow-sm" />
+      <div className="h-[88px] animate-pulse rounded-lg border border-border-default bg-surface-subtle shadow-sm" />
     </div>
   );
 }

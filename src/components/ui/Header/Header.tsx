@@ -29,7 +29,7 @@ export function Header({
   return (
     <header
       className={cn(
-        "flex h-[56px] w-full items-center justify-between bg-surface px-5",
+        "flex h-[56px] w-full items-center justify-between bg-surface px-page",
         className,
       )}
     >

@@ -83,7 +83,7 @@ export function CouponWalletContent() {
         {!hydrated ? (
           <CouponSkeleton />
         ) : !isLoggedIn ? (
-          <div className="rounded-lg bg-surface pb-xl text-center">
+          <div className="rounded-lg border border-border-default bg-surface pb-lg text-center shadow-sm">
             <EmptyState
               heading={t("loginRequired")}
               description={t("loginRequiredDescription")}
@@ -107,7 +107,7 @@ export function CouponWalletContent() {
           />
         ) : (
           <>
-            <section className="rounded-lg bg-surface p-xl shadow-sm">
+            <section className="rounded-lg border border-border-default bg-surface p-lg shadow-sm">
               <p className="font-sans text-caption-13-regular text-text-secondary">
                 {t("availableCoupons")}
               </p>
@@ -148,7 +148,7 @@ export function CouponWalletContent() {
             </div>
 
             {coupons && coupons.length > 0 ? (
-              <section className="space-y-sm">
+              <section className="space-y-lg">
                 {coupons.map((coupon) => (
                   <CouponCard
                     key={coupon.id}
@@ -225,7 +225,7 @@ function CouponCard({
     <button
       type="button"
       onClick={onSelect}
-      className="flex w-full items-start gap-lg rounded-lg border border-border-default bg-surface p-lg text-left focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-action-primary"
+      className="flex w-full items-start gap-lg rounded-lg border border-border-default bg-surface p-lg text-left shadow-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-action-primary"
     >
       <BrandLogo brand={brand} className="size-[40px]" />
       <span className="min-w-0 flex-1">
@@ -317,7 +317,7 @@ function CouponDetail({
           </button>
         </div>
 
-        <div className="mt-xl overflow-hidden rounded-lg bg-surface p-lg text-center shadow-sm">
+        <div className="mt-xl overflow-hidden rounded-lg border border-border-default bg-surface p-lg text-center shadow-sm">
           <div className="overflow-x-auto">
             <Barcode
               value={coupon.barcodeValue}

@@ -148,6 +148,7 @@ export function SessionLogContent() {
           <Select
             value={draftFilters.status}
             options={STATUS_OPTIONS}
+            ariaLabel="상태"
             onChange={(status) =>
               setDraftFilters((prev) => ({ ...prev, status }))
             }
@@ -162,6 +163,7 @@ export function SessionLogContent() {
           <Select
             value={draftFilters.dropStage}
             options={DROP_STAGE_OPTIONS}
+            ariaLabel="이탈 단계"
             onChange={(dropStage) =>
               setDraftFilters((prev) => ({ ...prev, dropStage }))
             }

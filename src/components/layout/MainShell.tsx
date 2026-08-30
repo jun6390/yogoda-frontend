@@ -58,8 +58,13 @@ export function MainShell({ children }: MainShellProps) {
   );
   const [isNotificationPanelOpen, setIsNotificationPanelOpen] = useState(false);
 
-  const { notifications, unreadCount, markAsRead, dismissNotification } =
-    useNotifications();
+  const {
+    notifications,
+    unreadCount,
+    markAsRead,
+    markAllAsRead,
+    dismissNotification,
+  } = useNotifications();
 
   const { resolvedTheme, setTheme } = useTheme();
   const menu = useTranslations("Menu");
@@ -158,6 +163,7 @@ export function MainShell({ children }: MainShellProps) {
               notifications={notifications}
               onClose={() => setIsNotificationPanelOpen(false)}
               onNotificationClick={handleNotificationClick}
+              onMarkAllAsRead={markAllAsRead}
               onNotificationDelete={handleNotificationDelete}
             />
           )

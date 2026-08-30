@@ -34,7 +34,7 @@ export function RewardCalendar({
   };
 
   return (
-    <section className="rounded-lg bg-surface p-lg shadow-sm">
+    <section className="rounded-lg border border-border-default bg-surface p-lg shadow-sm">
       <div className="flex items-center justify-between">
         <button
           type="button"

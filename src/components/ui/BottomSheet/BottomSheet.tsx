@@ -33,7 +33,7 @@ export function BottomSheet({
   return (
     <div
       className={cn(
-        "relative flex w-[calc(100vw-40px)] max-w-[350px] flex-col gap-xl rounded-2xl bg-surface p-2xl shadow-lg",
+        "relative flex w-[calc(100vw-40px)] max-w-[350px] flex-col gap-xl rounded-xl bg-surface p-2xl shadow-lg",
         type === "permission" && "gap-xl",
         className,
       )}

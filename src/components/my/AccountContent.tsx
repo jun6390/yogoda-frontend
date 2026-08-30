@@ -35,7 +35,7 @@ export function AccountContent() {
       <MySubpageHeader title={t("title")} backLabel={t("back")} />
 
       <div className="space-y-xl px-page py-xl">
-        <section className="rounded-lg bg-surface p-xl shadow-sm">
+        <section className="rounded-lg border border-border-default bg-surface p-lg shadow-sm">
           <div className="flex items-center gap-md">
             <span className="flex size-[44px] items-center justify-center rounded-full bg-brand-soft text-icon-brand">
               <UserRound aria-hidden="true" size={22} />
@@ -55,7 +55,7 @@ export function AccountContent() {
           <h2 className="font-sans text-label-14-bold text-text-primary">
             {t("security")}
           </h2>
-          <div className="mt-md rounded-lg bg-surface px-lg shadow-sm">
+          <div className="mt-md rounded-lg border border-border-default bg-surface px-lg shadow-sm">
             <div className="flex min-h-[64px] items-center gap-md">
               {provider ? (
                 <SocialProviderIcon provider={provider} framed />

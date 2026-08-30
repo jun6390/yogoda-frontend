@@ -1,6 +1,12 @@
 "use client";
 
-import { useCallback, useEffect, useState, useSyncExternalStore } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+  useSyncExternalStore,
+} from "react";
 import { io, Socket } from "socket.io-client";
 
 import { API_BASE_URL } from "@/lib/api/client";
@@ -57,7 +63,10 @@ export function useNotifications() {
    */
   const [rawNotifications, setNotifications] = useState<AppNotification[]>([]);
   const [rawUnreadCount, setUnreadCount] = useState(0);
-  const notifications = isLoggedIn ? rawNotifications : [];
+  const notifications = useMemo(
+    () => (isLoggedIn ? rawNotifications : []),
+    [isLoggedIn, rawNotifications],
+  );
   const unreadCount = isLoggedIn ? rawUnreadCount : 0;
 
   // 로그인 상태가 확정되면 최초 알림 목록/안 읽은 개수를 REST로 불러옴
@@ -90,7 +99,6 @@ export function useNotifications() {
     const apiBase = API_BASE_URL || "http://localhost:8000";
 
     const socket: Socket = io(`${apiBase}/notifications`, {
-      transports: ["websocket"],
       auth: { token: accessToken },
     });
 
@@ -138,6 +146,27 @@ export function useNotifications() {
     [notifications],
   );
 
+  const markAllAsRead = useCallback(async () => {
+    const unreadIds = notifications
+      .filter((notification) => !notification.readAt)
+      .map((notification) => notification.id);
+
+    if (unreadIds.length === 0) return;
+
+    const readAt = new Date().toISOString();
+    setNotifications((prev) =>
+      prev.map((notification) =>
+        notification.readAt ? notification : { ...notification, readAt },
+      ),
+    );
+    setUnreadCount(0);
+
+    const results = await Promise.allSettled(unreadIds.map(readNotification));
+    if (results.some((result) => result.status === "rejected")) {
+      console.error("일부 알림 읽음 처리 실패함");
+    }
+  }, [notifications]);
+
   /*
    * 알림을 목록에서 삭제함. 안 읽은 알림이면 unreadCount도 함께 감소시킴.
    * Optimistic update 방식으로 화면을 먼저 갱신하고 서버 요청을 보냄
@@ -162,5 +191,11 @@ export function useNotifications() {
     [notifications],
   );
 
-  return { notifications, unreadCount, markAsRead, dismissNotification };
+  return {
+    notifications,
+    unreadCount,
+    markAsRead,
+    markAllAsRead,
+    dismissNotification,
+  };
 }

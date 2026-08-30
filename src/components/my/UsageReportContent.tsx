@@ -162,25 +162,25 @@ export function UsageReportContent() {
           </strong>
         </ReportCard>
 
-        <section className="rounded-lg bg-toast-background p-lg text-text-on-primary">
+        <ReportCard className="bg-surface-subtle">
           <div className="flex items-center gap-sm text-text-brand">
             <Sparkles aria-hidden="true" size={16} />
             <h2 className="font-sans text-caption-13-bold">
               {t("aiAnalysis")}
             </h2>
           </div>
-          <strong className="mt-md block font-sans text-label-14-bold">
+          <strong className="mt-md block font-sans text-label-14-bold text-text-primary">
             {t("insightTitle", { amount: usageReport.insightAverage })}
           </strong>
-          <p className="mt-sm font-sans text-caption-12-regular text-text-tertiary">
+          <p className="mt-sm font-sans text-caption-12-regular text-text-secondary">
             {t("insightDescription")}
           </p>
-          <span className="mt-md inline-flex rounded-sm bg-success/15 px-sm py-xs font-sans text-micro-11-bold text-success">
+          <span className="mt-md inline-flex rounded-sm bg-success-soft px-sm py-xs font-sans text-micro-11-bold text-success">
             {t("potentialSavings", {
               amount: numberFormatter.format(usageReport.potentialSavings),
             })}
           </span>
-        </section>
+        </ReportCard>
 
         <section>
           <h2 className="font-sans text-label-14-bold text-text-primary">
@@ -230,7 +230,7 @@ function ReportCard({
   return (
     <section
       className={cn(
-        "rounded-lg border border-border-default bg-surface p-lg",
+        "rounded-lg border border-border-default bg-surface p-lg shadow-sm",
         className,
       )}
     >

@@ -1,25 +1,15 @@
 "use client";
 
-import {
-  useDeferredValue,
-  useEffect,
-  useId,
-  useMemo,
-  useRef,
-  useState,
-  type ReactNode,
-} from "react";
+import { useDeferredValue, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import {
-  Check,
-  ChevronDown,
   ChevronRight,
+  Headset,
   List,
   LocateFixed,
   Map,
   MapPin,
   Search,
-  SlidersHorizontal,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
 
@@ -29,6 +19,7 @@ import { EmptyState } from "@/components/ui/EmptyState/EmptyState";
 import { ErrorState } from "@/components/ui/ErrorState/ErrorState";
 import { Input } from "@/components/ui/Input/Input";
 import { NaverMap } from "@/components/ui/NaverMap/NaverMap";
+import { Select } from "@/components/ui/Select/Select";
 import { Link } from "@/i18n/navigation";
 import { getStores } from "@/lib/api/store";
 import { cn } from "@/lib/utils";
@@ -70,30 +61,44 @@ export function StoreListContent() {
       }),
     retry: false,
   });
+  const stores = useMemo(() => {
+    const items = storesQuery.data?.stores ?? [];
+
+    if (!coordinates) return items;
+
+    return items
+      .map((store) => ({
+        ...store,
+        distanceKm: calculateDistanceKm(coordinates, store.coordinates),
+      }))
+      .sort((a, b) => a.distanceKm - b.distanceKm);
+  }, [coordinates, storesQuery.data?.stores]);
   const mapLocations = useMemo(
     () =>
-      storesQuery.data?.stores.map((store) => ({
+      stores.map((store) => ({
         id: store.code,
         name: store.name,
         latitude: store.coordinates.latitude,
         longitude: store.coordinates.longitude,
-      })) ?? [],
-    [storesQuery.data?.stores],
+      })),
+    [stores],
   );
-  const selectedStore = storesQuery.data?.stores.find(
-    (store) => store.code === selectedStoreCode,
-  );
+  const selectedStore =
+    stores.find((store) => store.code === selectedStoreCode) ?? stores[0];
+  const activeStoreCode = selectedStore?.code;
   const regions = storesQuery.data?.regions ?? [];
   const showRegionFilter = regions.length > 1;
 
   const requestLocation = () => {
     setLocationError(false);
     navigator.geolocation.getCurrentPosition(
-      ({ coords }) =>
+      ({ coords }) => {
+        setSelectedStoreCode(undefined);
         setCoordinates({
           latitude: coords.latitude,
           longitude: coords.longitude,
-        }),
+        });
+      },
       () => setLocationError(true),
       { enableHighAccuracy: false, timeout: 8000 },
     );
@@ -126,7 +131,21 @@ export function StoreListContent() {
         </div>
       </section>
 
-      <section className="space-y-lg px-page py-xl">
+      <section className="space-y-md px-page py-xl">
+        <button
+          type="button"
+          onClick={requestLocation}
+          className="flex min-h-touch w-full items-center gap-sm rounded-lg border border-border-default bg-surface px-lg font-sans text-label-14-bold text-text-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-action-primary"
+        >
+          <LocateFixed className="text-icon-brand" size={18} />
+          {coordinates ? t("locationApplied") : t("nearbySort")}
+        </button>
+        {locationError && (
+          <p className="font-sans text-caption-12-regular text-error">
+            {t("locationError")}
+          </p>
+        )}
+
         <div className="grid grid-cols-2 rounded-lg bg-surface-subtle p-xs">
           {(["map", "list"] as const).map((item) => {
             const Icon = item === "map" ? Map : List;
@@ -150,9 +169,9 @@ export function StoreListContent() {
         </div>
         <div className={cn("grid gap-sm", showRegionFilter && "grid-cols-2")}>
           {showRegionFilter && (
-            <FilterSelect
+            <Select
               icon={<MapPin size={18} />}
-              label={t("regionFilterLabel")}
+              ariaLabel={t("regionFilterLabel")}
               value={region}
               onChange={setRegion}
               options={[
@@ -161,9 +180,9 @@ export function StoreListContent() {
               ]}
             />
           )}
-          <FilterSelect
-            icon={<SlidersHorizontal size={18} />}
-            label={t("serviceFilterLabel")}
+          <Select
+            icon={<Headset size={18} />}
+            ariaLabel={t("serviceFilterLabel")}
             value={service}
             onChange={(value) => setService(value as "all" | StoreService)}
             options={services.map((item) => ({
@@ -173,25 +192,12 @@ export function StoreListContent() {
           />
         </div>
 
-        <button
-          type="button"
-          onClick={requestLocation}
-          className="flex min-h-[44px] w-full items-center justify-between rounded-lg border border-border-default bg-surface px-lg text-left focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-action-primary"
-        >
-          <span className="flex items-center gap-sm font-sans text-label-14-bold text-text-primary">
-            <LocateFixed className="text-icon-brand" size={18} />
-            {coordinates ? t("locationApplied") : t("nearbySort")}
-          </span>
-          <ChevronRight className="text-icon-secondary" size={18} />
-        </button>
-        {locationError && (
-          <p className="font-sans text-caption-12-regular text-error">
-            {t("locationError")}
-          </p>
-        )}
-
         {storesQuery.isPending ? (
-          <StoreListSkeleton />
+          view === "map" ? (
+            <div className="h-[440px] animate-pulse rounded-lg border border-border-default bg-surface-subtle shadow-sm" />
+          ) : (
+            <StoreListSkeleton />
+          )
         ) : storesQuery.isError ? (
           <ErrorState
             title={t("loadError")}
@@ -199,17 +205,18 @@ export function StoreListContent() {
             retryLabel={t("retry")}
             onRetry={() => storesQuery.refetch()}
           />
-        ) : storesQuery.data.stores.length === 0 ? (
+        ) : stores.length === 0 ? (
           <EmptyState
             heading={t("emptyTitle")}
             description={t("emptyDescription")}
             className="w-full rounded-lg bg-surface"
           />
         ) : view === "map" ? (
-          <div className="relative overflow-hidden rounded-lg border border-border-default bg-surface shadow-sm">
+          <div className="relative isolate overflow-hidden rounded-lg border border-border-default bg-surface shadow-sm">
             <NaverMap
               locations={mapLocations}
-              selectedId={selectedStoreCode}
+              center={coordinates ?? undefined}
+              selectedId={activeStoreCode}
               onSelect={setSelectedStoreCode}
               className="h-[440px]"
               errorTitle={t("mapError")}
@@ -218,9 +225,9 @@ export function StoreListContent() {
             {selectedStore && (
               <Link
                 href={`/my/stores/${selectedStore.code}`}
-                className="absolute inset-x-md bottom-md flex items-start gap-md rounded-lg border border-border-default bg-surface p-lg shadow-lg"
+                className="absolute inset-x-md bottom-md z-[200] flex items-start gap-md rounded-lg border border-border-default bg-surface p-lg shadow-lg"
               >
-                <span className="flex size-[40px] shrink-0 items-center justify-center rounded-sm bg-brand-soft text-icon-brand">
+                <span className="flex size-[36px] shrink-0 items-center justify-center rounded-sm bg-brand-soft text-icon-brand">
                   <MapPin size={20} />
                 </span>
                 <span className="min-w-0 flex-1">
@@ -231,23 +238,26 @@ export function StoreListContent() {
                     {selectedStore.address}
                   </span>
                 </span>
-                <ChevronRight className="text-icon-secondary" size={18} />
+                <ChevronRight
+                  className="self-center text-icon-secondary"
+                  size={18}
+                />
               </Link>
             )}
           </div>
         ) : (
-          <div className="space-y-sm">
+          <div className="space-y-lg">
             <p className="font-sans text-caption-12-regular text-text-secondary">
-              {t("resultCount", { count: storesQuery.data.stores.length })}
+              {t("resultCount", { count: stores.length })}
             </p>
-            {storesQuery.data.stores.map((store) => (
+            {stores.map((store) => (
               <Link
                 key={store.code}
                 href={`/my/stores/${store.code}`}
                 className="flex min-h-[116px] items-start gap-md rounded-lg border border-border-default bg-surface p-lg shadow-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-action-primary"
               >
-                <span className="flex size-[40px] shrink-0 items-center justify-center rounded-sm bg-brand-soft text-icon-brand">
-                  <MapPin aria-hidden="true" size={21} />
+                <span className="flex size-[36px] shrink-0 items-center justify-center rounded-sm bg-brand-soft text-icon-brand">
+                  <MapPin aria-hidden="true" size={20} />
                 </span>
                 <span className="min-w-0 flex-1">
                   <span className="flex items-start justify-between gap-sm">
@@ -281,131 +291,36 @@ export function StoreListContent() {
   );
 }
 
-interface FilterSelectProps {
-  icon: ReactNode;
-  label: string;
-  value: string;
-  options: Array<{ value: string; label: string }>;
-  onChange: (value: string) => void;
-}
-
-function FilterSelect({
-  icon,
-  label,
-  value,
-  options,
-  onChange,
-}: FilterSelectProps) {
-  const [isOpen, setIsOpen] = useState(false);
-  const menuId = useId();
-  const containerRef = useRef<HTMLDivElement>(null);
-  const triggerRef = useRef<HTMLButtonElement>(null);
-  const selectedOption = options.find((option) => option.value === value);
-
-  useEffect(() => {
-    if (!isOpen) return;
-
-    const closeOnOutsideClick = (event: MouseEvent) => {
-      if (!containerRef.current?.contains(event.target as Node)) {
-        setIsOpen(false);
-      }
-    };
-
-    document.addEventListener("mousedown", closeOnOutsideClick);
-    return () => document.removeEventListener("mousedown", closeOnOutsideClick);
-  }, [isOpen]);
-
-  const closeMenu = () => {
-    setIsOpen(false);
-    triggerRef.current?.focus();
-  };
+function calculateDistanceKm(from: Coordinates, to: Coordinates) {
+  const earthRadiusKm = 6371;
+  const toRadians = (degrees: number) => (degrees * Math.PI) / 180;
+  const latitudeDelta = toRadians(to.latitude - from.latitude);
+  const longitudeDelta = toRadians(to.longitude - from.longitude);
+  const fromLatitude = toRadians(from.latitude);
+  const toLatitude = toRadians(to.latitude);
+  const haversine =
+    Math.sin(latitudeDelta / 2) ** 2 +
+    Math.cos(fromLatitude) *
+      Math.cos(toLatitude) *
+      Math.sin(longitudeDelta / 2) ** 2;
 
   return (
-    <div
-      ref={containerRef}
-      className={cn("relative", isOpen && "z-[20]")}
-      onKeyDown={(event) => {
-        if (event.key === "Escape" && isOpen) {
-          event.preventDefault();
-          closeMenu();
-        }
-      }}
-    >
-      <button
-        ref={triggerRef}
-        type="button"
-        aria-haspopup="menu"
-        aria-expanded={isOpen}
-        aria-controls={menuId}
-        aria-label={label}
-        onClick={() => setIsOpen((open) => !open)}
-        className={cn(
-          "flex min-h-[48px] w-full items-center rounded-lg border bg-surface px-md text-left text-text-primary transition-colors",
-          "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-action-primary",
-          isOpen ? "border-action-primary" : "border-border-default",
-        )}
-      >
-        <span aria-hidden="true" className="shrink-0 text-icon-brand">
-          {icon}
-        </span>
-        <span className="min-w-0 flex-1 truncate px-sm font-sans text-label-14-bold">
-          {selectedOption?.label}
-        </span>
-        <ChevronDown
-          aria-hidden="true"
-          className={cn(
-            "shrink-0 text-icon-secondary transition-transform",
-            isOpen && "rotate-180",
-          )}
-          size={18}
-        />
-      </button>
-
-      {isOpen && (
-        <div
-          id={menuId}
-          role="menu"
-          aria-label={label}
-          className="absolute inset-x-0 top-[calc(100%+8px)] overflow-hidden rounded-lg border border-border-default bg-surface p-xs shadow-lg"
-        >
-          {options.map((option) => {
-            const isSelected = option.value === value;
-            return (
-              <button
-                key={option.value}
-                type="button"
-                role="menuitemradio"
-                aria-checked={isSelected}
-                onClick={() => {
-                  onChange(option.value);
-                  closeMenu();
-                }}
-                className={cn(
-                  "flex min-h-[42px] w-full items-center justify-between gap-sm rounded-sm px-md text-left font-sans text-body-14-regular",
-                  "focus-visible:outline-2 focus-visible:outline-action-primary",
-                  isSelected
-                    ? "bg-brand-soft font-bold text-text-brand"
-                    : "text-text-primary hover:bg-surface-subtle",
-                )}
-              >
-                <span>{option.label}</span>
-                {isSelected && <Check aria-hidden="true" size={17} />}
-              </button>
-            );
-          })}
-        </div>
-      )}
-    </div>
+    Math.round(
+      earthRadiusKm *
+        2 *
+        Math.atan2(Math.sqrt(haversine), Math.sqrt(1 - haversine)) *
+        10,
+    ) / 10
   );
 }
 
 function StoreListSkeleton() {
   return (
-    <div className="space-y-sm" aria-hidden="true">
+    <div className="space-y-lg" aria-hidden="true">
       {Array.from({ length: 3 }).map((_, index) => (
         <div
           key={index}
-          className="h-[116px] animate-pulse rounded-lg bg-surface-subtle"
+          className="h-[116px] animate-pulse rounded-lg border border-border-default bg-surface-subtle shadow-sm"
         />
       ))}
     </div>

@@ -1,31 +1,23 @@
 "use client";
 
+import type { ElementType } from "react";
 import { useCallback, useRef, useState } from "react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { Bell, Tag, Calendar, MessageCircle, Trash2 } from "lucide-react";
 
 import type { AppNotification, NotificationType } from "@/lib/api/notification";
 import { cn } from "@/lib/utils";
 
 /** 알림 타입별 아이콘·색상 메타데이터 */
-const NOTIFICATION_META: Record<
-  NotificationType,
-  { icon: React.ElementType; iconClass: string; bgClass: string }
-> = {
+const NOTIFICATION_META: Record<NotificationType, { icon: ElementType }> = {
   coupon_expiring: {
     icon: Tag,
-    iconClass: "text-action-primary",
-    bgClass: "bg-brand-soft",
   },
   attendance_reminder: {
     icon: Calendar,
-    iconClass: "text-info",
-    bgClass: "bg-info/10",
   },
   consultation_incomplete: {
     icon: MessageCircle,
-    iconClass: "text-action-secondary",
-    bgClass: "bg-action-secondary/10",
   },
 };
 
@@ -37,6 +29,7 @@ interface NotificationPanelProps {
   onClose: () => void;
   /** 읽음 처리(서버 반영)까지 끝난 뒤에 페이지 이동을 해야 하므로 Promise를 반환받음 */
   onNotificationClick: (notification: AppNotification) => Promise<void>;
+  onMarkAllAsRead: () => Promise<void>;
   /** 스와이프 삭제 시 호출됨. 미전달 시 삭제 기능 비활성화 */
   onNotificationDelete?: (notification: AppNotification) => Promise<void>;
 }
@@ -50,10 +43,22 @@ export function NotificationPanel({
   notifications,
   onClose,
   onNotificationClick,
+  onMarkAllAsRead,
   onNotificationDelete,
 }: NotificationPanelProps) {
   const notificationT = useTranslations("Notifications");
+  const locale = useLocale();
   const unreadCount = notifications.filter((n) => !n.readAt).length;
+  const [isMarkingAll, setIsMarkingAll] = useState(false);
+
+  const handleMarkAllAsRead = async () => {
+    setIsMarkingAll(true);
+    try {
+      await onMarkAllAsRead();
+    } finally {
+      setIsMarkingAll(false);
+    }
+  };
 
   return (
     <>
@@ -86,6 +91,16 @@ export function NotificationPanel({
               </span>
             )}
           </div>
+          <button
+            type="button"
+            disabled={unreadCount === 0 || isMarkingAll}
+            onClick={() => void handleMarkAllAsRead()}
+            className="font-sans text-caption-12-bold text-text-brand disabled:cursor-default disabled:text-text-tertiary"
+          >
+            {isMarkingAll
+              ? notificationT("markingAllAsRead")
+              : notificationT("markAllAsRead")}
+          </button>
         </div>
 
         {/* 알림 목록 or 빈 상태 */}
@@ -97,6 +112,7 @@ export function NotificationPanel({
               <NotificationItem
                 key={notification.id}
                 notification={notification}
+                locale={locale}
                 onClick={() => void onNotificationClick(notification)}
                 onDelete={
                   onNotificationDelete
@@ -116,10 +132,12 @@ export function NotificationPanel({
 
 function NotificationItem({
   notification,
+  locale,
   onClick,
   onDelete,
 }: {
   notification: AppNotification;
+  locale: string;
   onClick: () => void;
   onDelete?: () => Promise<void>;
 }) {
@@ -256,12 +274,9 @@ function NotificationItem({
         {/* 타입 아이콘 */}
         <span
           aria-hidden="true"
-          className={cn(
-            "mt-[1px] flex size-[36px] shrink-0 items-center justify-center rounded-full",
-            meta.bgClass,
-          )}
+          className="mt-[1px] flex size-[36px] shrink-0 items-center justify-center rounded-sm bg-brand-soft text-icon-brand"
         >
-          <Icon size={16} strokeWidth={1.8} className={meta.iconClass} />
+          <Icon size={20} strokeWidth={1.8} />
         </span>
 
         <div className="min-w-0 flex-1">
@@ -285,10 +300,33 @@ function NotificationItem({
           <p className="mt-xs font-sans text-caption-13-regular text-text-secondary">
             {notification.body}
           </p>
+          <time
+            dateTime={notification.createdAt}
+            className="mt-xs block text-right font-sans text-micro-11-regular text-text-tertiary"
+          >
+            {formatNotificationDate(notification.createdAt, locale)}
+          </time>
         </div>
       </button>
     </li>
   );
+}
+
+function formatNotificationDate(value: string, locale: string) {
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) return value;
+
+  const now = new Date();
+  const includeYear = date.getFullYear() !== now.getFullYear();
+
+  return new Intl.DateTimeFormat(locale, {
+    ...(includeYear && { year: "numeric" }),
+    month: "short",
+    day: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+  }).format(date);
 }
 
 function NotificationEmptyState({ label }: { label: string }) {

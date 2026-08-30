@@ -64,14 +64,6 @@ export default async function LocaleLayout({
 
   return (
     <html lang={locale} suppressHydrationWarning>
-      <head>
-        {/* hydration 전에 dark 클래스를 먼저 붙여 테마 깜빡임(FOUC)을 막음 (theme-provider.tsx와 동일 로직) */}
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `(function(){try{var t=localStorage.getItem("theme");var isDark=t==="dark"||((!t||t==="system")&&window.matchMedia("(prefers-color-scheme: dark)").matches);if(isDark){document.documentElement.classList.add("dark");document.documentElement.style.colorScheme="dark";}}catch(e){}})();`,
-          }}
-        />
-      </head>
       <body className={`${notoSansKr.variable} font-sans`}>
         <NextIntlClientProvider messages={messages}>
           <AppProviders>{children}</AppProviders>
