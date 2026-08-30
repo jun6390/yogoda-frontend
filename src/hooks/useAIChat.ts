@@ -236,7 +236,7 @@ export function useAIChat({ preselectedPlan }: UseAIChatOptions = {}) {
    */
 
   const openSocket = useCallback(() => {
-    if (socketRef.current?.connected) return;
+    if (socketRef.current) return; // 연결 중(connecting)인 소켓도 재사용 — connected 체크만 하면 두 번째 호출 시 중복 소켓이 생성됨
 
     const apiBase = API_BASE_URL || "http://localhost:8000";
     const { accessToken: token } = useAuthStore.getState();
