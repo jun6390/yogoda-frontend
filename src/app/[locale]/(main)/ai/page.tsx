@@ -148,6 +148,7 @@ export default function AIConsultationPage() {
 
   const handleEndChatConfirm = () => {
     setShowEndChatModal(false);
+    setPreselectedPlan(undefined);
     void endCurrentChat();
   };
 
@@ -225,11 +226,7 @@ export default function AIConsultationPage() {
                 )}
 
                 {/* 명의도용 방지 안내 카드 */}
-                {msg.type === "fraud_warning" && (
-                  <FraudWarningCard
-                    onConfirm={() => sendMessageSilent("확인했습니다")}
-                  />
-                )}
+                {msg.type === "fraud_warning" && <FraudWarningCard />}
 
                 {/* 약관 동의 카드 */}
                 {msg.type === "terms" && (

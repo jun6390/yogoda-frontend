@@ -139,6 +139,20 @@ export function useAIChat({ preselectedPlan }: UseAIChatOptions = {}) {
     }
   }, [currentSignupStep]);
 
+  // signupCollectedData 변경 시 sessionStorage에 저장 (새로고침 복원용)
+  useEffect(() => {
+    if (!signupCollectedData || Object.keys(signupCollectedData).length === 0)
+      return;
+    try {
+      sessionStorage.setItem(
+        "signupCollectedData",
+        JSON.stringify(signupCollectedData),
+      );
+    } catch {
+      /* noop */
+    }
+  }, [signupCollectedData]);
+
   // sessionStorage 비동기 읽기 등으로 preselectedPlan이 뒤늦게 세팅될 때
   // 히스토리 복원이 이미 완료된 상태에서도 signup-entry 메시지를 추가함
   useEffect(() => {
@@ -350,6 +364,7 @@ export function useAIChat({ preselectedPlan }: UseAIChatOptions = {}) {
           sessionStorage.removeItem("signupStep");
           sessionStorage.removeItem("signupQuickReplies");
           sessionStorage.removeItem("signupEntryShown");
+          sessionStorage.removeItem("signupCollectedData");
         } catch {
           /* noop */
         }
@@ -444,6 +459,54 @@ export function useAIChat({ preselectedPlan }: UseAIChatOptions = {}) {
             setMessages([
               WELCOME_MESSAGE,
               ...dbMessages.flatMap((m) => {
+                // 카드 타입 메시지 — 텍스트 없이 카드만 렌더링
+                if (m.messageType === "fraud_warning") {
+                  return [
+                    {
+                      id: m.id,
+                      sender: "ai" as const,
+                      type: "fraud_warning" as const,
+                      signupStep: "fraud_warning",
+                      signupData: {},
+                    },
+                  ] satisfies ChatMessage[];
+                }
+                if (m.messageType === "terms") {
+                  return [
+                    {
+                      id: m.id,
+                      sender: "ai" as const,
+                      type: "terms" as const,
+                      signupStep: "terms_agreement",
+                      signupData: {},
+                    },
+                  ] satisfies ChatMessage[];
+                }
+                if (m.messageType === "signup_summary") {
+                  return [
+                    {
+                      id: m.id,
+                      sender: "ai" as const,
+                      type: "signup_summary" as const,
+                      signupStep: "final_confirm",
+                      signupData:
+                        (m.signupData as import("@/types/chat").SignupCollectedData) ??
+                        {},
+                      preselectedPlan: m.preselectedPlan as
+                        import("@/types/chat").PreselectedPlan | undefined,
+                    },
+                  ] satisfies ChatMessage[];
+                }
+                if (m.messageType === "signup_complete") {
+                  return [
+                    {
+                      id: m.id,
+                      sender: "ai" as const,
+                      type: "signup_complete" as const,
+                    },
+                  ] satisfies ChatMessage[];
+                }
+
                 const textMsg: ChatMessage = {
                   id: m.id,
                   sender: m.role === "user" ? "user" : "ai",
@@ -570,6 +633,35 @@ export function useAIChat({ preselectedPlan }: UseAIChatOptions = {}) {
                   signupData: {},
                 },
               ]);
+            } else if (savedStep === "final_confirm") {
+              // final_confirm: signup_summary 카드 복원
+              try {
+                const rawData = sessionStorage.getItem("signupCollectedData");
+                const restoredData = rawData
+                  ? (JSON.parse(rawData) as Record<string, unknown>)
+                  : {};
+                const rawPlan = sessionStorage.getItem("preselectedPlan");
+                const restoredPlan = rawPlan
+                  ? (JSON.parse(rawPlan) as {
+                      code: string;
+                      name: string;
+                      monthlyFee: number;
+                    })
+                  : undefined;
+                setMessages((prev) => [
+                  ...prev,
+                  {
+                    id: `restore-summary-${Date.now()}`,
+                    sender: "ai" as const,
+                    type: "signup_summary" as const,
+                    signupStep: "final_confirm",
+                    signupData: restoredData,
+                    preselectedPlan: restoredPlan,
+                  },
+                ]);
+              } catch {
+                /* noop */
+              }
             }
           } catch {
             /* noop */
@@ -794,6 +886,7 @@ export function useAIChat({ preselectedPlan }: UseAIChatOptions = {}) {
       sessionStorage.removeItem("signupEntryShown");
       sessionStorage.removeItem("signupStep");
       sessionStorage.removeItem("signupQuickReplies");
+      sessionStorage.removeItem("signupCollectedData");
     } catch {
       /* noop */
     }
