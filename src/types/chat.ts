@@ -22,7 +22,6 @@ export type SignupStep =
 
 // 가입 플로우 중 수집된 데이터 (단계별로 점진적으로 채워짐)
 export interface SignupCollectedData {
-  signupType?: "신규가입" | "번호이동";
   fraudWarningAcknowledged?: boolean;
   agreedToTerms?: boolean;
   name?: string;

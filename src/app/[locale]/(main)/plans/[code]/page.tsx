@@ -23,6 +23,7 @@ import { ErrorState } from "@/components/ui/ErrorState/ErrorState";
 import { PageSpinner } from "@/components/ui/Spinner/Spinner";
 import { NergetPlanBadge } from "@/components/plans/NergetPlanBadge";
 import { Button } from "@/components/ui/Button/Button";
+import { BackToChatButton } from "@/components/chat/BackToChatButton";
 import { useRouter } from "@/i18n/navigation";
 import { getCurrentPlan, getPlanByCode } from "@/lib/api/plan";
 import { useAuthStore } from "@/stores/useAuthStore";
@@ -440,6 +441,11 @@ function PlanDetailContent({ code }: PlanDetailContentProps) {
       router.push("/login");
       return;
     }
+    // 이전 가입 플로우 잔여 상태 초기화 (새 가입 시작)
+    sessionStorage.removeItem("signupEntryShown");
+    sessionStorage.removeItem("signupStep");
+    sessionStorage.removeItem("signupQuickReplies");
+
     sessionStorage.setItem(
       "preselectedPlan",
       JSON.stringify({
@@ -448,11 +454,23 @@ function PlanDetailContent({ code }: PlanDetailContentProps) {
         monthlyFee: plan.monthlyFee,
       }),
     );
+    // 사용자가 선택한 혜택 타이틀을 AI 인삿말 생성에 활용
+    const benefitTitles = selectedOptions.map((opt) => opt.title);
+    if (benefitTitles.length > 0) {
+      sessionStorage.setItem(
+        "preselectedPlanBenefits",
+        JSON.stringify(benefitTitles),
+      );
+    } else {
+      sessionStorage.removeItem("preselectedPlanBenefits");
+    }
     router.push("/ai");
   };
 
   return (
     <>
+      <BackToChatButton />
+
       <PageContainer className="pb-xl pt-md">
         <div className="flex flex-col gap-lg">
           <button
