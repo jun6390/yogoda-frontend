@@ -23,18 +23,16 @@ export function PageIntro({
       )}
     >
       <div className="flex items-start justify-between gap-lg">
-        <div className="min-w-0">
-          <h1 className="font-sans text-title-24-bold text-text-primary">
-            {title}
-          </h1>
-          {description ? (
-            <p className="mt-sm font-sans text-body-14-regular text-text-secondary">
-              {description}
-            </p>
-          ) : null}
-        </div>
+        <h1 className="min-w-0 font-sans text-title-24-bold text-text-primary">
+          {title}
+        </h1>
         {action ? <div className="shrink-0">{action}</div> : null}
       </div>
+      {description ? (
+        <p className="mt-sm font-sans text-body-14-regular text-text-secondary">
+          {description}
+        </p>
+      ) : null}
     </section>
   );
 }

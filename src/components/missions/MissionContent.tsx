@@ -21,11 +21,9 @@ import { useTranslations } from "next-intl";
 
 import { MissionSubNav } from "./MissionSubNav";
 
-import { Badge } from "@/components/ui/Badge/Badge";
 import { Button } from "@/components/ui/Button/Button";
 import { EmptyState } from "@/components/ui/EmptyState/EmptyState";
 import { ErrorState } from "@/components/ui/ErrorState/ErrorState";
-import { ProgressBar } from "@/components/ui/ProgressBar/ProgressBar";
 import { PageIntro } from "@/components/ui/PageIntro/PageIntro";
 import { Toast } from "@/components/ui/Toast/Toast";
 import {
@@ -109,7 +107,7 @@ export function MissionContent({ view = "active" }: { view?: MissionView }) {
           />
         ) : (
           <>
-            <section className="relative min-h-[152px] overflow-hidden rounded-lg border border-[#e7def5] bg-[#f5f1fc] px-lg py-xl">
+            <section className="relative min-h-[152px] overflow-hidden rounded-lg border border-action-secondary/30 bg-brand-soft px-lg py-xl shadow-sm">
               <div className="relative z-[1] max-w-[58%]">
                 <p className="font-sans text-caption-12-regular text-text-secondary">
                   {t("progressSummary")}
@@ -126,12 +124,13 @@ export function MissionContent({ view = "active" }: { view?: MissionView }) {
                 alt=""
                 width={168}
                 height={168}
+                loading="eager"
                 className="pointer-events-none absolute -bottom-sm -right-xs size-[156px] object-contain [mask-image:linear-gradient(to_right,transparent_0%,black_12%)]"
               />
             </section>
 
             {missions?.length ? (
-              <section className="divide-y divide-border-default rounded-lg border border-border-default bg-surface px-lg">
+              <section className="divide-y divide-border-default rounded-lg border border-border-default bg-surface px-lg shadow-sm">
                 {missions.map((mission) => (
                   <button
                     key={mission.code}
@@ -146,15 +145,17 @@ export function MissionContent({ view = "active" }: { view?: MissionView }) {
                       <span className="block truncate font-sans text-label-14-medium text-text-primary">
                         {mission.title}
                       </span>
-                      <MissionStatusBadge status={mission.status} />
                     </span>
-                    <span className="shrink-0 font-sans text-caption-13-bold text-text-brand">
-                      +{mission.rewardPoints}P
+                    <span className="flex min-w-[64px] shrink-0 flex-col items-end gap-xs self-start pt-xs">
+                      <MissionStatusTag status={mission.status} />
+                      <span className="font-sans text-caption-13-bold text-text-brand">
+                        +{mission.rewardPoints}P
+                      </span>
                     </span>
                     <ChevronRight
                       aria-hidden="true"
                       className="shrink-0 text-icon-secondary"
-                      size={17}
+                      size={18}
                     />
                   </button>
                 ))}
@@ -225,6 +226,7 @@ function MissionDetail({
 }) {
   const t = useTranslations("Missions");
   const queryClient = useQueryClient();
+  const rewardLabel = getMissionRewardLabel(mission);
   const mutation = useMutation({
     mutationFn: () => getMissionAction(mission.status)(mission.code),
     onSuccess: async () => {
@@ -244,18 +246,21 @@ function MissionDetail({
         aria-labelledby="mission-title"
         className="w-full max-w-mobile rounded-t-xl bg-background p-page sm:rounded-xl"
       >
-        <div className="flex items-start justify-between">
+        <div className="flex items-start justify-between gap-lg">
           <span className="flex size-[48px] items-center justify-center rounded-lg bg-brand-soft text-icon-brand">
             <Gift aria-hidden="true" size={24} />
           </span>
-          <button
-            type="button"
-            aria-label={t("close")}
-            onClick={onClose}
-            className="flex size-touch items-center justify-center text-icon-default"
-          >
-            <X aria-hidden="true" size={24} />
-          </button>
+          <div className="flex items-start gap-md">
+            <MissionStatusTag status={mission.status} className="mt-[11px]" />
+            <button
+              type="button"
+              aria-label={t("close")}
+              onClick={onClose}
+              className="flex size-touch items-center justify-center text-icon-default"
+            >
+              <X aria-hidden="true" size={24} />
+            </button>
+          </div>
         </div>
         <h2
           id="mission-title"
@@ -263,7 +268,6 @@ function MissionDetail({
         >
           {mission.title}
         </h2>
-        <MissionStatusBadge status={mission.status} />
         <p className="mt-sm font-sans text-body-14-regular text-text-secondary">
           {mission.summary}
         </p>
@@ -278,13 +282,8 @@ function MissionDetail({
             {t("reward")}
           </p>
           <p className="mt-xs font-sans text-label-14-medium text-text-primary">
-            {mission.reward} · {mission.rewardPoints}P
+            {rewardLabel}
           </p>
-          {mission.status !== "available" && (
-            <div className="mt-lg">
-              <ProgressBar value={mission.progress} />
-            </div>
-          )}
         </div>
         {mission.status === "available" || mission.status === "completed" ? (
           <Button
@@ -314,24 +313,37 @@ function MissionDetail({
   );
 }
 
-function MissionStatusBadge({ status }: { status: MissionStatus }) {
+function MissionStatusTag({
+  status,
+  className,
+}: {
+  status: MissionStatus;
+  className?: string;
+}) {
   const t = useTranslations("Missions");
+  const isClaimed = status === "claimed";
 
   return (
-    <Badge
+    <span
       className={cn(
-        "mt-sm min-h-[24px] px-md py-xs text-caption-12-bold",
-        status === "available" &&
-          "border border-border-default bg-surface-subtle text-text-primary",
-        status === "in_progress" &&
-          "border border-action-primary bg-surface text-text-brand",
-        status === "completed" && "bg-action-primary text-text-on-primary",
-        status === "claimed" && "bg-success-soft text-success",
+        "inline-flex min-h-[22px] items-center whitespace-nowrap rounded-sm bg-surface-subtle px-sm font-sans text-caption-12-bold",
+        isClaimed ? "text-success" : "text-text-brand",
+        className,
       )}
     >
       {t(`status.${status}`)}
-    </Badge>
+    </span>
   );
+}
+
+function getMissionRewardLabel(mission: Mission) {
+  const reward = mission.reward.trim();
+  const pointsLabel = `${mission.rewardPoints}P`;
+
+  if (!reward) return pointsLabel;
+  if (reward.includes(pointsLabel)) return reward;
+
+  return `${reward} · ${pointsLabel}`;
 }
 
 function getMissionAction(status: MissionStatus) {
@@ -342,8 +354,8 @@ function getMissionAction(status: MissionStatus) {
 function MissionSkeleton() {
   return (
     <div className="space-y-md" aria-hidden="true">
-      <div className="h-[96px] animate-pulse rounded-lg bg-surface-subtle" />
-      <div className="h-[220px] animate-pulse rounded-lg bg-surface-subtle" />
+      <div className="h-[152px] animate-pulse rounded-lg border border-border-default bg-surface-subtle shadow-sm" />
+      <div className="h-[220px] animate-pulse rounded-lg border border-border-default bg-surface-subtle shadow-sm" />
     </div>
   );
 }

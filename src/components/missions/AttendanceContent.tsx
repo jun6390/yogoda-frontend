@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { CalendarCheck, Flame } from "lucide-react";
+import { Flame } from "lucide-react";
 import Image from "next/image";
 import { useTranslations } from "next-intl";
 import { MissionSubNav } from "./MissionSubNav";
@@ -74,28 +74,25 @@ export function AttendanceContent() {
                 alt=""
                 width={640}
                 height={640}
+                loading="eager"
+                fetchPriority="high"
                 sizes="180px"
                 className="pointer-events-none absolute -bottom-xs -right-sm size-[clamp(150px,36vw,180px)] object-contain [mask-image:linear-gradient(to_right,transparent_0%,black_16%)]"
               />
-              <div className="relative z-[1] flex max-w-[68%] items-start gap-md">
-                <span className="flex size-[44px] items-center justify-center rounded-lg bg-brand-soft text-icon-brand">
-                  <CalendarCheck size={23} />
-                </span>
-                <div className="min-w-0 flex-1">
-                  <strong className="font-sans text-title-18-bold text-text-primary">
-                    {attendance.data?.checkedInToday
-                      ? t("checkedTitle")
-                      : t("checkTitle")}
-                  </strong>
-                  <p className="mt-xs font-sans text-caption-13-regular text-text-secondary">
-                    {t("reward", {
-                      points: attendance.data?.pointsPerCheckIn ?? 30,
-                    })}
-                  </p>
-                </div>
+              <div className="relative z-[1] max-w-[68%]">
+                <strong className="font-sans text-title-18-bold text-[#17171c]">
+                  {attendance.data?.checkedInToday
+                    ? t("checkedTitle")
+                    : t("checkTitle")}
+                </strong>
+                <p className="mt-xs font-sans text-caption-13-regular text-[#6f6f79]">
+                  {t("reward", {
+                    points: attendance.data?.pointsPerCheckIn ?? 30,
+                  })}
+                </p>
               </div>
-              <div className="relative z-[1] mt-lg flex max-w-[68%] items-center gap-sm font-sans text-caption-13-bold text-text-brand">
-                <Flame size={17} />
+              <div className="relative z-[1] mt-lg flex max-w-[68%] items-center gap-sm font-sans text-caption-13-bold text-[#6f6f79]">
+                <Flame size={17} className="text-warning" />
                 {t("streak", { count: attendance.data?.streak ?? 0 })}
               </div>
               <Button

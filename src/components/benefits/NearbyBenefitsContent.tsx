@@ -7,7 +7,6 @@ import { useTranslations } from "next-intl";
 
 import { BenefitsSubNav } from "./BenefitsSubNav";
 import { BrandLogo } from "@/components/ui/BrandLogo/BrandLogo";
-import { Chip } from "@/components/ui/Chip/Chip";
 import { EmptyState } from "@/components/ui/EmptyState/EmptyState";
 import { ErrorState } from "@/components/ui/ErrorState/ErrorState";
 import { NaverMap } from "@/components/ui/NaverMap/NaverMap";
@@ -93,7 +92,7 @@ export function NearbyBenefitsContent() {
         <button
           type="button"
           onClick={requestLocation}
-          className="flex min-h-touch w-full items-center gap-sm rounded-lg border border-border-default bg-surface px-lg font-sans text-label-14-bold text-text-primary"
+          className="flex min-h-touch w-full items-center gap-sm rounded-lg border border-border-default bg-surface px-lg font-sans text-label-14-bold text-text-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-action-primary"
         >
           <LocateFixed className="text-icon-brand" size={18} />
           {userLocation ? t("locationApplied") : t("useLocation")}
@@ -105,16 +104,23 @@ export function NearbyBenefitsContent() {
         )}
         <div className="flex gap-sm overflow-x-auto">
           {(["all", "food", "culture", "shopping"] as const).map((item) => (
-            <Chip
+            <button
               key={item}
-              selected={category === item}
+              type="button"
+              aria-pressed={category === item}
               onClick={() => {
                 setCategory(item);
                 setSelectedId(undefined);
               }}
+              className={cn(
+                "h-[36px] shrink-0 rounded-full border px-lg font-sans text-caption-13-bold transition-colors",
+                category === item
+                  ? "border-action-primary bg-action-primary text-text-on-primary"
+                  : "border-border-default bg-surface text-text-secondary",
+              )}
             >
               {t(`categories.${item}`)}
-            </Chip>
+            </button>
           ))}
         </div>
         <div className="grid grid-cols-2 rounded-lg bg-surface-subtle p-xs">
@@ -142,7 +148,18 @@ export function NearbyBenefitsContent() {
 
       {query.isPending ? (
         <div className="px-page pb-xl">
-          <div className="h-[440px] animate-pulse rounded-lg border border-border-default bg-surface-subtle shadow-sm" />
+          {view === "map" ? (
+            <div className="h-[440px] animate-pulse rounded-lg border border-border-default bg-surface-subtle shadow-sm" />
+          ) : (
+            <div className="space-y-lg">
+              {Array.from({ length: 3 }).map((_, index) => (
+                <div
+                  key={index}
+                  className="h-[108px] animate-pulse rounded-lg border border-border-default bg-surface-subtle shadow-sm"
+                />
+              ))}
+            </div>
+          )}
         </div>
       ) : query.isError ? (
         <div className="px-page py-xl">
@@ -162,7 +179,7 @@ export function NearbyBenefitsContent() {
         </div>
       ) : view === "map" ? (
         <section className="px-page pb-xl">
-          <div className="relative overflow-hidden rounded-lg border border-border-default bg-surface shadow-sm">
+          <div className="relative isolate overflow-hidden rounded-lg border border-border-default bg-surface shadow-sm">
             <NaverMap
               locations={mapLocations}
               selectedId={selected?.id}
@@ -173,64 +190,61 @@ export function NearbyBenefitsContent() {
               errorDescription={t("mapErrorDescription")}
             />
             {selected && (
-              <article className="absolute inset-x-md bottom-md rounded-lg border border-border-default bg-surface p-lg shadow-lg">
-                <div className="flex items-start gap-md">
+              <article className="absolute inset-x-md bottom-md z-[200] rounded-lg border border-border-default bg-surface p-lg pr-[52px] shadow-lg">
+                <button
+                  type="button"
+                  aria-label={selected.benefit.title}
+                  onClick={() => setDetailOpen(true)}
+                  className="absolute inset-0 rounded-lg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-action-primary"
+                />
+                <div className="pointer-events-none relative z-[1] flex items-start gap-md">
                   <BrandLogo brand={selected.benefit.brand} />
                   <div className="min-w-0 flex-1">
-                    <div className="flex items-start justify-between gap-sm">
-                      <div>
-                        <p className="font-sans text-caption-12-regular text-text-secondary">
-                          {t(`categories.${selected.category}`)}
-                          {selected.distanceKm !== null &&
-                            ` · ${t("distance", { distance: selected.distanceKm })}`}
-                        </p>
-                        <h2 className="mt-xs font-sans text-label-14-bold text-text-primary">
-                          {selected.name}
-                        </h2>
-                      </div>
-                      <button
-                        type="button"
-                        aria-label={
-                          selected.benefit.saved ? t("removeSaved") : t("save")
-                        }
-                        disabled={saveMutation.isPending}
-                        onClick={() =>
-                          saveMutation.mutate({
-                            code: selected.benefit.code,
-                            saved: selected.benefit.saved,
-                          })
-                        }
-                        className={cn(
-                          "flex size-touch items-center justify-center",
-                          selected.benefit.saved
-                            ? "text-icon-brand"
-                            : "text-icon-secondary",
-                        )}
-                      >
-                        <Heart
-                          size={20}
-                          fill={
-                            selected.benefit.saved ? "currentColor" : "none"
-                          }
-                        />
-                      </button>
+                    <div>
+                      <p className="font-sans text-caption-12-regular text-text-secondary">
+                        {t(`categories.${selected.category}`)}
+                        {selected.distanceKm !== null &&
+                          ` · ${t("distance", { distance: selected.distanceKm })}`}
+                      </p>
+                      <h2 className="mt-xs font-sans text-label-14-bold text-text-primary">
+                        {selected.name}
+                      </h2>
                     </div>
-                    <button
-                      type="button"
-                      onClick={() => setDetailOpen(true)}
-                      className="mt-sm flex w-full items-center justify-between text-left font-sans text-caption-13-bold text-text-brand"
-                    >
+                    <p className="mt-sm font-sans text-caption-13-bold text-text-brand">
                       {selected.benefit.value}
-                      <ChevronRight size={17} />
-                    </button>
+                    </p>
                   </div>
                 </div>
+                <button
+                  type="button"
+                  aria-label={
+                    selected.benefit.saved ? t("removeSaved") : t("save")
+                  }
+                  disabled={saveMutation.isPending}
+                  onClick={() =>
+                    saveMutation.mutate({
+                      code: selected.benefit.code,
+                      saved: selected.benefit.saved,
+                    })
+                  }
+                  className={cn(
+                    "absolute right-xs top-xs z-[2] flex size-touch items-center justify-center",
+                    selected.benefit.saved
+                      ? "text-action-primary"
+                      : "text-action-secondary",
+                  )}
+                >
+                  <Heart
+                    size={20}
+                    fill={selected.benefit.saved ? "currentColor" : "none"}
+                  />
+                </button>
               </article>
             )}
           </div>
         </section>
       ) : (
-        <section className="space-y-sm px-page py-lg">
+        <section className="space-y-lg px-page py-lg">
           {filteredLocations.map((location) => (
             <button
               key={location.id}
@@ -260,7 +274,7 @@ export function NearbyBenefitsContent() {
       )}
       {detailOpen && selected && (
         <div
-          className="fixed inset-0 z-[80] flex items-end justify-center bg-black/40 sm:items-center sm:p-xl"
+          className="fixed inset-0 z-[1000] flex items-end justify-center bg-black/40 sm:items-center sm:p-xl"
           onClick={() => setDetailOpen(false)}
         >
           <article
