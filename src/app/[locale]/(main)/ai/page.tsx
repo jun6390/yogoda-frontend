@@ -55,6 +55,7 @@ export default function AIConsultationPage() {
   const {
     messages,
     isTyping,
+    thinkingMessage,
     isRestoringHistory,
     sendMessage,
     retryMessage,
@@ -208,72 +209,78 @@ export default function AIConsultationPage() {
         {isRestoringHistory ? (
           <ChatHistorySkeleton />
         ) : (
-          messages.map((msg) => {
-            if (msg.sender === "user") {
-              return <UserChatBubble key={msg.id}>{msg.text}</UserChatBubble>;
-            }
+          <>
+            {/* 채팅 상단 개인정보 수집 안내 문구 */}
+            <p className="text-center text-caption-12-regular text-text-tertiary px-md">
+              원활한 상담을 위해 대화 내용이 저장될 수 있습니다.
+            </p>
+            {messages.map((msg) => {
+              if (msg.sender === "user") {
+                return <UserChatBubble key={msg.id}>{msg.text}</UserChatBubble>;
+              }
 
-            // 응답 대기 중인 빈 AI 자리표시 메시지는 렌더링하지 않음
-            // (하단의 타이핑 인디케이터가 대신 표시되므로, 그리지 않으면 말풍선이 2개로 보임)
-            if (msg.type === "text" && !msg.text) {
-              return null;
-            }
+              // 응답 대기 중인 빈 AI 자리표시 메시지는 렌더링하지 않음
+              // (하단의 타이핑 인디케이터가 대신 표시되므로, 그리지 않으면 말풍선이 2개로 보임)
+              if (msg.type === "text" && !msg.text) {
+                return null;
+              }
 
-            // 가입 완료 카드는 풀너비 페이지형으로 AIChatBubble 밖에서 독립 렌더링
-            if (msg.type === "signup_complete") {
-              return <SignupCompleteCard key={msg.id} />;
-            }
+              // 가입 완료 카드는 풀너비 페이지형으로 AIChatBubble 밖에서 독립 렌더링
+              if (msg.type === "signup_complete") {
+                return <SignupCompleteCard key={msg.id} />;
+              }
 
-            return (
-              <AIChatBubble key={msg.id} noBackground={msg.type !== "text"}>
-                {/* 일반 텍스트 말풍선 (AI 응답의 마크다운 서식을 그대로 렌더링) */}
-                {msg.type === "text" && msg.text && (
-                  <ChatMarkdown>{msg.text}</ChatMarkdown>
-                )}
+              return (
+                <AIChatBubble key={msg.id} noBackground={msg.type !== "text"}>
+                  {/* 일반 텍스트 말풍선 (AI 응답의 마크다운 서식을 그대로 렌더링) */}
+                  {msg.type === "text" && msg.text && (
+                    <ChatMarkdown>{msg.text}</ChatMarkdown>
+                  )}
 
-                {/* 추천 요금제 카드 */}
-                {msg.type === "plans" && msg.plans && (
-                  <PlanRecommendationCards plans={msg.plans} />
-                )}
+                  {/* 추천 요금제 카드 */}
+                  {msg.type === "plans" && msg.plans && (
+                    <PlanRecommendationCards plans={msg.plans} />
+                  )}
 
-                {/* 명의도용 방지 안내 카드 */}
-                {msg.type === "fraud_warning" && <FraudWarningCard />}
+                  {/* 명의도용 방지 안내 카드 */}
+                  {msg.type === "fraud_warning" && <FraudWarningCard />}
 
-                {/* 약관 동의 카드 */}
-                {msg.type === "terms" && (
-                  <TermsAgreementCard onAgree={sendMessageSilent} />
-                )}
+                  {/* 약관 동의 카드 */}
+                  {msg.type === "terms" && (
+                    <TermsAgreementCard onAgree={sendMessageSilent} />
+                  )}
 
-                {/* 가입 정보 최종 확인 카드 */}
-                {msg.type === "signup_summary" && (
-                  <SignupSummaryCard
-                    signupData={msg.signupData ?? {}}
-                    plan={msg.preselectedPlan ?? preselectedPlan}
-                  />
-                )}
+                  {/* 가입 정보 최종 확인 카드 */}
+                  {msg.type === "signup_summary" && (
+                    <SignupSummaryCard
+                      signupData={msg.signupData ?? {}}
+                      plan={msg.preselectedPlan ?? preselectedPlan}
+                    />
+                  )}
 
-                {/* 링크 이동 말풍선 */}
-                {msg.type === "link" && msg.textKey && (
-                  <button className="flex items-center gap-xs font-sans text-caption-13-bold text-text-brand hover:underline self-start">
-                    {t(msg.textKey)} <ChevronRight size={16} />
-                  </button>
-                )}
+                  {/* 링크 이동 말풍선 */}
+                  {msg.type === "link" && msg.textKey && (
+                    <button className="flex items-center gap-xs font-sans text-caption-13-bold text-text-brand hover:underline self-start">
+                      {t(msg.textKey)} <ChevronRight size={16} />
+                    </button>
+                  )}
 
-                {/* 에러 발생 시 재시도 배너 */}
-                {msg.type === "error" && (
-                  <AITypingIndicator
-                    state="error"
-                    onRetry={() => retryMessage(msg.id)}
-                  />
-                )}
-              </AIChatBubble>
-            );
-          })
+                  {/* 에러 발생 시 재시도 배너 */}
+                  {msg.type === "error" && (
+                    <AITypingIndicator
+                      state="error"
+                      onRetry={() => retryMessage(msg.id)}
+                    />
+                  )}
+                </AIChatBubble>
+              );
+            })}
+          </>
         )}
         {/* 타이핑 애니메이션 인디케이터 */}
         {isTyping && (
           <AIChatBubble noBackground>
-            <AITypingIndicator state="typing" />
+            <AITypingIndicator state="typing" message={thinkingMessage} />
           </AIChatBubble>
         )}
         <div ref={chatEndRef} />

@@ -49,7 +49,8 @@ export function AIChatBubble({
         className={cn(
           !noBackground &&
             "rounded-[12px] rounded-tl-[4px] px-lg py-md bg-surface text-text-primary border border-border-default shadow-sm",
-          "font-sans text-body-14-regular whitespace-pre-line break-words max-w-[85%]",
+          noBackground ? "w-[85%]" : "max-w-[85%]",
+          "font-sans text-body-14-regular whitespace-pre-line break-words",
           className,
         )}
       >

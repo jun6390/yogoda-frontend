@@ -7,7 +7,7 @@
  */
 export function FraudWarningCard() {
   return (
-    <div className="w-[290px] rounded-xl border border-border-default bg-surface shadow-sm overflow-hidden">
+    <div className="w-full rounded-[12px] rounded-tl-[4px] border border-border-default bg-surface shadow-sm overflow-hidden">
       {/* 헤더 */}
       <div className="flex items-center gap-sm px-lg pt-md pb-sm">
         <strong className="font-sans text-caption-13-bold text-text-primary">

@@ -445,6 +445,7 @@ function PlanDetailContent({ code }: PlanDetailContentProps) {
     sessionStorage.removeItem("signupEntryShown");
     sessionStorage.removeItem("signupStep");
     sessionStorage.removeItem("signupQuickReplies");
+    sessionStorage.removeItem("signupCollectedData");
 
     sessionStorage.setItem(
       "preselectedPlan",
