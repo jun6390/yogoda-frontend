@@ -177,6 +177,13 @@ export function useAIChat({ preselectedPlan }: UseAIChatOptions = {}) {
   const [currentSignupStep, setCurrentSignupStep] = useState<string | null>(
     null,
   );
+  // 소켓 핸들러 클로저에서 최신 currentSignupStep을 참조하기 위한 ref.
+  // "signup" 이벤트가 같은 단계를 반복해서 보내도(예: 약관 동의 중 다른 질문을
+  // 하는 경우) 카드를 중복으로 추가하지 않기 위해 직전 단계와 비교하는 용도
+  const currentSignupStepRef = useRef(currentSignupStep);
+  useEffect(() => {
+    currentSignupStepRef.current = currentSignupStep;
+  }, [currentSignupStep]);
 
   useEffect(() => {
     if (!preselectedPlan) return;
@@ -212,26 +219,6 @@ export function useAIChat({ preselectedPlan }: UseAIChatOptions = {}) {
     }
   }, [currentSignupStep]);
 
-  // preselectedPlan이 세팅될 때 signup-entry 인삿말을 추가합니다.
-  // 세션 플래그가 남아 있어도 실제 메시지가 없다면 다시 추가해야
-  // 후속 가입 안내가 인삿말보다 먼저 보이지 않습니다.
-  useEffect(() => {
-    if (!preselectedPlan || isRestoringHistory) return;
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setMessages((prev) => {
-      const alreadyAdded = prev.some((m) => m.id.startsWith("signup-entry-"));
-      if (alreadyAdded) return prev;
-      return [...prev, createSignupEntryMessage(preselectedPlan, user?.name)];
-    });
-    try {
-      sessionStorage.setItem("signupEntryShown", "1");
-    } catch {
-      /* noop */
-    }
-    // preselectedPlan 객체 자체가 바뀔 때만 실행 (code 기준)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isRestoringHistory, preselectedPlan?.code]);
-
   const socketRef = useRef<Socket | null>(null);
   // 응답 타임아웃 타이머 (30초 안에 done이 안 오면 에러 처리)
   const responseTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -243,9 +230,15 @@ export function useAIChat({ preselectedPlan }: UseAIChatOptions = {}) {
   }, []);
   // 대화가 이어질 채팅 세션 id. 소켓 연결 시 auth로 실어 보내면 서버가 같은 세션으로 이어감
   const sessionIdRef = useRef<string | null>(null);
+  // 대화 내역 복원(init)이 이미 시작됐는지 추적. 개발 모드 등에서 마운트 effect가
+  // 중복 실행되어도 복원은 한 번만 일어나야 함
+  const initStartedRef = useRef(false);
   // 현재 수신 중인 AI 응답의 메시지 id. 소켓 이벤트 핸들러에서 어느 말풍선에 쓸지 식별함
   const currentAiMsgIdRef = useRef<string | null>(null);
-  // 킥오프 메시지가 이미 전송됐는지 추적 (중복 전송 방지)
+  // 가입 인삿말을 DB에 저장하는 signup_entry 이벤트를 이미 보낸 요금제 code.
+  // boolean이 아니라 code로 추적해야, 한 번 가입 플로우를 탄 뒤 다른 요금제로
+  // 다시 진입해도 인삿말이 정상적으로 다시 나옴 (마운트 시 DB 복원 결과로도 세팅됨)
+  const signupEntrySentRef = useRef<string | null>(null);
   const isAuthHydrated = useAuthHydrated();
 
   const appendChars = useCallback((messageId: string, chars: string) => {
@@ -298,20 +291,26 @@ export function useAIChat({ preselectedPlan }: UseAIChatOptions = {}) {
     });
 
     socket.on("plans", (data: ChatMessage["plans"]) => {
-      if (!currentAiMsgIdRef.current) return;
-      setMessages((prev) => [
-        ...prev,
-        {
-          id: `${currentAiMsgIdRef.current}-plans`,
-          sender: "ai",
-          type: "plans",
-          plans: data,
-        },
-      ]);
+      const aiMsgId = currentAiMsgIdRef.current;
+      if (!aiMsgId) return;
+      // 타이핑 애니메이션이 화면에 다 그려진 뒤에 카드를 붙임
+      typewriter.onDrain(aiMsgId, () => {
+        setMessages((prev) => [
+          ...prev,
+          {
+            id: `${aiMsgId}-plans`,
+            sender: "ai",
+            type: "plans",
+            plans: data,
+          },
+        ]);
+      });
     });
 
     socket.on("quickReplies", (data: string[]) => {
-      setQuickReplies(data);
+      typewriter.onDrain(currentAiMsgIdRef.current, () => {
+        setQuickReplies(data);
+      });
     });
 
     /*
@@ -322,6 +321,9 @@ export function useAIChat({ preselectedPlan }: UseAIChatOptions = {}) {
       "signup",
       (data: { signupStep: string; signupData: SignupCollectedData }) => {
         const { signupStep, signupData } = data;
+        // 같은 단계가 반복해서 와도(예: 약관 동의 중 다른 질문을 하는 경우)
+        // 카드를 중복으로 추가하지 않도록, 갱신 전의 이전 단계와 비교함
+        const isNewStep = signupStep !== currentSignupStepRef.current;
         setCurrentSignupStep(signupStep);
 
         // 누적된 수집 데이터 갱신
@@ -329,47 +331,68 @@ export function useAIChat({ preselectedPlan }: UseAIChatOptions = {}) {
 
         const aiMsgId = currentAiMsgIdRef.current;
 
-        // 단계별 특수 카드 삽입
+        // 단계별 특수 카드 삽입. 타이핑 애니메이션이 화면에 다 그려진 뒤에 붙임
+        if (!isNewStep) {
+          return;
+        }
         if (signupStep === "fraud_warning") {
-          setMessages((prev) => [
-            ...prev,
-            {
-              id: `${aiMsgId ?? Date.now()}-fraud`,
-              sender: "ai",
-              type: "fraud_warning",
-              signupStep: "fraud_warning",
-              signupData,
-            },
-          ]);
+          typewriter.onDrain(aiMsgId, () => {
+            setMessages((prev) => [
+              ...prev,
+              {
+                id: `${aiMsgId ?? Date.now()}-fraud`,
+                sender: "ai",
+                type: "fraud_warning",
+                signupStep: "fraud_warning",
+                signupData,
+              },
+            ]);
+          });
         } else if (signupStep === "terms_agreement") {
-          setMessages((prev) => [
-            ...prev,
-            {
-              id: `${aiMsgId ?? Date.now()}-terms`,
-              sender: "ai",
-              type: "terms",
-              signupStep: "terms_agreement",
-              signupData,
-            },
-          ]);
+          typewriter.onDrain(aiMsgId, () => {
+            setMessages((prev) => [
+              ...prev,
+              {
+                id: `${aiMsgId ?? Date.now()}-terms`,
+                sender: "ai",
+                type: "terms",
+                signupStep: "terms_agreement",
+                signupData,
+              },
+            ]);
+          });
+        } else if (signupStep === "identity_verification") {
+          typewriter.onDrain(aiMsgId, () => {
+            setMessages((prev) => [
+              ...prev,
+              {
+                id: `${aiMsgId ?? Date.now()}-idverify`,
+                sender: "ai",
+                type: "identity_verification",
+                signupStep: "identity_verification",
+                signupData,
+              },
+            ]);
+          });
         } else if (signupStep === "final_confirm") {
           // ref(최신 누적 상태)와 현재 턴 signupData를 머지
           // nested setState를 쓰면 React StrictMode에서 updater가 2회 호출돼
           // setMessages도 2회 실행되므로, ref를 통해 분리 호출함
           const merged = { ...signupCollectedDataRef.current, ...signupData };
           setSignupCollectedData(merged);
-          setMessages((prevMsgs) => [
-            ...prevMsgs,
-            {
-              id: `${aiMsgId ?? Date.now()}-summary`,
-              sender: "ai" as const,
-              type: "signup_summary" as const,
-              signupStep: "final_confirm",
-              signupData: merged,
-              preselectedPlan: preselectedPlanRef.current,
-            },
-          ]);
-          return; // 아래 공통 setSignupCollectedData 중복 방지
+          typewriter.onDrain(aiMsgId, () => {
+            setMessages((prevMsgs) => [
+              ...prevMsgs,
+              {
+                id: `${aiMsgId ?? Date.now()}-summary`,
+                sender: "ai" as const,
+                type: "signup_summary" as const,
+                signupStep: "final_confirm",
+                signupData: merged,
+                preselectedPlan: preselectedPlanRef.current,
+              },
+            ]);
+          });
         }
       },
     );
@@ -401,6 +424,8 @@ export function useAIChat({ preselectedPlan }: UseAIChatOptions = {}) {
           monthlyFee: 0,
         };
         preselectedPlanRef.current = undefined;
+        // 재가입 시 같은 요금제라도 인삿말이 다시 나오도록 초기화
+        signupEntrySentRef.current = null;
         setIsSignupFlowActive(false);
         setCurrentSignupStep(null);
         setSignupCollectedData({});
@@ -473,6 +498,11 @@ export function useAIChat({ preselectedPlan }: UseAIChatOptions = {}) {
   // accessToken의 hydration이 끝나기 전까지는 로그인 여부를 신뢰할 수 없으므로 대기함
   useEffect(() => {
     if (!isAuthHydrated) return;
+    // 개발 모드 등에서 이 effect가 중복 실행되더라도 복원(getLatestChatSession)은
+    // 딱 한 번만 일어나야 함. 두 번째 호출이 늦게 응답하면, 그사이 추가된 메시지
+    // (가입 인삿말 등)를 덮어써버리는 문제가 있었음
+    if (initStartedRef.current) return;
+    initStartedRef.current = true;
 
     async function init() {
       setIsRestoringHistory(true);
@@ -499,6 +529,19 @@ export function useAIChat({ preselectedPlan }: UseAIChatOptions = {}) {
           // DB 세션을 복원하고, 선택한 요금제 안내를 그 뒤에 이어 붙입니다.
           if (session && !session.endedAt && dbMessages.length > 0) {
             sessionIdRef.current = session.id;
+            // 같은 요금제의 가입 인삿말이 이미 DB에 저장되어 있다면(=재진입),
+            // signup_entry를 다시 저장하지 않도록 표시해둠. 세션 안에 다른
+            // 요금제로 시도했던 signup_entry가 섞여 있을 수 있으므로 planCode까지 비교함
+            if (
+              signupPlanOnLoad &&
+              dbMessages.some(
+                (m) =>
+                  m.messageType === "signup_entry" &&
+                  m.signupData?.planCode === signupPlanOnLoad.code,
+              )
+            ) {
+              signupEntrySentRef.current = signupPlanOnLoad.code;
+            }
             setMessages([
               WELCOME_MESSAGE,
               ...dbMessages.flatMap((m) => {
@@ -521,6 +564,17 @@ export function useAIChat({ preselectedPlan }: UseAIChatOptions = {}) {
                       sender: "ai" as const,
                       type: "terms" as const,
                       signupStep: "terms_agreement",
+                      signupData: {},
+                    },
+                  ] satisfies ChatMessage[];
+                }
+                if (m.messageType === "identity_verification") {
+                  return [
+                    {
+                      id: m.id,
+                      sender: "ai" as const,
+                      type: "identity_verification" as const,
+                      signupStep: "identity_verification",
                       signupData: {},
                     },
                   ] satisfies ChatMessage[];
@@ -623,25 +677,9 @@ export function useAIChat({ preselectedPlan }: UseAIChatOptions = {}) {
         }
       }
 
-      // 비동기 DB 히스토리 복원이 앞서 추가된 메시지를 덮어쓸 수 있으므로,
-      // 복원 작업의 마지막에 선택 요금제 안내가 반드시 존재하도록 보장합니다.
-      if (signupPlanOnLoad) {
-        setMessages((prev) => {
-          const alreadyAdded = prev.some((message) =>
-            message.id.startsWith("signup-entry-"),
-          );
-          if (alreadyAdded) return prev;
-          return [
-            ...prev,
-            createSignupEntryMessage(signupPlanOnLoad, user?.name),
-          ];
-        });
-      }
-
       setIsRestoringHistory(false);
 
       // 대화 내역 복원 후 소켓을 미리 연결해 첫 메시지 응답 속도를 개선함
-      // 가입 플로우: openSocket 안에서 session_created 이벤트가 오면 킥오프 자동 전송
       openSocket();
     }
 
@@ -704,6 +742,11 @@ export function useAIChat({ preselectedPlan }: UseAIChatOptions = {}) {
     (text: string) => {
       if (!text.trim()) return;
 
+      // 이미 응답을 기다리는 중이면(Enter 키 등으로 폼이 다시 제출된 경우 대비)
+      // 새 메시지를 보내지 않음. currentAiMsgIdRef는 state보다 항상 최신값을
+      // 즉시 반영하므로 isTyping state를 의존성에 추가하지 않고도 안전하게 확인 가능
+      if (currentAiMsgIdRef.current) return;
+
       // 비회원이 무료 상담 횟수(GUEST_CHAT_LIMIT)를 이미 다 썼다면, 메시지를
       // 보내지 않고(소켓 emit도 하지 않고) 로그인 유도 팝업만 다시 띄움
       if (!isLoggedIn && guestChatCount >= GUEST_CHAT_LIMIT) {
@@ -735,6 +778,7 @@ export function useAIChat({ preselectedPlan }: UseAIChatOptions = {}) {
       if (preselectedPlanRef.current) {
         extra.preselectedPlanCode = preselectedPlanRef.current.code;
         extra.signupCollectedData = signupCollectedData;
+        extra.currentSignupStep = currentSignupStepRef.current;
       }
 
       // 30초 안에 done이 안 오면 에러 처리
@@ -786,6 +830,7 @@ export function useAIChat({ preselectedPlan }: UseAIChatOptions = {}) {
       if (preselectedPlanRef.current) {
         extra.preselectedPlanCode = preselectedPlanRef.current.code;
         extra.signupCollectedData = signupCollectedData;
+        extra.currentSignupStep = currentSignupStepRef.current;
       }
       // 30초 안에 done이 안 오면 에러 처리
       clearResponseTimeout();
@@ -809,52 +854,55 @@ export function useAIChat({ preselectedPlan }: UseAIChatOptions = {}) {
     [emitMessage, signupCollectedData, clearResponseTimeout, typewriter],
   );
 
-  // 요금제 상세에서 AI 가입/변경을 선택하면 별도 사용자 입력 없이 가입 플로우를
-  // 시작합니다. 숨은 킥오프 메시지는 백엔드에서 사용자 메시지로 저장하지 않습니다.
-  const hasSignupEntryMessage = messages.some((message) =>
-    message.id.startsWith("signup-entry-"),
-  );
-
+  // 요금제 상세에서 AI 가입/변경을 선택하면 가입 인삿말("OO님, OO 요금제를
+  // 선택하셨군요! 지금 가입을 도와드릴까요?")을 보여주고 진행 확인 퀵답변을
+  // 띄웁니다. 예전에는 500ms 뒤 자동으로 다음 단계까지 넘어갔지만, 이제는
+  // 사용자가 실제로 답장(퀵답변 클릭 포함)을 보내야만 다음 단계로 진행합니다.
   useEffect(() => {
     if (
       !preselectedPlan ||
       !isLoggedIn ||
       isRestoringHistory ||
-      !hasSignupEntryMessage ||
       currentSignupStep ||
       isSignupComplete
     ) {
       return;
     }
 
-    try {
-      if (
-        sessionStorage.getItem("signupKickoffSent") === preselectedPlan.code
-      ) {
-        return;
-      }
-    } catch {
-      /* noop */
+    // 같은 요금제로 인삿말이 이미 있다면(DB 복원 포함) 다시 추가하지 않고,
+    // 새로고침으로 초기화된 진행 확인 퀵답변만 다시 보여줌
+    if (signupEntrySentRef.current === preselectedPlan.code) {
+      setQuickReplies((prev) => (prev.length > 0 ? prev : ["네, 진행할게요"]));
+      return;
     }
+    signupEntrySentRef.current = preselectedPlan.code;
 
-    const kickoffTimer = window.setTimeout(() => {
-      try {
-        sessionStorage.setItem("signupKickoffSent", preselectedPlan.code);
-      } catch {
-        /* noop */
-      }
-      sendMessageSilent("가입 절차를 시작해 주세요.", { isKickoff: true });
-    }, 500);
+    const entryMessage = createSignupEntryMessage(preselectedPlan, user?.name);
+    setMessages((prev) => [...prev, entryMessage]);
+    setQuickReplies(["네, 진행할게요"]);
 
-    return () => window.clearTimeout(kickoffTimer);
+    // 화면에 보여준 인삿말을 그대로 DB에도 저장해, 새로고침해도 실제 대화
+    // 내역에서 자연스럽게 복원되도록 함 (LLM 호출 없이 텍스트만 기록)
+    const persistEntry = () =>
+      socketRef.current?.emit("signup_entry", {
+        text: entryMessage.text,
+        planCode: preselectedPlan.code,
+      });
+    openSocket();
+    if (socketRef.current?.connected) {
+      persistEntry();
+    } else {
+      socketRef.current?.once("connect", persistEntry);
+    }
+    // preselectedPlan 객체(code) 자체가 바뀔 때만 실행하면 되므로 user는 의도적으로 제외
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
-    currentSignupStep,
+    preselectedPlan,
     isLoggedIn,
     isRestoringHistory,
+    currentSignupStep,
     isSignupComplete,
-    hasSignupEntryMessage,
-    preselectedPlan,
-    sendMessageSilent,
+    openSocket,
   ]);
 
   const closeGuestLimitModal = useCallback(() => {
@@ -885,6 +933,7 @@ export function useAIChat({ preselectedPlan }: UseAIChatOptions = {}) {
     openSocket();
 
     preselectedPlanRef.current = undefined;
+    signupEntrySentRef.current = null;
     setIsSignupFlowActive(false);
     setCurrentSignupStep(null);
     setSignupCollectedData({});
@@ -937,12 +986,57 @@ export function useAIChat({ preselectedPlan }: UseAIChatOptions = {}) {
     [messages, emitMessage, typewriter, clearResponseTimeout],
   );
 
+  /**
+   * "정지" 버튼 클릭 시 호출됨. 서버에는 stop 이벤트를 보내 해당 요청의 남은 emit과
+   * DB 저장을 건너뛰게 함. 클라이언트에서는 사용자 말풍선과 AI가 그때까지 받은
+   * 텍스트를 채팅에 그대로 남기고(빈 말풍선이었다면 그것만 지움), 재전송하기 쉽도록
+   * 사용자가 보냈던 텍스트를 입력창에 되돌릴 수 있게 반환함. (sendMessageSilent로
+   * 시작된 요청처럼 유저 말풍선이 없었다면 undefined를 반환함)
+   */
+  const stopGeneration = useCallback((): string | undefined => {
+    const aiMsgId = currentAiMsgIdRef.current;
+    if (!aiMsgId) return undefined;
+
+    clearResponseTimeout();
+    typewriter.stop(aiMsgId);
+    currentAiMsgIdRef.current = null;
+    socketRef.current?.emit("stop");
+
+    // 사용자 말풍선은 항상 채팅에 남겨두고, 입력창에도 재전송할 수 있도록 텍스트를
+    // 돌려줌. AI 말풍선은 그때까지 받은 텍스트가 있으면 잘린 채로 그대로 남기고,
+    // 아직 한 글자도 못 받은 빈 말풍선이었다면(타이핑 인디케이터만 보이던 상태) 지움
+    let restoredText: string | undefined;
+    setMessages((prev) => {
+      const aiIdx = prev.findIndex((msg) => msg.id === aiMsgId);
+      if (aiIdx === -1) return prev;
+
+      const prevMsg = prev[aiIdx - 1];
+      if (aiIdx > 0 && prevMsg?.sender === "user" && prevMsg.type === "text") {
+        restoredText = prevMsg.text;
+      }
+
+      const aiMsg = prev[aiIdx];
+      if (aiMsg.type === "text" && !aiMsg.text) {
+        return prev.filter((_, idx) => idx !== aiIdx);
+      }
+
+      return prev;
+    });
+
+    setIsTyping(false);
+    setThinkingMessage(null);
+    setQuickReplies([]);
+
+    return restoredText;
+  }, [clearResponseTimeout, typewriter]);
+
   return {
     messages,
     isTyping,
     thinkingMessage,
     isRestoringHistory,
     sendMessage,
+    stopGeneration,
     sendMessageSilent,
     retryMessage,
     guestChatCount,

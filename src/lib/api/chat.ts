@@ -7,7 +7,13 @@ export interface ChatSessionMessage {
   role: "user" | "ai";
   content: string;
   messageType?:
-    "text" | "fraud_warning" | "terms" | "signup_summary" | "signup_complete";
+    | "text"
+    | "signup_entry"
+    | "fraud_warning"
+    | "terms"
+    | "identity_verification"
+    | "signup_summary"
+    | "signup_complete";
   plans?: ChatPlanCard[];
   signupData?: Record<string, unknown>;
   preselectedPlan?: { code: string; name: string; monthlyFee: number };
