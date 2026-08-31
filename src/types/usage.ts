@@ -26,3 +26,27 @@ export interface DemoUsageResponse {
   message: string;
   report: UsageReport;
 }
+
+export interface UsageRecommendationPlan {
+  code: string;
+  name: string;
+  monthlyFee: number;
+  dataDisplay?: string;
+  tags?: string[];
+}
+
+export interface UsageRecommendation {
+  status: "keep-current" | "recommend-change";
+  headline: string;
+  reason: string;
+  currentPlan: UsageRecommendationPlan;
+  recommendedPlan: UsageRecommendationPlan | null;
+  monthlySavings: number;
+  analysisSource: "ai" | "rules";
+  evidence?: {
+    recentAverageGb: number;
+    previousAverageGb: number;
+    changeRate: number;
+    activeOttCount: number;
+  };
+}

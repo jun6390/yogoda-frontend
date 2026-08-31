@@ -37,6 +37,8 @@ export function PlanSuccessContent({
   } = useQuery({
     queryKey: ["plans", "me", "current"],
     queryFn: getCurrentPlan,
+    staleTime: 0,
+    refetchOnMount: "always",
   });
 
   const planCode = currentPlan?.planCode;

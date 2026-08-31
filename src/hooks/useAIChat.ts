@@ -11,6 +11,7 @@ import { io, Socket } from "socket.io-client";
 
 import { API_BASE_URL } from "@/lib/api/client";
 import { endChatSession, getLatestChatSession } from "@/lib/api/chat";
+import { clearChatSessionStorage } from "@/lib/chatSessionStorage";
 import { useAuthStore } from "@/stores/useAuthStore";
 import {
   GUEST_CHAT_LIMIT,
@@ -34,6 +35,32 @@ const WELCOME_MESSAGE: ChatMessage = {
   type: "text",
   text: "안녕하세요! 사용자님에게 딱 맞는 베스트 요금제를 추천해 드릴게요. 평소 데이터 사용량이나 선호하시는 혜택(OTT 등)에 대해 편하게 말씀해 주세요!",
 };
+
+function createSignupEntryMessage(
+  plan: PreselectedPlan,
+  userName?: string,
+): ChatMessage {
+  let benefits: string[] = [];
+  try {
+    const raw = sessionStorage.getItem("preselectedPlanBenefits");
+    if (raw) benefits = JSON.parse(raw) as string[];
+  } catch {
+    /* noop */
+  }
+
+  const benefitPart =
+    benefits.length > 0 ? ` **${benefits.join(", ")}** 혜택과 함께` : "";
+  const text = userName
+    ? `${userName}님, **${plan.name}** 요금제를 선택하셨군요!${benefitPart} 지금 가입을 도와드릴까요?`
+    : `**${plan.name}** 요금제에 관심이 있으시군요! 가입을 진행하려면 먼저 로그인이 필요해요. 로그인 후 함께 가입 절차를 진행해보세요.`;
+
+  return {
+    id: `signup-entry-${plan.code}-${Date.now()}`,
+    sender: "ai",
+    type: "text",
+    text,
+  };
+}
 
 function subscribeToAuthHydration(onStoreChange: () => void) {
   const unsubscribeHydrate = useAuthStore.persist.onHydrate(onStoreChange);
@@ -85,8 +112,13 @@ export function useAIChat({ preselectedPlan }: UseAIChatOptions = {}) {
 
   // preselectedPlan ref — 소켓 핸들러 클로저에서 최신 값 참조
   const preselectedPlanRef = useRef(preselectedPlan);
+  const [isSignupFlowActive, setIsSignupFlowActive] = useState(
+    Boolean(preselectedPlan),
+  );
   useEffect(() => {
     preselectedPlanRef.current = preselectedPlan;
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- 페이지가 sessionStorage에서 요금제를 복원한 뒤 가입 모드에 진입함
+    setIsSignupFlowActive(Boolean(preselectedPlan));
   }, [preselectedPlan]);
 
   // 가입 플로우 시작 시 웰컴 메시지 없이 빈 상태로 시작하고, AI 첫 메시지를 기다림
@@ -146,6 +178,12 @@ export function useAIChat({ preselectedPlan }: UseAIChatOptions = {}) {
     null,
   );
 
+  useEffect(() => {
+    if (!preselectedPlan) return;
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- 새 요금제 가입을 시작하면 이전 완료 상태를 해제함
+    setIsSignupComplete(false);
+  }, [preselectedPlan]);
+
   // signupCollectedData 변경 시 ref 동기화 및 sessionStorage 저장 (새로고침 복원용)
   useEffect(() => {
     signupCollectedDataRef.current = signupCollectedData;
@@ -174,46 +212,25 @@ export function useAIChat({ preselectedPlan }: UseAIChatOptions = {}) {
     }
   }, [currentSignupStep]);
 
-  // preselectedPlan이 세팅될 때 signup-entry 인삿말을 추가
-  // signupEntryShown 플래그로 새로고침 시 중복 표시 방지
+  // preselectedPlan이 세팅될 때 signup-entry 인삿말을 추가합니다.
+  // 세션 플래그가 남아 있어도 실제 메시지가 없다면 다시 추가해야
+  // 후속 가입 안내가 인삿말보다 먼저 보이지 않습니다.
   useEffect(() => {
-    if (!preselectedPlan) return;
-    try {
-      if (sessionStorage.getItem("signupEntryShown")) return;
-      sessionStorage.setItem("signupEntryShown", "1");
-    } catch {
-      /* noop */
-    }
+    if (!preselectedPlan || isRestoringHistory) return;
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setMessages((prev) => {
       const alreadyAdded = prev.some((m) => m.id.startsWith("signup-entry-"));
       if (alreadyAdded) return prev;
-      // 선택한 혜택 목록 (요금제 선택 페이지 → AI 페이지 이동 시 sessionStorage로 전달)
-      let benefits: string[] = [];
-      try {
-        const raw = sessionStorage.getItem("preselectedPlanBenefits");
-        if (raw) benefits = JSON.parse(raw) as string[];
-      } catch {
-        /* noop */
-      }
-      const benefitPart =
-        benefits.length > 0 ? ` **${benefits.join(", ")}** 혜택과 함께` : "";
-      const greetingText = user?.name
-        ? `${user.name}님, **${preselectedPlan.name}** 요금제를 선택하셨군요!${benefitPart} 지금 가입을 도와드릴까요?`
-        : `**${preselectedPlan.name}** 요금제에 관심이 있으시군요! 가입을 진행하려면 먼저 로그인이 필요해요. 로그인 후 함께 가입 절차를 진행해보세요.`;
-      return [
-        ...prev,
-        {
-          id: `signup-entry-${Date.now()}`,
-          sender: "ai" as const,
-          type: "text" as const,
-          text: greetingText,
-        },
-      ];
+      return [...prev, createSignupEntryMessage(preselectedPlan, user?.name)];
     });
+    try {
+      sessionStorage.setItem("signupEntryShown", "1");
+    } catch {
+      /* noop */
+    }
     // preselectedPlan 객체 자체가 바뀔 때만 실행 (code 기준)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [preselectedPlan?.code]);
+  }, [isRestoringHistory, preselectedPlan?.code]);
 
   const socketRef = useRef<Socket | null>(null);
   // 응답 타임아웃 타이머 (30초 안에 done이 안 오면 에러 처리)
@@ -273,6 +290,9 @@ export function useAIChat({ preselectedPlan }: UseAIChatOptions = {}) {
 
     socket.on("chunk", (data: string) => {
       if (!currentAiMsgIdRef.current) return;
+      // 서버가 정상적으로 응답을 시작했다면 최초 응답 대기 타임아웃은 종료합니다.
+      // 가입 완료 후속 DB 처리 중 30초를 넘겨 이미 받은 응답을 오류로 바꾸지 않습니다.
+      clearResponseTimeout();
       setIsTyping(false);
       typewriter.push(currentAiMsgIdRef.current, data);
     });
@@ -360,17 +380,32 @@ export function useAIChat({ preselectedPlan }: UseAIChatOptions = {}) {
     socket.on(
       "signup_complete",
       (data: { planCode: string; planName: string }) => {
-        setIsSignupComplete(true);
-        // 가입 완료 — 가입 플로우 관련 sessionStorage 전체 정리
-        try {
-          sessionStorage.removeItem("preselectedPlanBenefits");
-          sessionStorage.removeItem("signupStep");
-          sessionStorage.removeItem("signupCollectedData");
-          sessionStorage.removeItem("signupQuickReplies");
-          sessionStorage.removeItem("signupEntryShown");
-        } catch {
-          /* noop */
+        clearResponseTimeout();
+        const pendingMessageId = currentAiMsgIdRef.current;
+        if (pendingMessageId) {
+          typewriter.stop(pendingMessageId);
+          setMessages((prev) =>
+            prev.filter(
+              (message) =>
+                message.id !== pendingMessageId || Boolean(message.text),
+            ),
+          );
+          currentAiMsgIdRef.current = null;
         }
+        setIsTyping(false);
+        setThinkingMessage(null);
+        setIsSignupComplete(true);
+        const completedPlan = preselectedPlanRef.current ?? {
+          code: data.planCode,
+          name: data.planName,
+          monthlyFee: 0,
+        };
+        preselectedPlanRef.current = undefined;
+        setIsSignupFlowActive(false);
+        setCurrentSignupStep(null);
+        setSignupCollectedData({});
+        setQuickReplies([]);
+        clearChatSessionStorage();
         setMessages((prev) => [
           ...prev,
           {
@@ -378,11 +413,7 @@ export function useAIChat({ preselectedPlan }: UseAIChatOptions = {}) {
             sender: "ai",
             type: "signup_complete",
             signupStep: "completed",
-            preselectedPlan: preselectedPlanRef.current ?? {
-              code: data.planCode,
-              name: data.planName,
-              monthlyFee: 0,
-            },
+            preselectedPlan: completedPlan,
           },
         ]);
       },
@@ -448,27 +479,25 @@ export function useAIChat({ preselectedPlan }: UseAIChatOptions = {}) {
 
       // init() 실행 시점에 preselectedPlanRef.current는 아직 null일 수 있으므로
       // sessionStorage를 직접 읽어 가입 플로우 여부를 판단함
-      let isSignupFlowOnLoad = false;
+      let signupPlanOnLoad: PreselectedPlan | undefined;
       try {
-        isSignupFlowOnLoad = !!sessionStorage.getItem("preselectedPlan");
+        const storedPlan = sessionStorage.getItem("preselectedPlan");
+        if (storedPlan) {
+          signupPlanOnLoad = JSON.parse(storedPlan) as PreselectedPlan;
+        }
       } catch {
         /* noop */
       }
+      const isSignupFlowOnLoad = Boolean(signupPlanOnLoad);
 
       if (isLoggedIn) {
         try {
           const { session, messages: dbMessages } =
             await getLatestChatSession();
 
-          // 가입 플로우 시작 시에는 기존 DB 세션을 복원하지 않음
-          // (plan 페이지에서 navigate해 오는 경우 항상 새 세션으로 시작해야 함)
-          // 종료된 세션이면 복원하지 않고 웰컴 메시지로 새로 시작함
-          if (
-            !isSignupFlowOnLoad &&
-            session &&
-            !session.endedAt &&
-            dbMessages.length > 0
-          ) {
+          // 가입 플로우도 기존 상담의 연장이므로 최초 진입과 재진입 모두 같은
+          // DB 세션을 복원하고, 선택한 요금제 안내를 그 뒤에 이어 붙입니다.
+          if (session && !session.endedAt && dbMessages.length > 0) {
             sessionIdRef.current = session.id;
             setMessages([
               WELCOME_MESSAGE,
@@ -517,6 +546,9 @@ export function useAIChat({ preselectedPlan }: UseAIChatOptions = {}) {
                       id: m.id,
                       sender: "ai" as const,
                       type: "signup_complete" as const,
+                      signupStep: "completed" as const,
+                      preselectedPlan: m.preselectedPlan as
+                        import("@/types/chat").PreselectedPlan | undefined,
                     },
                   ] satisfies ChatMessage[];
                 }
@@ -543,31 +575,6 @@ export function useAIChat({ preselectedPlan }: UseAIChatOptions = {}) {
                 return [textMsg];
               }),
             ]);
-          } else {
-            // 새로고침 복원
-            if (isSignupFlowOnLoad) {
-              try {
-                const savedStep = sessionStorage.getItem("signupStep");
-                const savedDataRaw = sessionStorage.getItem(
-                  "signupCollectedData",
-                );
-                const savedRepliesRaw =
-                  sessionStorage.getItem("signupQuickReplies");
-                if (savedStep) setCurrentSignupStep(savedStep);
-                if (savedDataRaw) {
-                  setSignupCollectedData(
-                    JSON.parse(
-                      savedDataRaw,
-                    ) as import("@/types/chat").SignupCollectedData,
-                  );
-                }
-                if (savedRepliesRaw) {
-                  setQuickReplies(JSON.parse(savedRepliesRaw) as string[]);
-                }
-              } catch {
-                /* noop */
-              }
-            }
           }
         } catch (err) {
           console.error("채팅 내역 조회 실패:", err);
@@ -581,6 +588,29 @@ export function useAIChat({ preselectedPlan }: UseAIChatOptions = {}) {
         }
       }
 
+      // 가입 단계 정보는 최초 진입 여부와 관계없이 복원합니다. DB 메시지와 함께
+      // 현재 카드의 입력 상태 및 빠른 응답까지 유지되어야 하기 때문입니다.
+      if (isSignupFlowOnLoad) {
+        try {
+          const savedStep = sessionStorage.getItem("signupStep");
+          const savedDataRaw = sessionStorage.getItem("signupCollectedData");
+          const savedRepliesRaw = sessionStorage.getItem("signupQuickReplies");
+          if (savedStep) setCurrentSignupStep(savedStep);
+          if (savedDataRaw) {
+            setSignupCollectedData(
+              JSON.parse(
+                savedDataRaw,
+              ) as import("@/types/chat").SignupCollectedData,
+            );
+          }
+          if (savedRepliesRaw) {
+            setQuickReplies(JSON.parse(savedRepliesRaw) as string[]);
+          }
+        } catch {
+          /* noop */
+        }
+      }
+
       // 일반 채팅: 새로고침 전 마지막 퀵 응답 복원
       if (!isSignupFlowOnLoad) {
         try {
@@ -591,6 +621,21 @@ export function useAIChat({ preselectedPlan }: UseAIChatOptions = {}) {
         } catch {
           /* noop */
         }
+      }
+
+      // 비동기 DB 히스토리 복원이 앞서 추가된 메시지를 덮어쓸 수 있으므로,
+      // 복원 작업의 마지막에 선택 요금제 안내가 반드시 존재하도록 보장합니다.
+      if (signupPlanOnLoad) {
+        setMessages((prev) => {
+          const alreadyAdded = prev.some((message) =>
+            message.id.startsWith("signup-entry-"),
+          );
+          if (alreadyAdded) return prev;
+          return [
+            ...prev,
+            createSignupEntryMessage(signupPlanOnLoad, user?.name),
+          ];
+        });
       }
 
       setIsRestoringHistory(false);
@@ -726,7 +771,7 @@ export function useAIChat({ preselectedPlan }: UseAIChatOptions = {}) {
    */
 
   const sendMessageSilent = useCallback(
-    (text: string) => {
+    (text: string, extraPayload?: Record<string, unknown>) => {
       if (!text.trim()) return;
       const aiMsgId = Date.now().toString();
       setMessages((prev) => [
@@ -737,7 +782,7 @@ export function useAIChat({ preselectedPlan }: UseAIChatOptions = {}) {
       setQuickReplies([]);
       currentAiMsgIdRef.current = aiMsgId;
 
-      const extra: Record<string, unknown> = {};
+      const extra: Record<string, unknown> = { ...extraPayload };
       if (preselectedPlanRef.current) {
         extra.preselectedPlanCode = preselectedPlanRef.current.code;
         extra.signupCollectedData = signupCollectedData;
@@ -763,6 +808,54 @@ export function useAIChat({ preselectedPlan }: UseAIChatOptions = {}) {
     },
     [emitMessage, signupCollectedData, clearResponseTimeout, typewriter],
   );
+
+  // 요금제 상세에서 AI 가입/변경을 선택하면 별도 사용자 입력 없이 가입 플로우를
+  // 시작합니다. 숨은 킥오프 메시지는 백엔드에서 사용자 메시지로 저장하지 않습니다.
+  const hasSignupEntryMessage = messages.some((message) =>
+    message.id.startsWith("signup-entry-"),
+  );
+
+  useEffect(() => {
+    if (
+      !preselectedPlan ||
+      !isLoggedIn ||
+      isRestoringHistory ||
+      !hasSignupEntryMessage ||
+      currentSignupStep ||
+      isSignupComplete
+    ) {
+      return;
+    }
+
+    try {
+      if (
+        sessionStorage.getItem("signupKickoffSent") === preselectedPlan.code
+      ) {
+        return;
+      }
+    } catch {
+      /* noop */
+    }
+
+    const kickoffTimer = window.setTimeout(() => {
+      try {
+        sessionStorage.setItem("signupKickoffSent", preselectedPlan.code);
+      } catch {
+        /* noop */
+      }
+      sendMessageSilent("가입 절차를 시작해 주세요.", { isKickoff: true });
+    }, 500);
+
+    return () => window.clearTimeout(kickoffTimer);
+  }, [
+    currentSignupStep,
+    isLoggedIn,
+    isRestoringHistory,
+    isSignupComplete,
+    hasSignupEntryMessage,
+    preselectedPlan,
+    sendMessageSilent,
+  ]);
 
   const closeGuestLimitModal = useCallback(() => {
     setShowGuestLimitModal(false);
@@ -791,16 +884,11 @@ export function useAIChat({ preselectedPlan }: UseAIChatOptions = {}) {
     socketRef.current = null;
     openSocket();
 
-    // 혜택 정보 및 가입 플로우 sessionStorage 정리
-    try {
-      sessionStorage.removeItem("preselectedPlanBenefits");
-      sessionStorage.removeItem("signupStep");
-      sessionStorage.removeItem("signupCollectedData");
-      sessionStorage.removeItem("signupQuickReplies");
-      sessionStorage.removeItem("signupEntryShown");
-    } catch {
-      /* noop */
-    }
+    preselectedPlanRef.current = undefined;
+    setIsSignupFlowActive(false);
+    setCurrentSignupStep(null);
+    setSignupCollectedData({});
+    clearChatSessionStorage();
 
     setMessages([WELCOME_MESSAGE]);
     setQuickReplies([]);
@@ -867,6 +955,6 @@ export function useAIChat({ preselectedPlan }: UseAIChatOptions = {}) {
     signupCollectedData,
     isSignupComplete,
     currentSignupStep,
-    isSignupFlow: !!preselectedPlan,
+    isSignupFlow: isSignupFlowActive,
   };
 }

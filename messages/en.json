@@ -721,7 +721,17 @@
     "loginRequired": "Sign in required.",
     "loadError": "Unable to load usage data.",
     "errorDescription": "Check your current plan and backend connection, then try again.",
-    "retry": "Try again"
+    "retry": "Try again",
+    "analyzeRecommendation": "Analyze a new plan with AI",
+    "analyzingRecommendation": "Analyzing your usage pattern",
+    "recommendationError": "Unable to complete the AI analysis. Please try again.",
+    "aiRecommendation": "AI recommendation",
+    "ruleRecommendation": "Usage-based recommendation",
+    "monthlySavings": "Save KRW {amount}/mo",
+    "annualSavings": "Save up to KRW {amount}/year",
+    "currentPlanLabel": "Current plan",
+    "recommendedPlanLabel": "Recommended plan",
+    "viewRecommendedPlan": "View recommended plan"
   },
   "UsageDemo": {
     "title": "Demo stage",
