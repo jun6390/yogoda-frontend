@@ -24,8 +24,8 @@ export function LogoutButton({
       disabled={disabled || loading}
       aria-busy={loading || undefined}
       className={cn(
-        "flex h-[48px] w-full items-center justify-center gap-sm rounded-lg border border-error/30 bg-transparent",
-        "font-sans text-label-14-bold text-error transition-colors hover:bg-error-soft",
+        "flex h-[48px] w-full items-center justify-center gap-sm rounded-lg border border-border-default bg-transparent",
+        "font-sans text-label-14-bold text-text-secondary transition-colors hover:bg-surface-subtle",
         "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-action-primary",
         "disabled:text-text-tertiary",
         className,

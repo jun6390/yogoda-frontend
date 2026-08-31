@@ -62,7 +62,7 @@ function SidebarBody({ onNavigate }: SidebarBodyProps) {
                 "flex h-[44px] items-center gap-sm rounded-lg px-md",
                 "font-sans text-label-14-bold transition-colors",
                 isActive
-                  ? "bg-brand-soft text-text-brand"
+                  ? "bg-surface-subtle text-text-primary"
                   : "text-text-secondary hover:bg-surface-subtle hover:text-text-primary",
               )}
             >
@@ -105,28 +105,19 @@ export function AdminSidebar() {
 
   return (
     <>
-      {/* md 미만에서는 고정폭 사이드바 대신 상단바 + 오프캔버스 메뉴로 전환함 */}
-      <div className="flex h-[56px] shrink-0 items-center justify-between border-b border-border-default bg-surface px-lg md:hidden">
-        <Link
-          href="/"
-          aria-label="메인 화면으로 이동"
-          className="flex items-center gap-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-action-primary"
-        >
-          <FigmaImage
-            alt=""
-            src="/yogoda-logo.svg"
-            className="h-[18px] w-auto"
-          />
-          <span className="font-sans text-caption-12-bold tracking-wide text-text-tertiary">
-            ADMIN
-          </span>
-        </Link>
-
+      {/*
+        md 미만에서는 고정폭 사이드바 대신 상단바 + 오프캔버스 메뉴로 전환함.
+        패널이 왼쪽에서 나오므로(데스크톱 사이드바 자리를 그대로 씀), 여는 아이콘도
+        왼쪽에 둬서 "누른 자리에서 패널이 나온다"는 방향이 어긋나지 않게 함.
+        로고는 여기 안 두고 데스크톱 사이드바에만 둠 — 반응형 전환 때 로고 위치가
+        왔다갔다 하는 걸 막기 위함. 로고/홈 이동은 패널을 열면(SidebarBody) 여전히 가능함
+      */}
+      <div className="flex h-[56px] shrink-0 items-center border-b border-border-default bg-surface px-lg md:hidden">
         <button
           type="button"
           aria-label="메뉴 열기"
           onClick={() => setIsMenuOpen(true)}
-          className="flex size-touch items-center justify-center text-text-primary"
+          className="flex size-touch shrink-0 items-center justify-center text-text-primary"
         >
           <Menu aria-hidden="true" size={22} />
         </button>
