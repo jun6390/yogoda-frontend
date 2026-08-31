@@ -20,7 +20,7 @@ export function SignupCompleteCard() {
           <Button
             variant="secondary"
             className="w-full h-[44px]"
-            onClick={() => router.push("/mypage")}
+            onClick={() => router.push("/my")}
           >
             마이페이지에서 확인
           </Button>

@@ -3,14 +3,14 @@
 import type { ReactNode } from "react";
 import { useSyncExternalStore } from "react";
 
-import { useQuery } from "@tanstack/react-query";
-import { Activity, Database } from "lucide-react";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { Activity, ChevronRight, Database, Sparkles } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 
 import { MySubpageHeader } from "@/components/my/MySubpageHeader";
 import { ErrorState } from "@/components/ui/ErrorState/ErrorState";
 import { Link } from "@/i18n/navigation";
-import { getMyUsageReport } from "@/lib/api/usage";
+import { getMyUsageRecommendation, getMyUsageReport } from "@/lib/api/usage";
 import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/stores/useAuthStore";
 
@@ -29,6 +29,9 @@ export function UsageReportContent() {
     queryKey: ["my-usage-report"],
     queryFn: getMyUsageReport,
     enabled: hydrated && Boolean(accessToken),
+  });
+  const recommendationMutation = useMutation({
+    mutationFn: getMyUsageRecommendation,
   });
 
   if (!hydrated || reportQuery.isLoading) return <UsageReportLoading />;
@@ -220,6 +223,35 @@ export function UsageReportContent() {
           </p>
         </ReportCard>
 
+        <section className="space-y-md">
+          <button
+            type="button"
+            disabled={recommendationMutation.isPending}
+            onClick={() => recommendationMutation.mutate()}
+            className="flex h-[52px] w-full items-center justify-center gap-sm rounded-lg bg-action-primary font-sans text-title-16-bold text-text-on-primary disabled:opacity-60"
+          >
+            <Sparkles aria-hidden="true" size={18} />
+            {recommendationMutation.isPending
+              ? t("analyzingRecommendation")
+              : t("analyzeRecommendation")}
+          </button>
+          {recommendationMutation.isError && (
+            <p
+              role="alert"
+              className="text-center font-sans text-caption-12-regular text-error"
+            >
+              {t("recommendationError")}
+            </p>
+          )}
+        </section>
+
+        {recommendationMutation.data && (
+          <RecommendationCard
+            recommendation={recommendationMutation.data}
+            locale={locale}
+          />
+        )}
+
         <section>
           <div className="flex items-center gap-sm">
             <Database
@@ -264,6 +296,92 @@ export function UsageReportContent() {
         </section>
       </main>
     </div>
+  );
+}
+
+function RecommendationCard({
+  recommendation,
+  locale,
+}: {
+  recommendation: import("@/types/usage").UsageRecommendation;
+  locale: string;
+}) {
+  const t = useTranslations("UsageReport");
+  const formatter = new Intl.NumberFormat(locale);
+  const recommended = recommendation.recommendedPlan;
+
+  return (
+    <section className="rounded-lg border border-action-primary bg-surface p-lg shadow-sm">
+      <div className="flex items-center justify-between gap-md">
+        <span className="inline-flex items-center gap-xs font-sans text-caption-13-bold text-text-brand">
+          <Sparkles aria-hidden="true" size={16} />
+          {recommendation.analysisSource === "ai"
+            ? t("aiRecommendation")
+            : t("ruleRecommendation")}
+        </span>
+        {recommendation.monthlySavings > 0 && (
+          <span className="rounded-full bg-success-soft px-sm py-xs font-sans text-micro-11-bold text-success">
+            {t("monthlySavings", {
+              amount: formatter.format(recommendation.monthlySavings),
+            })}
+          </span>
+        )}
+      </div>
+      <h2 className="mt-md font-sans text-title-16-bold text-text-primary">
+        {recommendation.headline}
+      </h2>
+      <p className="mt-sm font-sans text-caption-13-regular text-text-secondary">
+        {recommendation.reason}
+      </p>
+      {recommended && (
+        <>
+          <div className="mt-lg grid grid-cols-[1fr_auto_1fr] items-center gap-sm rounded-md bg-surface-subtle p-md">
+            <div className="min-w-0">
+              <span className="font-sans text-micro-11-regular text-text-tertiary">
+                {t("currentPlanLabel")}
+              </span>
+              <strong className="mt-xs block truncate font-sans text-caption-13-bold text-text-primary">
+                {recommendation.currentPlan.name}
+              </strong>
+              <span className="font-sans text-caption-12-regular text-text-secondary">
+                {t("won", {
+                  amount: formatter.format(
+                    recommendation.currentPlan.monthlyFee,
+                  ),
+                })}
+              </span>
+            </div>
+            <ChevronRight
+              aria-hidden="true"
+              size={18}
+              className="text-icon-secondary"
+            />
+            <div className="min-w-0 text-right">
+              <span className="font-sans text-micro-11-regular text-text-tertiary">
+                {t("recommendedPlanLabel")}
+              </span>
+              <strong className="mt-xs block truncate font-sans text-caption-13-bold text-text-brand">
+                {recommended.name}
+              </strong>
+              <span className="font-sans text-caption-12-regular text-text-secondary">
+                {t("won", { amount: formatter.format(recommended.monthlyFee) })}
+              </span>
+            </div>
+          </div>
+          <p className="mt-md text-center font-sans text-caption-12-bold text-success">
+            {t("annualSavings", {
+              amount: formatter.format(recommendation.monthlySavings * 12),
+            })}
+          </p>
+          <Link
+            href={`/plans/${recommended.code}`}
+            className="mt-lg flex h-[44px] items-center justify-center rounded-md border border-action-primary font-sans text-label-14-bold text-action-primary"
+          >
+            {t("viewRecommendedPlan")}
+          </Link>
+        </>
+      )}
+    </section>
   );
 }
 
