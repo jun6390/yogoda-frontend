@@ -9,6 +9,8 @@ type AITypingIndicatorState = "typing" | "error";
 interface AITypingIndicatorProps extends HTMLAttributes<HTMLDivElement> {
   // 타이핑 중(typing) 또는 에러 발생(error) 상태를 수신
   state?: AITypingIndicatorState;
+  // 백엔드가 전달한 문맥별 로딩 문구 — 없으면 번역 리소스의 순환 문구를 사용함
+  message?: string | null;
   // error 상태에서 "다시 시도" 버튼을 눌렀을 때 실행할 콜백
   onRetry?: () => void;
 }
@@ -18,6 +20,7 @@ const TYPING_MESSAGE_INTERVAL_MS = 4000;
 
 export function AITypingIndicator({
   state = "typing",
+  message,
   onRetry,
   className,
   ...props
@@ -28,6 +31,9 @@ export function AITypingIndicator({
   // 대기 중임을 지루하지 않게 보여주기 위한 문구를 순서대로 순환시킴
   const typingMessages = t.raw("typingMessages") as string[];
   const [messageIndex, setMessageIndex] = useState(0);
+  // 백엔드 문구가 있으면 우선 사용, 없으면 순환 문구
+  const displayMessage =
+    message ?? typingMessages[messageIndex] ?? t("typingAlt");
 
   useEffect(() => {
     // 이 컴포넌트는 isTyping이 true일 때만 마운트되므로, 매 응답 대기마다
@@ -53,21 +59,19 @@ export function AITypingIndicator({
           <span
             // messageIndex를 key로 줘서 문구가 바뀔 때마다 아래 글자 span들을 새로 마운트시킴
             // (그래야 매번 wave 애니메이션이 처음부터 다시 재생됨)
-            key={messageIndex}
+            key={message ?? messageIndex}
             className="font-sans text-caption-13-medium text-text-secondary"
           >
             {/* 로딩 중임이 계속 느껴지도록 글자마다 delay를 줘서 지렁이처럼 순차적으로 물결치게 함 */}
-            {(typingMessages[messageIndex] ?? t("typingAlt"))
-              .split("")
-              .map((char, index) => (
-                <span
-                  key={index}
-                  className="inline-block motion-safe:animate-[typingMessageWave_1.2s_ease-in-out_infinite]"
-                  style={{ animationDelay: `${index * 60}ms` }}
-                >
-                  {char === " " ? " " : char}
-                </span>
-              ))}
+            {displayMessage.split("").map((char, index) => (
+              <span
+                key={index}
+                className="inline-block motion-safe:animate-[typingMessageWave_1.2s_ease-in-out_infinite]"
+                style={{ animationDelay: `${index * 60}ms` }}
+              >
+                {char === " " ? " " : char}
+              </span>
+            ))}
           </span>
         </div>
       ) : (
