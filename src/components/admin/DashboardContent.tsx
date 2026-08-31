@@ -96,6 +96,22 @@ export function DashboardContent() {
   const showDropStageAlert =
     Boolean(maxDropStageLabel) && data?.funnel.maxDropStage !== dismissedStage;
 
+  /*
+   * dropRate는 "이전 단계 → 이 단계로 넘어오면서 빠진 비율"이라, 실제로 이탈한 세션의
+   * last_stage(=drop_stage 필터값)는 maxDropStage 자신이 아니라 바로 앞 단계임.
+   * 예: signup_started의 dropRate가 가장 높다 = plan_comparison_viewed에서 멈춘 세션이 많다는 뜻.
+   * maxDropStage를 그대로 필터에 쓰면 엉뚱한 세션이 나오고, signup_completed인 경우엔
+   * (도달 = 성공이라 이탈일 수 없어서) 결과가 항상 0건이 됨
+   */
+  const maxDropStageIndex =
+    data?.funnel.stages.findIndex(
+      (stage) => stage.stage === data.funnel.maxDropStage,
+    ) ?? -1;
+  const actualDropStage =
+    maxDropStageIndex > 0
+      ? data?.funnel.stages[maxDropStageIndex - 1].stage
+      : undefined;
+
   const maxStageCount = data
     ? Math.max(...data.funnel.stages.map((stage) => stage.count))
     : 0;
@@ -172,12 +188,14 @@ export function DashboardContent() {
                 {data.funnel.totalDropRate}%예요.
               </p>
 
-              <NextLink
-                href={`/admin/logs?drop_stage=${data.funnel.maxDropStage}`}
-                className="shrink-0 font-sans text-label-14-bold text-text-primary underline underline-offset-2"
-              >
-                해당 로그 보기
-              </NextLink>
+              {actualDropStage && (
+                <NextLink
+                  href={`/admin/logs?drop_stage=${actualDropStage}`}
+                  className="shrink-0 font-sans text-label-14-bold text-text-primary underline underline-offset-2"
+                >
+                  해당 로그 보기
+                </NextLink>
+              )}
 
               <NextLink href="/admin/prompts" className="shrink-0">
                 <Button variant="primary" className="h-[36px] px-lg py-0">
