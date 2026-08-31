@@ -5,8 +5,8 @@ import {
   ArrowLeft,
   LogOut,
   Mic,
-  MicOff,
   Send,
+  Square,
   ChevronRight,
   ArrowDown,
 } from "lucide-react";
@@ -58,6 +58,7 @@ export default function AIConsultationPage() {
     thinkingMessage,
     isRestoringHistory,
     sendMessage,
+    stopGeneration,
     retryMessage,
     showGuestLimitModal,
     closeGuestLimitModal,
@@ -85,6 +86,8 @@ export default function AIConsultationPage() {
   const { isListening, isSupported, interimText, toggleListening } =
     useVoiceInput({ onFinalResult: handleVoiceResult });
 
+  // 입력창 ref. 정지 버튼을 누르면 되돌린 텍스트를 바로 이어서 편집할 수 있도록 포커스를 줌
+  const inputRef = useRef<HTMLInputElement>(null);
   // 스크롤 영역 ref (맨 아래 여부 판단에 사용)
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   // 메시지 추가 시 자동 스크롤을 위한 ref
@@ -127,6 +130,9 @@ export default function AIConsultationPage() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    // 정지 직후 잠깐 동안, 그리고 AI 응답을 기다리는 동안(Enter로 폼이 그대로
+    // 제출되는 경우 포함)에는 전송하지 않음
+    if (justStoppedRef.current || isTyping) return;
     sendMessage(inputText);
     setInputText("");
     // 전송 즉시 맨 아래로 이동 (useEffect 보다 한 틱 빠르게)
@@ -140,6 +146,35 @@ export default function AIConsultationPage() {
     setTimeout(() => {
       chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
     }, 0);
+  };
+
+  // 정지 직후 짧은 시간 동안 정지 버튼 연타와 (같은 자리에 나타난) 전송 버튼으로의
+  // 겹침 클릭을 막기 위한 플래그. handleSubmit에서도 함께 확인함
+  const justStoppedRef = useRef(false);
+
+  // AI 응답 생성 중 정지 버튼을 누르면, 서버에 stop을 알리고 방금 보낸 사용자
+  // 메시지를 다시 입력창으로 되돌림. (사용자 말풍선 없이 시작된 요청이면 복원할
+  // 텍스트가 없으므로 입력창은 그대로 둠)
+  const handleStop = () => {
+    if (justStoppedRef.current) return;
+
+    justStoppedRef.current = true;
+    window.setTimeout(() => {
+      justStoppedRef.current = false;
+    }, 400);
+
+    const restoredText = stopGeneration();
+    if (restoredText) {
+      setInputText(restoredText);
+    }
+    // setInputText 반영 및 리렌더 이후에 포커스를 줘야 커서가 텍스트 끝에 정확히 위치함
+    requestAnimationFrame(() => {
+      const el = inputRef.current;
+      if (!el) return;
+      el.focus();
+      const len = el.value.length;
+      el.setSelectionRange(len, len);
+    });
   };
 
   const handleGuestLimitLogin = () => {
@@ -321,6 +356,7 @@ export default function AIConsultationPage() {
           className="relative flex items-center w-full"
         >
           <Input
+            ref={inputRef}
             value={isListening && interimText ? interimText : inputText}
             onChange={(e) => setInputText(e.target.value)}
             readOnly={isListening}
@@ -337,9 +373,6 @@ export default function AIConsultationPage() {
             }
             aria-hidden={!isSupported}
           >
-            {isListening && (
-              <span className="absolute size-[36px] rounded-full bg-action-primary/20 animate-ping" />
-            )}
             <button
               type="button"
               onClick={toggleListening}
@@ -353,21 +386,40 @@ export default function AIConsultationPage() {
                   : "relative flex size-[36px] items-center justify-center text-text-tertiary hover:text-text-primary transition-colors"
               }
             >
-              {isListening ? <MicOff size={16} /> : <Mic size={16} />}
+              <Mic
+                size={16}
+                className={
+                  isListening
+                    ? "motion-safe:animate-[micPulse_1s_ease-in-out_infinite]"
+                    : undefined
+                }
+              />
             </button>
           </div>
 
-          <button
-            type="submit"
-            disabled={!inputText.trim()}
-            className={
-              inputText.trim()
-                ? "absolute right-sm flex size-[36px] items-center justify-center text-action-primary transition-colors active:scale-90"
-                : "absolute right-sm flex size-[36px] items-center justify-center text-text-tertiary cursor-not-allowed transition-colors"
-            }
-          >
-            <Send size={18} />
-          </button>
+          {/* AI 응답을 기다리는 중에는 전송 버튼이 정지 버튼으로 바뀜 */}
+          {isTyping ? (
+            <button
+              type="button"
+              onClick={handleStop}
+              aria-label={t("stopGeneration")}
+              className="absolute right-sm flex size-[36px] items-center justify-center text-action-primary transition-colors active:scale-90"
+            >
+              <Square size={16} fill="currentColor" />
+            </button>
+          ) : (
+            <button
+              type="submit"
+              disabled={!inputText.trim()}
+              className={
+                inputText.trim()
+                  ? "absolute right-sm flex size-[36px] items-center justify-center text-action-primary transition-colors active:scale-90"
+                  : "absolute right-sm flex size-[36px] items-center justify-center text-text-tertiary cursor-not-allowed transition-colors"
+              }
+            >
+              <Send size={18} />
+            </button>
+          )}
         </form>
       </div>
 

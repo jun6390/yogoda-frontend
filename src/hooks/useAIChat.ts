@@ -704,6 +704,11 @@ export function useAIChat({ preselectedPlan }: UseAIChatOptions = {}) {
     (text: string) => {
       if (!text.trim()) return;
 
+      // 이미 응답을 기다리는 중이면(Enter 키 등으로 폼이 다시 제출된 경우 대비)
+      // 새 메시지를 보내지 않음. currentAiMsgIdRef는 state보다 항상 최신값을
+      // 즉시 반영하므로 isTyping state를 의존성에 추가하지 않고도 안전하게 확인 가능
+      if (currentAiMsgIdRef.current) return;
+
       // 비회원이 무료 상담 횟수(GUEST_CHAT_LIMIT)를 이미 다 썼다면, 메시지를
       // 보내지 않고(소켓 emit도 하지 않고) 로그인 유도 팝업만 다시 띄움
       if (!isLoggedIn && guestChatCount >= GUEST_CHAT_LIMIT) {
@@ -937,12 +942,57 @@ export function useAIChat({ preselectedPlan }: UseAIChatOptions = {}) {
     [messages, emitMessage, typewriter, clearResponseTimeout],
   );
 
+  /**
+   * "정지" 버튼 클릭 시 호출됨. 서버에는 stop 이벤트를 보내 해당 요청의 남은 emit과
+   * DB 저장을 건너뛰게 함. 클라이언트에서는 사용자 말풍선과 AI가 그때까지 받은
+   * 텍스트를 채팅에 그대로 남기고(빈 말풍선이었다면 그것만 지움), 재전송하기 쉽도록
+   * 사용자가 보냈던 텍스트를 입력창에 되돌릴 수 있게 반환함. (sendMessageSilent로
+   * 시작된 요청처럼 유저 말풍선이 없었다면 undefined를 반환함)
+   */
+  const stopGeneration = useCallback((): string | undefined => {
+    const aiMsgId = currentAiMsgIdRef.current;
+    if (!aiMsgId) return undefined;
+
+    clearResponseTimeout();
+    typewriter.stop(aiMsgId);
+    currentAiMsgIdRef.current = null;
+    socketRef.current?.emit("stop");
+
+    // 사용자 말풍선은 항상 채팅에 남겨두고, 입력창에도 재전송할 수 있도록 텍스트를
+    // 돌려줌. AI 말풍선은 그때까지 받은 텍스트가 있으면 잘린 채로 그대로 남기고,
+    // 아직 한 글자도 못 받은 빈 말풍선이었다면(타이핑 인디케이터만 보이던 상태) 지움
+    let restoredText: string | undefined;
+    setMessages((prev) => {
+      const aiIdx = prev.findIndex((msg) => msg.id === aiMsgId);
+      if (aiIdx === -1) return prev;
+
+      const prevMsg = prev[aiIdx - 1];
+      if (aiIdx > 0 && prevMsg?.sender === "user" && prevMsg.type === "text") {
+        restoredText = prevMsg.text;
+      }
+
+      const aiMsg = prev[aiIdx];
+      if (aiMsg.type === "text" && !aiMsg.text) {
+        return prev.filter((_, idx) => idx !== aiIdx);
+      }
+
+      return prev;
+    });
+
+    setIsTyping(false);
+    setThinkingMessage(null);
+    setQuickReplies([]);
+
+    return restoredText;
+  }, [clearResponseTimeout, typewriter]);
+
   return {
     messages,
     isTyping,
     thinkingMessage,
     isRestoringHistory,
     sendMessage,
+    stopGeneration,
     sendMessageSilent,
     retryMessage,
     guestChatCount,
