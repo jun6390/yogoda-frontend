@@ -37,8 +37,16 @@ export interface PromptVersionSummary {
   isActive: boolean;
 }
 
+export interface PromptHistoryParams {
+  page?: number;
+  limit?: number;
+}
+
 export interface PromptHistoryResponse {
   versions: PromptVersionSummary[];
+  totalCount: number;
+  page: number;
+  limit: number;
 }
 
 export interface PromptDetail {

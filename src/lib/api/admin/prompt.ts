@@ -6,6 +6,7 @@ import type {
   CreatePromptPayload,
   CreatePromptResponse,
   PromptDetail,
+  PromptHistoryParams,
   PromptHistoryResponse,
 } from "@/types/prompt";
 
@@ -20,8 +21,16 @@ export function createPrompt(payload: CreatePromptPayload) {
   });
 }
 
-export function getPromptHistory() {
-  return apiFetch<PromptHistoryResponse>("/api/admin/prompts");
+export function getPromptHistory(params: PromptHistoryParams = {}) {
+  const search = new URLSearchParams();
+  if (params.page) search.set("page", String(params.page));
+  if (params.limit) search.set("limit", String(params.limit));
+
+  const query = search.toString();
+
+  return apiFetch<PromptHistoryResponse>(
+    `/api/admin/prompts${query ? `?${query}` : ""}`,
+  );
 }
 
 export function getPromptDetail(versionId: string) {
