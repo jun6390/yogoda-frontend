@@ -62,7 +62,7 @@ function SidebarBody({ onNavigate }: SidebarBodyProps) {
                 "flex h-[44px] items-center gap-sm rounded-lg px-md",
                 "font-sans text-label-14-bold transition-colors",
                 isActive
-                  ? "bg-brand-soft text-text-brand"
+                  ? "bg-surface-subtle text-text-primary"
                   : "text-text-secondary hover:bg-surface-subtle hover:text-text-primary",
               )}
             >

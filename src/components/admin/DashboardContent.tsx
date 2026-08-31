@@ -144,6 +144,21 @@ export function DashboardContent() {
     ? Math.max(...data.promptConversion.map((v) => v.conversionRate))
     : 0;
 
+  const activeVersionIndex =
+    data?.promptConversion.findIndex((v) => v.isActive) ?? -1;
+  const activeVersion =
+    activeVersionIndex >= 0
+      ? data?.promptConversion[activeVersionIndex]
+      : undefined;
+  const previousVersion =
+    activeVersionIndex > 0
+      ? data?.promptConversion[activeVersionIndex - 1]
+      : undefined;
+  const conversionImprovement =
+    activeVersion && previousVersion
+      ? activeVersion.conversionRate - previousVersion.conversionRate
+      : undefined;
+
   return (
     <div className="p-3xl">
       <div className="flex flex-col gap-md sm:flex-row sm:items-center sm:justify-between">
@@ -386,49 +401,104 @@ export function DashboardContent() {
           </section>
 
           <section className="mt-2xl rounded-lg border border-border-default bg-surface p-2xl">
-            <h2 className="font-sans text-title-18-bold text-text-primary">
-              프롬프트 버전별 전환율
-            </h2>
+            <div className="flex items-center gap-sm">
+              <h2 className="font-sans text-title-18-bold text-text-primary">
+                프롬프트 버전별 전환율
+              </h2>
+              {activeVersion && (
+                <Badge variant="accent">{activeVersion.version} 운영중</Badge>
+              )}
+            </div>
 
-            <div className="mt-lg flex h-[180px] items-end gap-lg">
-              {data.promptConversion.map((version) => {
-                const heightPercent =
-                  maxConversionRate > 0
-                    ? (version.conversionRate / maxConversionRate) * 100
-                    : 0;
+            <div className="mt-lg flex flex-col gap-2xl sm:flex-row">
+              <div className="flex shrink-0 flex-col gap-md sm:w-45">
+                <p className="font-sans text-caption-12-regular text-text-tertiary">
+                  배포 이후 7일 누적 전환율
+                </p>
 
-                return (
-                  <div
-                    key={version.version}
-                    className="flex flex-1 flex-col items-center gap-xs"
-                  >
-                    <span
+                {previousVersion && conversionImprovement !== undefined && (
+                  <p className="font-sans text-caption-12-regular text-text-tertiary">
+                    {previousVersion.version} 대비{" "}
+                    <strong
                       className={cn(
                         "font-sans text-caption-12-bold",
-                        version.isActive
-                          ? "text-text-brand"
-                          : "text-text-secondary",
+                        conversionImprovement >= 0
+                          ? "text-success"
+                          : "text-error",
                       )}
                     >
-                      {version.conversionRate}%
-                    </span>
-                    <div className="flex w-full flex-1 items-end">
-                      <div
+                      {conversionImprovement >= 0 ? "+" : ""}
+                      {conversionImprovement.toFixed(1)}%p
+                    </strong>{" "}
+                    {conversionImprovement >= 0 ? "개선" : "하락"}
+                  </p>
+                )}
+
+                <NextLink
+                  href="/admin/prompts"
+                  className="font-sans text-label-14-bold text-text-secondary underline-offset-2 hover:underline"
+                >
+                  프롬프트 관리로 이동 →
+                </NextLink>
+              </div>
+
+              <div className="flex h-45 justify-center gap-lg sm:flex-1">
+                {data.promptConversion.map((version) => {
+                  const heightPercent =
+                    maxConversionRate > 0
+                      ? (version.conversionRate / maxConversionRate) * 100
+                      : 0;
+
+                  return (
+                    <div
+                      key={version.version}
+                      className="flex w-20 shrink-0 flex-col items-center gap-xs"
+                    >
+                      <span
                         className={cn(
-                          "w-full rounded-t-sm transition-all",
+                          "font-sans text-caption-12-bold",
                           version.isActive
-                            ? "bg-action-primary"
-                            : "bg-border-strong",
+                            ? "text-text-brand"
+                            : "text-text-secondary",
                         )}
-                        style={{ height: `${heightPercent}%` }}
-                      />
+                      >
+                        {version.conversionRate}%
+                      </span>
+                      <div className="flex w-full flex-1 items-end justify-center">
+                        <div
+                          className={cn(
+                            "w-10 rounded-t-sm transition-all",
+                            version.isActive
+                              ? "bg-action-primary"
+                              : "bg-border-strong",
+                          )}
+                          style={{ height: `${heightPercent}%` }}
+                        />
+                      </div>
+                      <span
+                        className={cn(
+                          "whitespace-nowrap font-sans text-caption-12-regular",
+                          version.isActive
+                            ? "text-text-primary"
+                            : "text-text-tertiary",
+                        )}
+                      >
+                        <span
+                          className={cn(
+                            "font-sans",
+                            version.isActive
+                              ? "text-caption-12-bold"
+                              : "text-caption-12-regular",
+                          )}
+                        >
+                          {version.version}
+                        </span>{" "}
+                        {version.sessionCount.toLocaleString("ko-KR")} 세션
+                      </span>
                     </div>
-                    <span className="font-sans text-caption-12-regular text-text-tertiary">
-                      {version.version}
-                    </span>
-                  </div>
-                );
-              })}
+                  );
+                })}
+              </div>
             </div>
           </section>
         </>
