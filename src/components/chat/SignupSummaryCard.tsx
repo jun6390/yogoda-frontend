@@ -49,6 +49,7 @@ export function SignupSummaryCard({
     { label: "선택 혜택", value: benefitValue },
     { label: "이름", value: signupData.name },
     { label: "생년월일", value: formatBirth(signupData.birth) },
+    { label: "휴대폰 번호", value: signupData.phoneNumber },
     { label: "결제 수단", value: signupData.paymentMethod },
   ];
 

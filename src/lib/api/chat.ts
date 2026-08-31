@@ -11,6 +11,7 @@ export interface ChatSessionMessage {
     | "signup_entry"
     | "fraud_warning"
     | "terms"
+    | "identity_verification"
     | "signup_summary"
     | "signup_complete";
   plans?: ChatPlanCard[];

@@ -361,6 +361,19 @@ export function useAIChat({ preselectedPlan }: UseAIChatOptions = {}) {
               },
             ]);
           });
+        } else if (signupStep === "identity_verification") {
+          typewriter.onDrain(aiMsgId, () => {
+            setMessages((prev) => [
+              ...prev,
+              {
+                id: `${aiMsgId ?? Date.now()}-idverify`,
+                sender: "ai",
+                type: "identity_verification",
+                signupStep: "identity_verification",
+                signupData,
+              },
+            ]);
+          });
         } else if (signupStep === "final_confirm") {
           // ref(최신 누적 상태)와 현재 턴 signupData를 머지
           // nested setState를 쓰면 React StrictMode에서 updater가 2회 호출돼
@@ -551,6 +564,17 @@ export function useAIChat({ preselectedPlan }: UseAIChatOptions = {}) {
                       sender: "ai" as const,
                       type: "terms" as const,
                       signupStep: "terms_agreement",
+                      signupData: {},
+                    },
+                  ] satisfies ChatMessage[];
+                }
+                if (m.messageType === "identity_verification") {
+                  return [
+                    {
+                      id: m.id,
+                      sender: "ai" as const,
+                      type: "identity_verification" as const,
+                      signupStep: "identity_verification",
                       signupData: {},
                     },
                   ] satisfies ChatMessage[];

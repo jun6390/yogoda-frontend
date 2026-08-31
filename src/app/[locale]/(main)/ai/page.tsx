@@ -16,6 +16,7 @@ import { useSearchParams } from "next/navigation";
 import { PlanRecommendationCards } from "@/components/chat/PlanRecommendationCards";
 import { FraudWarningCard } from "@/components/chat/FraudWarningCard";
 import { TermsAgreementCard } from "@/components/chat/TermsAgreementCard";
+import { IdentityVerificationCard } from "@/components/chat/IdentityVerificationCard";
 import { SignupSummaryCard } from "@/components/chat/SignupSummaryCard";
 import { SignupCompleteCard } from "@/components/chat/SignupCompleteCard";
 import { AITypingIndicator } from "@/components/ui/AITypingIndicator/AITypingIndicator";
@@ -294,6 +295,11 @@ export default function AIConsultationPage() {
                   {/* 약관 동의 카드 */}
                   {msg.type === "terms" && (
                     <TermsAgreementCard onAgree={sendMessageSilent} />
+                  )}
+
+                  {/* 휴대폰 본인인증 카드 */}
+                  {msg.type === "identity_verification" && (
+                    <IdentityVerificationCard onVerify={sendMessageSilent} />
                   )}
 
                   {/* 가입 정보 최종 확인 카드 */}
