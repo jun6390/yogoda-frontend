@@ -46,13 +46,27 @@ interface FilterState {
   promptVersion: string;
 }
 
-const EMPTY_FILTERS: FilterState = {
-  startDate: "",
-  endDate: "",
-  status: "all",
-  dropStage: "all",
-  promptVersion: "",
-};
+const DEFAULT_PERIOD_DAYS = 7;
+
+function toDateKey(date: Date) {
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+}
+
+// 이탈 대화를 우선 노출하는 게 더 중요해서, 기본값은 "최근 7일 · 이탈"로 좁혀두고
+// 필요할 때 "전체"로 넓혀 보도록 함
+function getDefaultFilters(): FilterState {
+  const today = new Date();
+  const start = new Date();
+  start.setDate(today.getDate() - (DEFAULT_PERIOD_DAYS - 1));
+
+  return {
+    startDate: toDateKey(start),
+    endDate: toDateKey(today),
+    status: "dropped",
+    dropStage: "all",
+    promptVersion: "",
+  };
+}
 
 function toListParams(filters: FilterState): SessionListParams {
   return {
@@ -76,7 +90,7 @@ export function SessionLogContent() {
   const initialDropStage =
     (searchParams.get("drop_stage") as SessionDropStage | null) ?? "all";
   const initialFilters: FilterState = {
-    ...EMPTY_FILTERS,
+    ...getDefaultFilters(),
     dropStage: initialDropStage,
   };
 
@@ -114,8 +128,9 @@ export function SessionLogContent() {
   const handleApplyFilters = () => setAppliedFilters(draftFilters);
 
   const handleResetFilters = () => {
-    setDraftFilters(EMPTY_FILTERS);
-    setAppliedFilters(EMPTY_FILTERS);
+    const defaultFilters = getDefaultFilters();
+    setDraftFilters(defaultFilters);
+    setAppliedFilters(defaultFilters);
   };
 
   return (
