@@ -9,6 +9,7 @@ import { AlertTriangle, X } from "lucide-react";
 
 import { Button } from "@/components/admin/Button";
 import { PeriodTabs } from "@/components/admin/PeriodTabs";
+import { Badge } from "@/components/ui/Badge/Badge";
 import { ErrorState } from "@/components/ui/ErrorState/ErrorState";
 import { getDashboard } from "@/lib/api/admin/dashboard";
 import { ADMIN_DASHBOARD_QUERY_KEYS } from "@/lib/admin/queryKeys";
@@ -28,6 +29,20 @@ function getPrevPeriodLabel(period: DashboardPeriod) {
   return "전월";
 }
 
+function toDateKey(date: Date) {
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+}
+
+// 로그 페이지로 넘어갈 때 대시보드에서 고른 기간(오늘/7일/30일)을 그대로 날짜 필터로 물려줌
+function getDateRangeForPeriod(period: DashboardPeriod) {
+  const days = period === "today" ? 1 : period === "7d" ? 7 : 30;
+  const today = new Date();
+  const start = new Date();
+  start.setDate(today.getDate() - (days - 1));
+
+  return { startDate: toDateKey(start), endDate: toDateKey(today) };
+}
+
 function KpiCard({
   title,
   value,
@@ -44,7 +59,7 @@ function KpiCard({
   prevLabel: string;
 }) {
   return (
-    <div className="flex-1 rounded-lg border border-border-default bg-surface p-lg">
+    <div className="flex-1 rounded-lg border border-border-default bg-surface p-2xl">
       <div className="flex items-center justify-between">
         <p className="font-sans text-body-14-regular text-text-secondary">
           {title}
@@ -84,39 +99,53 @@ export function DashboardContent() {
   // 달라지면(기간 변경 등) 다시 보여줌
   const [dismissedStage, setDismissedStage] = useState<string | null>(null);
 
-  const maxDropStageLabel = data?.funnel.stages.find(
-    (stage) => stage.stage === data.funnel.maxDropStage,
-  )?.label;
+  /*
+   * dropRate는 "0~100 크기"가 아니라 "진입률 변화량"이라 빠진 만큼 음수로 내려옴
+   * (예: 가입 신청 100% → 가입 완료 30%면 dropRate는 -70). 그래서 실제 이탈이 가장 큰
+   * 단계는 dropRate가 가장 작은(가장 음수인) 곳이고, 0 이상(=이탈 없음)인 단계는 후보에서 뺌
+   */
+  const highestDropStage = data?.funnel.stages.reduce<
+    (typeof data.funnel.stages)[number] | undefined
+  >((min, stage) => {
+    if (stage.dropRate === null || stage.dropRate >= 0) return min;
+    if (!min || stage.dropRate < (min.dropRate ?? Infinity)) return stage;
+    return min;
+  }, undefined);
+
+  const maxDropStage = highestDropStage?.stage ?? null;
+  const maxDropStageLabel = highestDropStage?.label;
 
   const showDropStageAlert =
-    Boolean(maxDropStageLabel) && data?.funnel.maxDropStage !== dismissedStage;
+    Boolean(maxDropStageLabel) && maxDropStage !== dismissedStage;
 
   /*
    * dropRate는 "이전 단계 → 이 단계로 넘어오면서 빠진 비율"이라, 실제로 이탈한 세션의
    * last_stage(=drop_stage 필터값)는 maxDropStage 자신이 아니라 바로 앞 단계임.
    * 예: signup_started의 dropRate가 가장 높다 = plan_comparison_viewed에서 멈춘 세션이 많다는 뜻.
-   * maxDropStage를 그대로 필터에 쓰면 엉뚱한 세션이 나오고, signup_completed인 경우엔
-   * (도달 = 성공이라 이탈일 수 없어서) 결과가 항상 0건이 됨
    */
   const maxDropStageIndex =
-    data?.funnel.stages.findIndex(
-      (stage) => stage.stage === data.funnel.maxDropStage,
-    ) ?? -1;
+    data?.funnel.stages.findIndex((stage) => stage.stage === maxDropStage) ??
+    -1;
   const actualDropStage =
     maxDropStageIndex > 0
       ? data?.funnel.stages[maxDropStageIndex - 1].stage
       : undefined;
 
-  const maxStageCount = data
-    ? Math.max(...data.funnel.stages.map((stage) => stage.count))
-    : 0;
+  const { startDate: logsStartDate, endDate: logsEndDate } =
+    getDateRangeForPeriod(period);
+
+  // 대시보드 퍼널 차트에서는 "상담 시작" 단계를 표시하지 않음
+  const funnelStages =
+    data?.funnel.stages.filter(
+      (stage) => stage.stage !== "consultation_started",
+    ) ?? [];
 
   const maxConversionRate = data
     ? Math.max(...data.promptConversion.map((v) => v.conversionRate))
     : 0;
 
   return (
-    <div className="p-2xl">
+    <div className="p-3xl">
       <div className="flex flex-col gap-md sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="font-sans text-title-24-bold text-text-primary">
@@ -131,14 +160,14 @@ export function DashboardContent() {
       </div>
 
       {isPending && (
-        <p className="mt-xl font-sans text-body-14-regular text-text-secondary">
+        <p className="mt-2xl font-sans text-body-14-regular text-text-secondary">
           불러오는 중이에요...
         </p>
       )}
 
       {isError && (
         <ErrorState
-          className="mt-xl"
+          className="mt-2xl"
           title="대시보드를 불러오지 못했어요"
           description={error instanceof ApiError ? error.message : undefined}
           retryLabel="다시 시도"
@@ -149,7 +178,7 @@ export function DashboardContent() {
       {data && (
         <>
           {showDropStageAlert && (
-            <div className="mt-xl flex flex-wrap items-center gap-md rounded-lg border border-error-soft bg-error-soft px-lg py-md">
+            <div className="mt-2xl flex flex-wrap items-center gap-md rounded-lg border border-error-soft bg-error-soft px-lg py-md">
               <AlertTriangle
                 aria-hidden="true"
                 size={20}
@@ -166,14 +195,17 @@ export function DashboardContent() {
               {actualDropStage && (
                 <NextLink
                   href={`/admin/logs?drop_stage=${actualDropStage}`}
-                  className="shrink-0 font-sans text-label-14-bold text-text-primary underline underline-offset-2"
+                  className="shrink-0 font-sans text-caption-12-bold text-text-primary underline underline-offset-2"
                 >
                   해당 로그 보기
                 </NextLink>
               )}
 
               <NextLink href="/admin/prompts" className="shrink-0">
-                <Button variant="primary" className="h-[36px] px-lg py-0">
+                <Button
+                  variant="primary"
+                  className="h-7 rounded-md px-md py-0 text-caption-12-bold"
+                >
                   프롬프트 개선하기
                 </Button>
               </NextLink>
@@ -181,15 +213,15 @@ export function DashboardContent() {
               <button
                 type="button"
                 aria-label="배너 닫기"
-                onClick={() => setDismissedStage(data.funnel.maxDropStage)}
-                className="flex size-touch shrink-0 items-center justify-center text-text-secondary"
+                onClick={() => setDismissedStage(maxDropStage)}
+                className="shrink-0 text-text-secondary hover:text-text-primary"
               >
                 <X aria-hidden="true" size={18} />
               </button>
             </div>
           )}
 
-          <div className="mt-xl flex flex-col gap-lg sm:flex-row">
+          <div className="mt-2xl flex flex-col gap-2xl sm:flex-row">
             <KpiCard
               title="추천 건수"
               value={data.kpi.consultationCount}
@@ -216,59 +248,144 @@ export function DashboardContent() {
             />
           </div>
 
-          <section className="mt-xl rounded-lg border border-border-default bg-surface p-lg">
+          <section className="mt-2xl rounded-lg border border-border-default bg-surface p-2xl">
             <div className="flex items-center justify-between">
-              <h2 className="font-sans text-title-18-bold text-text-primary">
-                추천 → 가입 퍼널
-              </h2>
-              <span className="font-sans text-caption-12-regular text-text-tertiary">
-                전체 이탈률 {data.funnel.totalDropRate}%
+              <div>
+                <h2 className="font-sans text-title-18-bold text-text-primary">
+                  추천 → 가입 퍼널
+                </h2>
+                <p className="mt-xs font-sans text-caption-12-regular text-text-tertiary">
+                  각 단계를 클릭하면 해당 대화 로그로 이동합니다
+                </p>
+              </div>
+              <span className="shrink-0 font-sans text-caption-12-regular text-text-tertiary">
+                전체 이탈률{" "}
+                <strong className="font-sans text-caption-12-bold text-error">
+                  {data.funnel.totalDropRate}%
+                </strong>
               </span>
             </div>
 
-            <div className="mt-lg flex flex-col gap-md">
-              {data.funnel.stages.map((stage) => {
-                const widthPercent =
-                  maxStageCount > 0 ? (stage.count / maxStageCount) * 100 : 0;
-                const isMaxDrop = stage.stage === data.funnel.maxDropStage;
+            <div className="mt-lg flex flex-col gap-xs">
+              {funnelStages.map((stage, index) => {
+                const widthPercent = stage.entryRate;
+                const isMaxDrop = stage.stage === maxDropStage;
+                const isLastStage = index === funnelStages.length - 1;
 
-                return (
-                  <div key={stage.stage}>
-                    <div className="flex items-center justify-between">
-                      <span className="font-sans text-label-14-bold text-text-primary">
-                        {stage.label}
-                        {isMaxDrop && (
-                          <span className="ml-xs rounded-full bg-error-soft px-sm py-xs font-sans text-micro-11-bold text-error">
-                            최다 이탈
-                          </span>
-                        )}
-                      </span>
-                      <span className="font-sans text-caption-12-regular text-text-tertiary">
-                        {stage.count.toLocaleString("ko-KR")}건 · 진입{" "}
-                        {stage.entryRate}%
-                        {stage.dropRate !== null && (
-                          <span className="ml-xs text-error">
-                            {stage.dropRate}%
-                          </span>
-                        )}
-                      </span>
-                    </div>
-                    <div className="mt-xs h-[24px] w-full overflow-hidden rounded-sm bg-surface-subtle">
+                /*
+                 * dropRate와 마찬가지로, 이 단계에서 이탈한 세션의 drop_stage 값은
+                 * 이 단계 자신이 아니라 바로 앞 단계임 (last_stage 기준으로 기록되므로)
+                 */
+                const stageIndexInFull =
+                  data?.funnel.stages.findIndex(
+                    (s) => s.stage === stage.stage,
+                  ) ?? -1;
+                const rowDropStage =
+                  stageIndexInFull > 0
+                    ? data?.funnel.stages[stageIndexInFull - 1].stage
+                    : undefined;
+                const logsHref = rowDropStage
+                  ? `/admin/logs?drop_stage=${rowDropStage}&start_date=${logsStartDate}&end_date=${logsEndDate}`
+                  : undefined;
+
+                const row = (
+                  <>
+                    <span className="w-23 shrink-0 whitespace-nowrap font-sans text-label-14-bold text-text-primary">
+                      {stage.label}
+                    </span>
+
+                    <span
+                      className={cn(
+                        "flex w-20 shrink-0 items-center",
+                        !isMaxDrop && "invisible",
+                      )}
+                    >
+                      <Badge
+                        variant="error"
+                        className="shrink-0 bg-error text-text-on-primary"
+                      >
+                        최다 이탈
+                      </Badge>
+                    </span>
+
+                    <div className="relative h-9 flex-1 overflow-hidden rounded-md bg-border-default">
                       <div
                         className={cn(
-                          "h-full rounded-sm transition-all",
-                          isMaxDrop ? "bg-error" : "bg-action-primary",
+                          "flex h-full items-center gap-xs overflow-hidden rounded-md px-md transition-all",
+                          isLastStage
+                            ? "bg-action-primary"
+                            : "bg-border-strong",
                         )}
-                        style={{ width: `${widthPercent}%` }}
-                      />
+                        style={{ width: `${Math.max(widthPercent, 20)}%` }}
+                      >
+                        <span
+                          className={cn(
+                            "truncate font-sans text-label-14-bold",
+                            isLastStage
+                              ? "text-text-on-primary"
+                              : "text-text-primary",
+                          )}
+                        >
+                          {stage.count.toLocaleString("ko-KR")}
+                        </span>
+                      </div>
+
+                      {logsHref && (
+                        <span className="absolute right-xs top-1/2 -translate-y-1/2 whitespace-nowrap rounded-full border-2 border-surface bg-surface px-md py-xs font-sans text-micro-11-bold text-text-brand opacity-0 shadow-sm transition-opacity group-hover:opacity-100">
+                          AI 채팅 로그 바로가기 →
+                        </span>
+                      )}
                     </div>
-                  </div>
+
+                    <span className="w-[72px] shrink-0 text-right font-sans text-micro-11-regular text-text-tertiary">
+                      진입 {stage.entryRate}%
+                    </span>
+
+                    <span
+                      className={cn(
+                        "w-16 shrink-0 text-right font-sans text-label-14-bold",
+                        stage.dropRate === null
+                          ? "text-text-tertiary"
+                          : "text-error",
+                      )}
+                    >
+                      {stage.dropRate === null
+                        ? "—"
+                        : `${Math.abs(stage.dropRate)}%`}
+                    </span>
+                  </>
+                );
+
+                if (!logsHref) {
+                  return (
+                    <div
+                      key={stage.stage}
+                      className="-mx-sm flex items-center gap-md px-sm py-xs"
+                    >
+                      {row}
+                    </div>
+                  );
+                }
+
+                return (
+                  <NextLink
+                    key={stage.stage}
+                    href={logsHref}
+                    className={cn(
+                      "group -mx-sm flex items-center gap-md rounded-md px-sm py-xs transition-colors",
+                      isMaxDrop
+                        ? "bg-error-soft hover:bg-error-soft/70"
+                        : "hover:bg-surface-subtle",
+                    )}
+                  >
+                    {row}
+                  </NextLink>
                 );
               })}
             </div>
           </section>
 
-          <section className="mt-xl rounded-lg border border-border-default bg-surface p-lg">
+          <section className="mt-2xl rounded-lg border border-border-default bg-surface p-2xl">
             <h2 className="font-sans text-title-18-bold text-text-primary">
               프롬프트 버전별 전환율
             </h2>

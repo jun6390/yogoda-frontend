@@ -59,7 +59,7 @@ export function PromptVersionHistory() {
   };
 
   return (
-    <section className="mt-xl rounded-lg border border-border-default bg-surface p-lg">
+    <section className="mt-2xl rounded-lg border border-border-default bg-surface p-2xl">
       <h2 className="font-sans text-title-18-bold text-text-primary">
         버전 히스토리
       </h2>

@@ -93,13 +93,19 @@ const filterInputClassName = cn(
 );
 
 export function SessionLogContent() {
-  // 대시보드의 "해당 로그 보기" 링크에서 ?drop_stage=xxx로 들어오면 그 단계로 미리 필터링해둠
+  // 대시보드의 퍼널 행 클릭에서 ?drop_stage=xxx&start_date=...&end_date=...로 들어오면
+  // 대시보드에서 보던 단계·기간 그대로 미리 필터링해둠
   const searchParams = useSearchParams();
   const initialDropStage =
     (searchParams.get("drop_stage") as SessionDropStage | null) ?? "all";
+  const initialStartDate = searchParams.get("start_date");
+  const initialEndDate = searchParams.get("end_date");
   const initialFilters: FilterState = {
     ...getDefaultFilters(),
     dropStage: initialDropStage,
+    ...(initialStartDate && initialEndDate
+      ? { startDate: initialStartDate, endDate: initialEndDate }
+      : {}),
   };
 
   const [draftFilters, setDraftFilters] = useState<FilterState>(initialFilters);
@@ -150,7 +156,7 @@ export function SessionLogContent() {
   };
 
   return (
-    <div className="p-2xl">
+    <div className="p-3xl">
       <h1 className="font-sans text-title-24-bold text-text-primary">
         AI 채팅 로그
       </h1>
@@ -158,7 +164,7 @@ export function SessionLogContent() {
         이탈이 발생한 실제 대화를 읽고 프롬프트 개선 지점을 찾으세요
       </p>
 
-      <section className="mt-xl flex flex-wrap items-end gap-md rounded-lg border border-border-default bg-surface p-lg">
+      <section className="mt-2xl flex flex-wrap items-end gap-md rounded-lg border border-border-default bg-surface p-2xl">
         <label className="flex flex-col gap-xs">
           <span className="font-sans text-caption-12-bold text-text-tertiary">
             기간
@@ -262,8 +268,8 @@ export function SessionLogContent() {
         </div>
       </section>
 
-      <div className="mt-xl flex flex-col gap-lg md:flex-row">
-        <section className="flex h-[400px] w-full shrink-0 flex-col rounded-lg border border-border-default bg-surface p-lg md:h-[600px] md:w-[360px]">
+      <div className="mt-2xl flex flex-col gap-2xl md:flex-row">
+        <section className="flex h-[400px] w-full shrink-0 flex-col rounded-lg border border-border-default bg-surface p-2xl md:h-[600px] md:w-[360px]">
           <h2 className="font-sans text-title-18-bold text-text-primary">
             세션 목록
             {listData && (
@@ -348,7 +354,7 @@ export function SessionLogContent() {
           </div>
         </section>
 
-        <section className="flex h-[500px] flex-col rounded-lg border border-border-default bg-surface p-lg md:h-[600px] md:flex-1">
+        <section className="flex h-[500px] flex-col rounded-lg border border-border-default bg-surface p-2xl md:h-[600px] md:flex-1">
           {!selectedSessionId && (
             <p className="font-sans text-body-14-regular text-text-secondary">
               왼쪽 목록에서 세션을 선택하면 대화 내용을 볼 수 있어요.

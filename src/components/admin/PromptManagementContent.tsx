@@ -89,7 +89,7 @@ export function PromptManagementContent() {
   };
 
   return (
-    <div className="p-2xl">
+    <div className="p-3xl">
       <h1 className="font-sans text-title-24-bold text-text-primary">
         프롬프트 관리
       </h1>
@@ -97,7 +97,7 @@ export function PromptManagementContent() {
         AI 추천 상담의 시스템 프롬프트를 수정하고 버전별 성과를 확인하세요
       </p>
 
-      <section className="mt-xl rounded-lg border border-border-default bg-surface p-lg">
+      <section className="mt-2xl rounded-lg border border-border-default bg-surface p-2xl">
         <div className="flex flex-wrap items-center justify-between gap-md">
           <div className="flex items-center gap-sm">
             <h2 className="font-sans text-title-18-bold text-text-primary">

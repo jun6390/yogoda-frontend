@@ -30,7 +30,7 @@ export function UiAnalysisContent() {
   const lowestCtrElement = data?.elements[0];
 
   return (
-    <div className="p-2xl">
+    <div className="p-3xl">
       <div className="flex flex-col gap-md sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="font-sans text-title-24-bold text-text-primary">
@@ -45,14 +45,14 @@ export function UiAnalysisContent() {
       </div>
 
       {isPending && (
-        <p className="mt-xl font-sans text-body-14-regular text-text-secondary">
+        <p className="mt-2xl font-sans text-body-14-regular text-text-secondary">
           불러오는 중이에요...
         </p>
       )}
 
       {isError && (
         <ErrorState
-          className="mt-xl"
+          className="mt-2xl"
           title="UI 행동 분석 데이터를 불러오지 못했어요"
           description={error instanceof ApiError ? error.message : undefined}
           retryLabel="다시 시도"
@@ -62,8 +62,8 @@ export function UiAnalysisContent() {
 
       {data && (
         <>
-          <div className="mt-xl flex flex-col gap-lg sm:flex-row">
-            <div className="flex-1 rounded-lg border border-border-default bg-surface p-lg">
+          <div className="mt-2xl flex flex-col gap-2xl sm:flex-row">
+            <div className="flex-1 rounded-lg border border-border-default bg-surface p-2xl">
               {lowestCtrElement ? (
                 <>
                   <Badge variant="error">낮은 클릭률</Badge>
@@ -88,7 +88,7 @@ export function UiAnalysisContent() {
               )}
             </div>
 
-            <div className="flex-1 rounded-lg border border-border-default bg-surface p-lg">
+            <div className="flex-1 rounded-lg border border-border-default bg-surface p-2xl">
               <p className="font-sans text-body-14-regular text-text-secondary">
                 전체 UI 클릭률
               </p>
@@ -109,7 +109,7 @@ export function UiAnalysisContent() {
             </div>
           </div>
 
-          <section className="mt-xl rounded-lg border border-border-default bg-surface p-lg">
+          <section className="mt-2xl rounded-lg border border-border-default bg-surface p-2xl">
             <div className="flex flex-wrap items-center justify-between gap-xs">
               <h2 className="font-sans text-title-18-bold text-text-primary">
                 UI 요소별 성과
@@ -181,7 +181,7 @@ export function UiAnalysisContent() {
                           <div
                             className={cn(
                               "h-full rounded-sm transition-all",
-                              element.lowCtr ? "bg-error" : "bg-action-primary",
+                              element.lowCtr ? "bg-error" : "bg-border-strong",
                             )}
                             style={{ width: `${Math.min(element.ctr, 100)}%` }}
                           />
