@@ -325,30 +325,37 @@ export default function AIConsultationPage() {
             onChange={(e) => setInputText(e.target.value)}
             readOnly={isListening}
             placeholder={t("inputPlaceholder")}
-            className={isSupported ? "w-full pr-[96px]" : "w-full pr-[56px]"}
+            className="w-full pl-[44px] pr-[40px]"
           />
 
-          {isSupported && (
-            <div className="absolute right-[48px] flex items-center justify-center">
-              {isListening && (
-                <span className="absolute size-[36px] rounded-full bg-action-primary/20 animate-ping" />
+          {/* 마이크 버튼 — 인풋 왼쪽, 미지원 브라우저에서는 invisible로 자리 유지 */}
+          <div
+            className={
+              isSupported
+                ? "absolute left-sm flex items-center justify-center"
+                : "absolute left-sm flex items-center justify-center invisible"
+            }
+            aria-hidden={!isSupported}
+          >
+            {isListening && (
+              <span className="absolute size-[36px] rounded-full bg-action-primary/20 animate-ping" />
+            )}
+            <button
+              type="button"
+              onClick={toggleListening}
+              tabIndex={isSupported ? undefined : -1}
+              aria-label={t(
+                isListening ? "voiceInput.stop" : "voiceInput.start",
               )}
-              <button
-                type="button"
-                onClick={toggleListening}
-                aria-label={t(
-                  isListening ? "voiceInput.stop" : "voiceInput.start",
-                )}
-                className={
-                  isListening
-                    ? "relative flex size-[36px] items-center justify-center text-action-primary transition-colors"
-                    : "relative flex size-[36px] items-center justify-center text-text-tertiary hover:text-text-primary transition-colors"
-                }
-              >
-                {isListening ? <MicOff size={16} /> : <Mic size={16} />}
-              </button>
-            </div>
-          )}
+              className={
+                isListening
+                  ? "relative flex size-[36px] items-center justify-center text-action-primary transition-colors"
+                  : "relative flex size-[36px] items-center justify-center text-text-tertiary hover:text-text-primary transition-colors"
+              }
+            >
+              {isListening ? <MicOff size={16} /> : <Mic size={16} />}
+            </button>
+          </div>
 
           <button
             type="submit"
