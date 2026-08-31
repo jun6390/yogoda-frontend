@@ -17,6 +17,7 @@ interface NaverMapProps {
   locations: MapLocation[];
   selectedId?: string;
   onSelect?: (id: string) => void;
+  onCenterChange?: (center: { latitude: number; longitude: number }) => void;
   center?: { latitude: number; longitude: number };
   className?: string;
   errorTitle: string;
@@ -27,6 +28,7 @@ export function NaverMap({
   locations,
   selectedId,
   onSelect,
+  onCenterChange,
   center,
   className,
   errorTitle,
@@ -57,6 +59,17 @@ export function NaverMap({
           zoomControlOptions: { position: maps.Position.TOP_RIGHT },
         });
         mapRef.current = map;
+
+        if (onCenterChange) {
+          const listener = maps.Event.addListener(map, "idle", () => {
+            const nextCenter = map.getCenter();
+            onCenterChange({
+              latitude: nextCenter.lat(),
+              longitude: nextCenter.lng(),
+            });
+          });
+          listenersRef.current.push(listener);
+        }
 
         markersRef.current = locations.map((location) => {
           const active = location.id === selectedId;
@@ -104,7 +117,7 @@ export function NaverMap({
       mapRef.current?.destroy();
       mapRef.current = null;
     };
-  }, [center, locations, onSelect, selectedId]);
+  }, [center, locations, onCenterChange, onSelect, selectedId]);
 
   if (failed) {
     return (

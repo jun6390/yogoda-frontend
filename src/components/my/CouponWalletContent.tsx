@@ -162,7 +162,7 @@ export function CouponWalletContent() {
               <EmptyState
                 heading={t(`empty.${filter}.title`)}
                 description={t(`empty.${filter}.description`)}
-                className="w-full rounded-lg bg-surface"
+                className="w-full"
               />
             )}
           </>

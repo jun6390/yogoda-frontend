@@ -29,6 +29,7 @@ declare global {
   }
 
   interface NaverMap {
+    getCenter: () => NaverLatLng;
     setCenter: (center: NaverLatLng) => void;
     setZoom: (zoom: number) => void;
     destroy: () => void;
