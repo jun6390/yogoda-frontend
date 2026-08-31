@@ -79,7 +79,6 @@ export default function AIConsultationPage() {
     quickReplies,
     isSignupFlow,
     isSignupComplete,
-    currentSignupStep,
     sendMessageSilent,
   } = useAIChat({ preselectedPlan });
 
@@ -144,7 +143,7 @@ export default function AIConsultationPage() {
     e.preventDefault();
     // 정지 직후 잠깐 동안, 그리고 AI 응답을 기다리는 동안(Enter로 폼이 그대로
     // 제출되는 경우 포함)에는 전송하지 않음
-    if (justStoppedRef.current || isTyping) return;
+    if (justStoppedRef.current || isTyping || isInputDisabled) return;
     sendMessage(inputText);
     setInputText("");
     // 전송 즉시 맨 아래로 이동 (useEffect 보다 한 틱 빠르게)
@@ -207,9 +206,9 @@ export default function AIConsultationPage() {
     }, 280);
   };
 
-  // 가입 완료 후에는 입력창 비활성화
-  const isInputDisabled =
-    isSignupComplete || currentSignupStep === "terms_agreement";
+  // 가입 완료 후에는 입력창 비활성화. 약관 동의 단계는 입력창을 막지 않고 자유
+  // 텍스트도 받되, 다음 단계로의 진행 여부는 서버가 결정론적으로 판단함
+  const isInputDisabled = isSignupComplete;
 
   return (
     <div className="relative flex h-full flex-col bg-background">
@@ -372,6 +371,7 @@ export default function AIConsultationPage() {
             value={isListening && interimText ? interimText : inputText}
             onChange={(e) => setInputText(e.target.value)}
             readOnly={isListening}
+            disabled={isInputDisabled}
             placeholder={t("inputPlaceholder")}
             className={
               isListening
@@ -392,6 +392,7 @@ export default function AIConsultationPage() {
             <button
               type="button"
               onClick={toggleListening}
+              disabled={isInputDisabled}
               tabIndex={isSupported ? undefined : -1}
               aria-label={t(
                 isListening ? "voiceInput.stop" : "voiceInput.start",
@@ -428,9 +429,9 @@ export default function AIConsultationPage() {
           ) : (
             <button
               type="submit"
-              disabled={!inputText.trim()}
+              disabled={!inputText.trim() || isInputDisabled}
               className={
-                inputText.trim()
+                inputText.trim() && !isInputDisabled
                   ? "absolute right-sm flex size-[36px] items-center justify-center text-action-primary transition-colors active:scale-90"
                   : "absolute right-sm flex size-[36px] items-center justify-center text-text-tertiary cursor-not-allowed transition-colors"
               }

@@ -1,10 +1,21 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ChevronRight, CheckCircle2, Circle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Sheet } from "@/components/ui/Sheet/Sheet";
 import { Button } from "@/components/ui/Button/Button";
+
+const CHECKED_STORAGE_KEY = "termsAgreementChecked";
+
+function readStoredChecked(): Record<string, boolean> {
+  try {
+    const stored = sessionStorage.getItem(CHECKED_STORAGE_KEY);
+    return stored ? (JSON.parse(stored) as Record<string, boolean>) : {};
+  } catch {
+    return {};
+  }
+}
 
 interface Term {
   id: string;
@@ -66,8 +77,18 @@ interface TermsAgreementCardProps {
 }
 
 export function TermsAgreementCard({ onAgree }: TermsAgreementCardProps) {
-  const [checked, setChecked] = useState<Record<string, boolean>>({});
+  // 새로고침해도 체크 상태가 유지되도록 sessionStorage에서 초기값을 복원함
+  const [checked, setChecked] =
+    useState<Record<string, boolean>>(readStoredChecked);
   const [sheetTerm, setSheetTerm] = useState<Term | null>(null);
+
+  useEffect(() => {
+    try {
+      sessionStorage.setItem(CHECKED_STORAGE_KEY, JSON.stringify(checked));
+    } catch {
+      /* noop */
+    }
+  }, [checked]);
 
   const allRequired = TERMS.filter((t) => t.required);
   const allOptional = TERMS.filter((t) => !t.required);
@@ -100,6 +121,11 @@ export function TermsAgreementCard({ onAgree }: TermsAgreementCardProps) {
       optionalAgreed.length > 0
         ? `동의합니다 (선택 동의: ${optionalAgreed.join(", ")})`
         : "동의합니다";
+    try {
+      sessionStorage.removeItem(CHECKED_STORAGE_KEY);
+    } catch {
+      /* noop */
+    }
     onAgree?.(message);
   };
 
