@@ -68,6 +68,7 @@ export default function AIConsultationPage() {
   const {
     messages,
     isTyping,
+    isLoadingExtra,
     thinkingMessage,
     isRestoringHistory,
     sendMessage,
@@ -333,6 +334,12 @@ export default function AIConsultationPage() {
         {isTyping && (
           <AIChatBubble noBackground>
             <AITypingIndicator state="typing" message={thinkingMessage} />
+          </AIChatBubble>
+        )}
+        {/* 답변 텍스트는 다 왔지만 카드/퀵답변처럼 더 올 수 있는 내용을 기다리는 중 */}
+        {!isTyping && isLoadingExtra && (
+          <AIChatBubble noBackground>
+            <AITypingIndicator state="typing" message={t("loadingExtra")} />
           </AIChatBubble>
         )}
         <div ref={chatEndRef} />

@@ -124,6 +124,9 @@ export function useAIChat({ preselectedPlan }: UseAIChatOptions = {}) {
   // 가입 플로우 시작 시 웰컴 메시지 없이 빈 상태로 시작하고, AI 첫 메시지를 기다림
   const [messages, setMessages] = useState<ChatMessage[]>([WELCOME_MESSAGE]);
   const [isTyping, setIsTyping] = useState(false);
+  // 답변 텍스트 스트리밍은 끝났지만, 카드/퀵답변처럼 뒤에 더 올 수 있는 내용을
+  // 기다리는 중임을 명시적으로 보여주기 위한 상태 ("loading_extra" 이벤트로 켜짐)
+  const [isLoadingExtra, setIsLoadingExtra] = useState(false);
   // 백엔드가 AI 호출 전에 emit하는 문맥별 로딩 문구
   const [thinkingMessage, setThinkingMessage] = useState<string | null>(null);
   // 이전 대화 내역을 불러오는 동안 스켈레톤 UI를 표시하기 위한 상태
@@ -290,7 +293,15 @@ export function useAIChat({ preselectedPlan }: UseAIChatOptions = {}) {
       typewriter.push(currentAiMsgIdRef.current, data);
     });
 
+    // 답변 텍스트 스트리밍은 끝났지만, 카드/퀵답변처럼 뒤에 더 올 수 있는 내용을
+    // 서버가 준비 중임을 알려줌. plans/signup/quickReplies/done/error 중 먼저
+    // 도착하는 이벤트에서 꺼짐
+    socket.on("loading_extra", () => {
+      setIsLoadingExtra(true);
+    });
+
     socket.on("plans", (data: ChatMessage["plans"]) => {
+      setIsLoadingExtra(false);
       const aiMsgId = currentAiMsgIdRef.current;
       if (!aiMsgId) return;
       // 타이핑 애니메이션이 화면에 다 그려진 뒤에 카드를 붙임
@@ -308,6 +319,7 @@ export function useAIChat({ preselectedPlan }: UseAIChatOptions = {}) {
     });
 
     socket.on("quickReplies", (data: string[]) => {
+      setIsLoadingExtra(false);
       typewriter.onDrain(currentAiMsgIdRef.current, () => {
         setQuickReplies(data);
       });
@@ -321,6 +333,7 @@ export function useAIChat({ preselectedPlan }: UseAIChatOptions = {}) {
       "signup",
       (data: { signupStep: string; signupData: SignupCollectedData }) => {
         const { signupStep, signupData } = data;
+        setIsLoadingExtra(false);
         // 같은 단계가 반복해서 와도(예: 약관 동의 중 다른 질문을 하는 경우)
         // 카드를 중복으로 추가하지 않도록, 갱신 전의 이전 단계와 비교함
         const isNewStep = signupStep !== currentSignupStepRef.current;
@@ -404,6 +417,7 @@ export function useAIChat({ preselectedPlan }: UseAIChatOptions = {}) {
       "signup_complete",
       (data: { planCode: string; planName: string }) => {
         clearResponseTimeout();
+        setIsLoadingExtra(false);
         const pendingMessageId = currentAiMsgIdRef.current;
         if (pendingMessageId) {
           typewriter.stop(pendingMessageId);
@@ -452,12 +466,14 @@ export function useAIChat({ preselectedPlan }: UseAIChatOptions = {}) {
       clearResponseTimeout();
       currentAiMsgIdRef.current = null;
       setIsTyping(false);
+      setIsLoadingExtra(false);
       setThinkingMessage(null);
       // 소켓은 유지해서 다음 메시지도 핸드셰이크 없이 바로 보낼 수 있게 함
     });
 
     socket.on("error", () => {
       clearResponseTimeout();
+      setIsLoadingExtra(false);
       const aiMsgId = currentAiMsgIdRef.current;
       if (aiMsgId) {
         typewriter.stop(aiMsgId);
@@ -474,6 +490,7 @@ export function useAIChat({ preselectedPlan }: UseAIChatOptions = {}) {
 
     socket.on("connect_error", () => {
       clearResponseTimeout();
+      setIsLoadingExtra(false);
       const aiMsgId = currentAiMsgIdRef.current;
       if (aiMsgId) {
         typewriter.stop(aiMsgId);
@@ -795,6 +812,7 @@ export function useAIChat({ preselectedPlan }: UseAIChatOptions = {}) {
           currentAiMsgIdRef.current = null;
         }
         setIsTyping(false);
+        setIsLoadingExtra(false);
         setQuickReplies([]);
       }, RESPONSE_TIMEOUT_MS);
 
@@ -846,6 +864,7 @@ export function useAIChat({ preselectedPlan }: UseAIChatOptions = {}) {
           currentAiMsgIdRef.current = null;
         }
         setIsTyping(false);
+        setIsLoadingExtra(false);
         setQuickReplies([]);
       }, RESPONSE_TIMEOUT_MS);
 
@@ -978,6 +997,7 @@ export function useAIChat({ preselectedPlan }: UseAIChatOptions = {}) {
           currentAiMsgIdRef.current = null;
         }
         setIsTyping(false);
+        setIsLoadingExtra(false);
         setQuickReplies([]);
       }, RESPONSE_TIMEOUT_MS);
 
@@ -1024,6 +1044,7 @@ export function useAIChat({ preselectedPlan }: UseAIChatOptions = {}) {
     });
 
     setIsTyping(false);
+    setIsLoadingExtra(false);
     setThinkingMessage(null);
     setQuickReplies([]);
 
@@ -1033,6 +1054,7 @@ export function useAIChat({ preselectedPlan }: UseAIChatOptions = {}) {
   return {
     messages,
     isTyping,
+    isLoadingExtra,
     thinkingMessage,
     isRestoringHistory,
     sendMessage,
