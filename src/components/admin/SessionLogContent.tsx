@@ -5,12 +5,17 @@ import { useState } from "react";
 import { useSearchParams } from "next/navigation";
 
 import { useQuery } from "@tanstack/react-query";
+import { ChevronDown, ChevronUp } from "lucide-react";
 
 import { Badge } from "@/components/ui/Badge/Badge";
 import { ErrorState } from "@/components/ui/ErrorState/ErrorState";
 import { Button } from "@/components/admin/Button";
 import { DateRangePicker } from "@/components/admin/DateRangePicker";
 import { Select } from "@/components/admin/Select";
+import {
+  AIChatBubble,
+  UserChatBubble,
+} from "@/components/ui/ChatBubble/ChatBubble";
 import { ChatMarkdown } from "@/components/ui/ChatMarkdown/ChatMarkdown";
 import { ApiError } from "@/lib/api/client";
 import { getSessionDetail, getSessions } from "@/lib/api/admin/session";
@@ -75,7 +80,9 @@ function toListParams(filters: FilterState): SessionListParams {
     end_date: filters.endDate || undefined,
     status: filters.status === "all" ? undefined : filters.status,
     drop_stage: filters.dropStage === "all" ? undefined : filters.dropStage,
-    prompt_version: filters.promptVersion || undefined,
+    prompt_version: filters.promptVersion
+      ? `v${filters.promptVersion}`
+      : undefined,
   };
 }
 
@@ -126,6 +133,14 @@ export function SessionLogContent() {
     enabled: Boolean(selectedSessionId),
   });
 
+  const handleVersionStep = (delta: number) => {
+    setDraftFilters((prev) => {
+      const current = prev.promptVersion ? Number(prev.promptVersion) : 0;
+      const next = Math.max(0, current + delta);
+      return { ...prev, promptVersion: next === 0 ? "" : String(next) };
+    });
+  };
+
   const handleApplyFilters = () => setAppliedFilters(draftFilters);
 
   const handleResetFilters = () => {
@@ -169,6 +184,7 @@ export function SessionLogContent() {
               setDraftFilters((prev) => ({ ...prev, status }))
             }
             className="w-[140px]"
+            triggerClassName="min-h-[40px] rounded-md"
           />
         </label>
 
@@ -184,6 +200,7 @@ export function SessionLogContent() {
               setDraftFilters((prev) => ({ ...prev, dropStage }))
             }
             className="w-[160px]"
+            triggerClassName="min-h-[40px] rounded-md"
           />
         </label>
 
@@ -191,23 +208,55 @@ export function SessionLogContent() {
           <span className="font-sans text-caption-12-bold text-text-tertiary">
             프롬프트 버전
           </span>
-          <input
-            type="text"
-            placeholder="예: v4"
-            value={draftFilters.promptVersion}
-            onChange={(e) =>
-              setDraftFilters((prev) => ({
-                ...prev,
-                promptVersion: e.target.value,
-              }))
-            }
-            className={cn(filterInputClassName, "w-[100px]")}
-          />
+          <div className="relative">
+            <span className="pointer-events-none absolute left-sm top-1/2 -translate-y-1/2 font-sans text-body-14-regular text-text-tertiary">
+              v
+            </span>
+            <input
+              type="text"
+              inputMode="numeric"
+              value={draftFilters.promptVersion}
+              onChange={(e) =>
+                setDraftFilters((prev) => ({
+                  ...prev,
+                  promptVersion: e.target.value.replace(/\D/g, ""),
+                }))
+              }
+              className={cn(filterInputClassName, "w-21 pl-xl pr-2xl")}
+            />
+            <div className="absolute right-xs top-1/2 flex -translate-y-1/2 flex-col">
+              <button
+                type="button"
+                aria-label="버전 올리기"
+                onClick={() => handleVersionStep(1)}
+                className="flex h-[16px] w-[20px] items-center justify-center text-text-tertiary hover:text-text-primary"
+              >
+                <ChevronUp aria-hidden="true" size={12} />
+              </button>
+              <button
+                type="button"
+                aria-label="버전 내리기"
+                onClick={() => handleVersionStep(-1)}
+                className="flex h-[16px] w-[20px] items-center justify-center text-text-tertiary hover:text-text-primary"
+              >
+                <ChevronDown aria-hidden="true" size={12} />
+              </button>
+            </div>
+          </div>
         </label>
 
         <div className="flex gap-sm">
-          <Button onClick={handleApplyFilters}>필터 적용</Button>
-          <Button variant="secondary" onClick={handleResetFilters}>
+          <Button
+            className="h-[40px] rounded-md px-lg py-0 text-label-14-bold"
+            onClick={handleApplyFilters}
+          >
+            필터 적용
+          </Button>
+          <Button
+            variant="secondary"
+            className="h-[40px] rounded-md px-lg py-0 text-label-14-bold"
+            onClick={handleResetFilters}
+          >
             초기화
           </Button>
         </div>
@@ -359,20 +408,13 @@ export function SessionLogContent() {
                         message.sender === "user" ? "items-end" : "items-start",
                       )}
                     >
-                      <div
-                        className={cn(
-                          "max-w-[75%] whitespace-pre-line rounded-lg px-md py-sm font-sans text-body-14-regular",
-                          message.sender === "user"
-                            ? "bg-brand-soft text-text-primary"
-                            : "border border-border-default bg-background text-text-primary",
-                        )}
-                      >
-                        {message.sender === "ai" ? (
+                      {message.sender === "user" ? (
+                        <UserChatBubble>{message.content}</UserChatBubble>
+                      ) : (
+                        <AIChatBubble>
                           <ChatMarkdown>{message.content}</ChatMarkdown>
-                        ) : (
-                          message.content
-                        )}
-                      </div>
+                        </AIChatBubble>
+                      )}
                       <span className="font-sans text-caption-12-regular text-text-tertiary">
                         {formatDateTime(message.createdAt)}
                       </span>

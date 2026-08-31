@@ -4,6 +4,7 @@ import { useState } from "react";
 
 import { useQuery } from "@tanstack/react-query";
 
+import { PeriodTabs } from "@/components/admin/PeriodTabs";
 import { Badge } from "@/components/ui/Badge/Badge";
 import { ErrorState } from "@/components/ui/ErrorState/ErrorState";
 import { getUiElements } from "@/lib/api/admin/ui-elements";
@@ -11,12 +12,6 @@ import { ADMIN_UI_ELEMENTS_QUERY_KEYS } from "@/lib/admin/queryKeys";
 import { ApiError } from "@/lib/api/client";
 import { cn } from "@/lib/utils";
 import type { AdminPeriod } from "@/types/admin";
-
-const PERIOD_OPTIONS: { value: AdminPeriod; label: string }[] = [
-  { value: "today", label: "오늘" },
-  { value: "7d", label: "7일" },
-  { value: "30d", label: "30일" },
-];
 
 function formatChange(value: number) {
   const sign = value >= 0 ? "▲" : "▼";
@@ -46,27 +41,7 @@ export function UiAnalysisContent() {
           </p>
         </div>
 
-        <div className="grid grid-cols-3 gap-xs rounded-lg bg-surface-subtle p-xs sm:inline-grid">
-          {PERIOD_OPTIONS.map((option) => {
-            const isSelected = period === option.value;
-
-            return (
-              <button
-                key={option.value}
-                type="button"
-                onClick={() => setPeriod(option.value)}
-                className={cn(
-                  "h-[36px] rounded-sm px-lg font-sans text-label-14-bold transition-colors",
-                  isSelected
-                    ? "bg-surface text-text-brand shadow-sm"
-                    : "text-text-secondary",
-                )}
-              >
-                {option.label}
-              </button>
-            );
-          })}
-        </div>
+        <PeriodTabs value={period} onChange={setPeriod} />
       </div>
 
       {isPending && (
@@ -202,10 +177,10 @@ export function UiAnalysisContent() {
                             {formatChange(element.ctrChange)}
                           </span>
                         </div>
-                        <div className="mt-xs h-[6px] w-full overflow-hidden rounded-full bg-surface-subtle">
+                        <div className="mt-xs h-[6px] w-full overflow-hidden rounded-sm bg-surface-subtle">
                           <div
                             className={cn(
-                              "h-full rounded-full transition-all",
+                              "h-full rounded-sm transition-all",
                               element.lowCtr ? "bg-error" : "bg-action-primary",
                             )}
                             style={{ width: `${Math.min(element.ctr, 100)}%` }}
