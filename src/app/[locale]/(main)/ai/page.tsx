@@ -11,6 +11,7 @@ import {
   ArrowDown,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
+import { useSearchParams } from "next/navigation";
 
 import { PlanRecommendationCards } from "@/components/chat/PlanRecommendationCards";
 import { FraudWarningCard } from "@/components/chat/FraudWarningCard";
@@ -40,6 +41,12 @@ export default function AIConsultationPage() {
     PreselectedPlan | undefined
   >(undefined);
 
+  // 채팅에서 요금제 상세로 넘어갔다가 다시 /ai로 돌아오는 경우, Next.js가 이 페이지를
+  // 새로 마운트하지 않고 재사용할 수 있어 mount-only effect(빈 deps)가 다시 실행되지
+  // 않을 수 있음. entry 쿼리 파라미터는 리마운트 여부와 무관하게 매번 갱신되는
+  // useSearchParams로 감지되므로, 이를 트리거로 매번 sessionStorage를 다시 읽음
+  const entryToken = useSearchParams().get("entry");
+
   useEffect(() => {
     try {
       const stored = sessionStorage.getItem("preselectedPlan");
@@ -50,7 +57,12 @@ export default function AIConsultationPage() {
     } catch {
       // sessionStorage 접근 불가 환경에서는 무시
     }
-  }, []);
+    if (entryToken) {
+      // 재사용을 유도한 쿼리 파라미터는 URL에 남기지 않고 바로 정리함
+      router.replace("/ai");
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [entryToken]);
 
   const {
     messages,
@@ -361,7 +373,11 @@ export default function AIConsultationPage() {
             onChange={(e) => setInputText(e.target.value)}
             readOnly={isListening}
             placeholder={t("inputPlaceholder")}
-            className="w-full pl-[44px] pr-[40px]"
+            className={
+              isListening
+                ? "w-full pl-[44px] pr-[40px] border-[1.5px] border-action-primary"
+                : "w-full pl-[44px] pr-[40px]"
+            }
           />
 
           {/* 마이크 버튼 — 인풋 왼쪽, 미지원 브라우저에서는 invisible로 자리 유지 */}
@@ -405,7 +421,9 @@ export default function AIConsultationPage() {
               aria-label={t("stopGeneration")}
               className="absolute right-sm flex size-[36px] items-center justify-center text-action-primary transition-colors active:scale-90"
             >
-              <Square size={16} fill="currentColor" />
+              <span className="flex size-6.5 items-center justify-center rounded-full bg-action-primary/15">
+                <Square size={12} fill="currentColor" />
+              </span>
             </button>
           ) : (
             <button

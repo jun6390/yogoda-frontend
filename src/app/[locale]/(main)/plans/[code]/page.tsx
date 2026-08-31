@@ -31,6 +31,15 @@ import type { PlanChoiceBenefit, PlanChoiceBenefitOption } from "@/types/plan";
 
 type SelectedBenefits = Record<string, string[]>;
 
+/*
+ * /ai로 이동할 때 매번 다른 값의 쿼리 파라미터를 만들기 위한 헬퍼.
+ * Date.now() 등 impure 호출은 컴포넌트 함수 본문에서 직접 하면 안 되므로 분리함
+ * (react-hooks/purity)
+ */
+function createNavigationNonce() {
+  return Date.now().toString(36);
+}
+
 export default function PlanDetailPage() {
   const { code } = useParams<{ code: string }>();
 
@@ -465,7 +474,9 @@ function PlanDetailContent({ code }: PlanDetailContentProps) {
     } else {
       sessionStorage.removeItem("preselectedPlanBenefits");
     }
-    router.push("/ai");
+    // entry 쿼리 파라미터로 매번 다른 값을 붙여, 직전에 /ai를 방문한 적이 있어
+    // 페이지가 재사용되는 경우에도 preselectedPlan을 다시 읽어오도록 강제함
+    router.push(`/ai?entry=${createNavigationNonce()}`);
   };
 
   return (

@@ -212,25 +212,8 @@ export function useAIChat({ preselectedPlan }: UseAIChatOptions = {}) {
     }
   }, [currentSignupStep]);
 
-  // preselectedPlan이 세팅될 때 signup-entry 인삿말을 추가합니다.
-  // 세션 플래그가 남아 있어도 실제 메시지가 없다면 다시 추가해야
-  // 후속 가입 안내가 인삿말보다 먼저 보이지 않습니다.
-  useEffect(() => {
-    if (!preselectedPlan || isRestoringHistory) return;
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setMessages((prev) => {
-      const alreadyAdded = prev.some((m) => m.id.startsWith("signup-entry-"));
-      if (alreadyAdded) return prev;
-      return [...prev, createSignupEntryMessage(preselectedPlan, user?.name)];
-    });
-    try {
-      sessionStorage.setItem("signupEntryShown", "1");
-    } catch {
-      /* noop */
-    }
-    // preselectedPlan 객체 자체가 바뀔 때만 실행 (code 기준)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isRestoringHistory, preselectedPlan?.code]);
+  // 가입 인삿말("OO님, OO 요금제를 선택하셨군요!")은 아래쪽의 signup_entry
+  // 관련 effect가 DB 복원 결과까지 함께 고려해 추가합니다. (useAIChat.ts 하단 참고)
 
   const socketRef = useRef<Socket | null>(null);
   // 응답 타임아웃 타이머 (30초 안에 done이 안 오면 에러 처리)
@@ -245,7 +228,10 @@ export function useAIChat({ preselectedPlan }: UseAIChatOptions = {}) {
   const sessionIdRef = useRef<string | null>(null);
   // 현재 수신 중인 AI 응답의 메시지 id. 소켓 이벤트 핸들러에서 어느 말풍선에 쓸지 식별함
   const currentAiMsgIdRef = useRef<string | null>(null);
-  // 킥오프 메시지가 이미 전송됐는지 추적 (중복 전송 방지)
+  // 가입 인삿말을 DB에 저장하는 signup_entry 이벤트를 이미 보낸 요금제 code.
+  // boolean이 아니라 code로 추적해야, 한 번 가입 플로우를 탄 뒤 다른 요금제로
+  // 다시 진입해도 인삿말이 정상적으로 다시 나옴 (마운트 시 DB 복원 결과로도 세팅됨)
+  const signupEntrySentRef = useRef<string | null>(null);
   const isAuthHydrated = useAuthHydrated();
 
   const appendChars = useCallback((messageId: string, chars: string) => {
@@ -401,6 +387,8 @@ export function useAIChat({ preselectedPlan }: UseAIChatOptions = {}) {
           monthlyFee: 0,
         };
         preselectedPlanRef.current = undefined;
+        // 재가입 시 같은 요금제라도 인삿말이 다시 나오도록 초기화
+        signupEntrySentRef.current = null;
         setIsSignupFlowActive(false);
         setCurrentSignupStep(null);
         setSignupCollectedData({});
@@ -499,6 +487,19 @@ export function useAIChat({ preselectedPlan }: UseAIChatOptions = {}) {
           // DB 세션을 복원하고, 선택한 요금제 안내를 그 뒤에 이어 붙입니다.
           if (session && !session.endedAt && dbMessages.length > 0) {
             sessionIdRef.current = session.id;
+            // 같은 요금제의 가입 인삿말이 이미 DB에 저장되어 있다면(=재진입),
+            // signup_entry를 다시 저장하지 않도록 표시해둠. 세션 안에 다른
+            // 요금제로 시도했던 signup_entry가 섞여 있을 수 있으므로 planCode까지 비교함
+            if (
+              signupPlanOnLoad &&
+              dbMessages.some(
+                (m) =>
+                  m.messageType === "signup_entry" &&
+                  m.signupData?.planCode === signupPlanOnLoad.code,
+              )
+            ) {
+              signupEntrySentRef.current = signupPlanOnLoad.code;
+            }
             setMessages([
               WELCOME_MESSAGE,
               ...dbMessages.flatMap((m) => {
@@ -623,25 +624,9 @@ export function useAIChat({ preselectedPlan }: UseAIChatOptions = {}) {
         }
       }
 
-      // 비동기 DB 히스토리 복원이 앞서 추가된 메시지를 덮어쓸 수 있으므로,
-      // 복원 작업의 마지막에 선택 요금제 안내가 반드시 존재하도록 보장합니다.
-      if (signupPlanOnLoad) {
-        setMessages((prev) => {
-          const alreadyAdded = prev.some((message) =>
-            message.id.startsWith("signup-entry-"),
-          );
-          if (alreadyAdded) return prev;
-          return [
-            ...prev,
-            createSignupEntryMessage(signupPlanOnLoad, user?.name),
-          ];
-        });
-      }
-
       setIsRestoringHistory(false);
 
       // 대화 내역 복원 후 소켓을 미리 연결해 첫 메시지 응답 속도를 개선함
-      // 가입 플로우: openSocket 안에서 session_created 이벤트가 오면 킥오프 자동 전송
       openSocket();
     }
 
@@ -814,52 +799,55 @@ export function useAIChat({ preselectedPlan }: UseAIChatOptions = {}) {
     [emitMessage, signupCollectedData, clearResponseTimeout, typewriter],
   );
 
-  // 요금제 상세에서 AI 가입/변경을 선택하면 별도 사용자 입력 없이 가입 플로우를
-  // 시작합니다. 숨은 킥오프 메시지는 백엔드에서 사용자 메시지로 저장하지 않습니다.
-  const hasSignupEntryMessage = messages.some((message) =>
-    message.id.startsWith("signup-entry-"),
-  );
-
+  // 요금제 상세에서 AI 가입/변경을 선택하면 가입 인삿말("OO님, OO 요금제를
+  // 선택하셨군요! 지금 가입을 도와드릴까요?")을 보여주고 진행 확인 퀵답변을
+  // 띄웁니다. 예전에는 500ms 뒤 자동으로 다음 단계까지 넘어갔지만, 이제는
+  // 사용자가 실제로 답장(퀵답변 클릭 포함)을 보내야만 다음 단계로 진행합니다.
   useEffect(() => {
     if (
       !preselectedPlan ||
       !isLoggedIn ||
       isRestoringHistory ||
-      !hasSignupEntryMessage ||
       currentSignupStep ||
       isSignupComplete
     ) {
       return;
     }
 
-    try {
-      if (
-        sessionStorage.getItem("signupKickoffSent") === preselectedPlan.code
-      ) {
-        return;
-      }
-    } catch {
-      /* noop */
+    // 같은 요금제로 인삿말이 이미 있다면(DB 복원 포함) 다시 추가하지 않고,
+    // 새로고침으로 초기화된 진행 확인 퀵답변만 다시 보여줌
+    if (signupEntrySentRef.current === preselectedPlan.code) {
+      setQuickReplies((prev) => (prev.length > 0 ? prev : ["네, 진행할게요"]));
+      return;
     }
+    signupEntrySentRef.current = preselectedPlan.code;
 
-    const kickoffTimer = window.setTimeout(() => {
-      try {
-        sessionStorage.setItem("signupKickoffSent", preselectedPlan.code);
-      } catch {
-        /* noop */
-      }
-      sendMessageSilent("가입 절차를 시작해 주세요.", { isKickoff: true });
-    }, 500);
+    const entryMessage = createSignupEntryMessage(preselectedPlan, user?.name);
+    setMessages((prev) => [...prev, entryMessage]);
+    setQuickReplies(["네, 진행할게요"]);
 
-    return () => window.clearTimeout(kickoffTimer);
+    // 화면에 보여준 인삿말을 그대로 DB에도 저장해, 새로고침해도 실제 대화
+    // 내역에서 자연스럽게 복원되도록 함 (LLM 호출 없이 텍스트만 기록)
+    const persistEntry = () =>
+      socketRef.current?.emit("signup_entry", {
+        text: entryMessage.text,
+        planCode: preselectedPlan.code,
+      });
+    openSocket();
+    if (socketRef.current?.connected) {
+      persistEntry();
+    } else {
+      socketRef.current?.once("connect", persistEntry);
+    }
+    // preselectedPlan 객체(code) 자체가 바뀔 때만 실행하면 되므로 user는 의도적으로 제외
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
-    currentSignupStep,
+    preselectedPlan,
     isLoggedIn,
     isRestoringHistory,
+    currentSignupStep,
     isSignupComplete,
-    hasSignupEntryMessage,
-    preselectedPlan,
-    sendMessageSilent,
+    openSocket,
   ]);
 
   const closeGuestLimitModal = useCallback(() => {
@@ -890,6 +878,7 @@ export function useAIChat({ preselectedPlan }: UseAIChatOptions = {}) {
     openSocket();
 
     preselectedPlanRef.current = undefined;
+    signupEntrySentRef.current = null;
     setIsSignupFlowActive(false);
     setCurrentSignupStep(null);
     setSignupCollectedData({});
