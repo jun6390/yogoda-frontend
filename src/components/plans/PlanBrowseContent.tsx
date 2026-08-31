@@ -11,11 +11,28 @@ import { Chip } from "@/components/ui/Chip/Chip";
 import { Input } from "@/components/ui/Input/Input";
 import { PlanRow } from "@/components/ui/PlanRow/PlanRow";
 import { Select } from "@/components/ui/Select/Select";
+import { usageReport } from "@/data/usageReport";
 import { getComparedPlans, getCurrentPlan, getPlans } from "@/lib/api/plan";
 import { useAuthStore } from "@/stores/useAuthStore";
+import type { Plan } from "@/types/plan";
 
 type PlanCategory = "popular" | "all" | "unlimited";
-type PlanSort = "default" | "priceHigh" | "priceLow";
+type PlanSort = "default" | "fit" | "priceHigh" | "priceLow";
+
+const averageUsageMb =
+  (usageReport.history.reduce((sum, item) => sum + item.amount, 0) /
+    usageReport.history.length) *
+  1024;
+const usageWithBufferMb = averageUsageMb * 1.15;
+
+function getUsageFitRank(plan: Plan) {
+  const allowance = plan.data.amountMb;
+
+  if (allowance === null) return Number.MAX_SAFE_INTEGER / 2;
+  if (allowance >= usageWithBufferMb) return allowance - usageWithBufferMb;
+
+  return Number.MAX_SAFE_INTEGER / 4 + (usageWithBufferMb - allowance);
+}
 
 export function PlanBrowseContent() {
   const t = useTranslations("Plans");
@@ -96,6 +113,12 @@ export function PlanBrowseContent() {
       return [...nextPlans].sort((a, b) => a.monthlyFee - b.monthlyFee);
     }
 
+    if (activeSort === "fit") {
+      return [...nextPlans].sort(
+        (a, b) => getUsageFitRank(a) - getUsageFitRank(b),
+      );
+    }
+
     return nextPlans;
   }, [activeCategory, activeSort, deferredKeyword, locale, plans]);
 
@@ -119,6 +142,9 @@ export function PlanBrowseContent() {
 
   const sortOptions: { value: PlanSort; label: string }[] = [
     { value: "default", label: t("sortDefault") },
+    ...(accessToken
+      ? ([{ value: "fit", label: t("sortUsageFit") }] as const)
+      : []),
     { value: "priceHigh", label: t("filterPriceHigh") },
     { value: "priceLow", label: t("filterPriceLow") },
   ];

@@ -75,10 +75,12 @@ export function CallbackHandler({ provider }: CallbackHandlerProps) {
           await importGuestChatSession({ sessionId: guestSessionId });
         } catch (err) {
           console.error("게스트 대화 내역 이관 실패:", err);
-        } finally {
-          useChatHistoryStore.getState().clearMessages();
         }
       }
+
+      // 로그인 후에는 게스트 세션 이관 여부와 무관하게 항상 로컬 채팅 데이터를 삭제함
+      // (다른 사용자가 같은 기기에서 로그인할 때 이전 게스트 데이터가 노출되는 것을 방지)
+      useChatHistoryStore.getState().clearMessages();
 
       // AI 채팅 화면에서 로그인하러 온 경우에만 그 화면으로 되돌아가고,
       // 그 외에는 기존과 동일하게 홈으로 이동함

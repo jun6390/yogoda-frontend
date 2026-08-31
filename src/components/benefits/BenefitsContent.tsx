@@ -25,6 +25,7 @@ import type { Benefit, BenefitFilter } from "@/types/benefit";
 
 const subscribe = () => () => {};
 const filters: BenefitFilter[] = ["all", "membership", "partner", "discount"];
+const BENEFITS_PER_PAGE = 6;
 
 function useHydrated() {
   return useSyncExternalStore(
@@ -41,6 +42,7 @@ export function BenefitsContent() {
   const [filter, setFilter] = useState<BenefitFilter>("all");
   const [selectedBenefit, setSelectedBenefit] = useState<Benefit | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [visibleCount, setVisibleCount] = useState(BENEFITS_PER_PAGE);
   const isLoggedIn = hydrated && Boolean(accessToken);
 
   useEffect(() => {
@@ -80,7 +82,10 @@ export function BenefitsContent() {
               type="button"
               role="tab"
               aria-selected={filter === item}
-              onClick={() => setFilter(item)}
+              onClick={() => {
+                setFilter(item);
+                setVisibleCount(BENEFITS_PER_PAGE);
+              }}
               className={cn(
                 "h-[36px] shrink-0 rounded-full border px-lg font-sans text-caption-13-bold transition-colors",
                 filter === item
@@ -126,46 +131,59 @@ export function BenefitsContent() {
               )}
             </div>
             <div className="space-y-xl">
-              {benefitQuery.data.benefits.map((benefit) => (
-                <button
-                  key={benefit.code}
-                  type="button"
-                  onClick={() => setSelectedBenefit(benefit)}
-                  className="block w-full text-left"
+              {benefitQuery.data.benefits
+                .slice(0, visibleCount)
+                .map((benefit) => (
+                  <button
+                    key={benefit.code}
+                    type="button"
+                    onClick={() => setSelectedBenefit(benefit)}
+                    className="block w-full text-left"
+                  >
+                    <BenefitRow
+                      iconClassName="size-[40px] bg-transparent"
+                      iconLabel={
+                        <BrandLogo
+                          brand={
+                            resolveBrandLogoName(
+                              benefit.brand,
+                              benefit.partner,
+                              benefit.title,
+                            ) ?? "U+"
+                          }
+                          className="size-[40px]"
+                        />
+                      }
+                      name={benefit.title}
+                      description={benefit.summary}
+                      value={
+                        <span
+                          className={cn(
+                            "flex items-center gap-xs",
+                            benefit.eligible
+                              ? "text-success"
+                              : "text-text-tertiary",
+                          )}
+                        >
+                          {benefit.eligible ? t("available") : t("unavailable")}
+                          <ChevronRight aria-hidden="true" size={18} />
+                        </span>
+                      }
+                      className="max-w-none"
+                    />
+                  </button>
+                ))}
+              {visibleCount < benefitQuery.data.benefits.length && (
+                <Button
+                  variant="secondary"
+                  onClick={() =>
+                    setVisibleCount((count) => count + BENEFITS_PER_PAGE)
+                  }
+                  className="h-[44px] w-full py-0 text-label-14-bold"
                 >
-                  <BenefitRow
-                    iconClassName="size-[40px] bg-transparent"
-                    iconLabel={
-                      <BrandLogo
-                        brand={
-                          resolveBrandLogoName(
-                            benefit.brand,
-                            benefit.partner,
-                            benefit.title,
-                          ) ?? "U+"
-                        }
-                        className="size-[40px]"
-                      />
-                    }
-                    name={benefit.title}
-                    description={benefit.summary}
-                    value={
-                      <span
-                        className={cn(
-                          "flex items-center gap-xs",
-                          benefit.eligible
-                            ? "text-success"
-                            : "text-text-tertiary",
-                        )}
-                      >
-                        {benefit.eligible ? t("available") : t("unavailable")}
-                        <ChevronRight aria-hidden="true" size={18} />
-                      </span>
-                    }
-                    className="max-w-none"
-                  />
-                </button>
-              ))}
+                  {t("loadMore")}
+                </Button>
+              )}
             </div>
           </section>
         ) : (

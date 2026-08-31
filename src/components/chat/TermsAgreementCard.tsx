@@ -143,7 +143,7 @@ export function TermsAgreementCard({ onAgree }: TermsAgreementCardProps) {
 
   return (
     <>
-      <div className="w-[290px] rounded-lg border border-border-default bg-surface p-lg flex flex-col gap-md shadow-sm">
+      <div className="w-full rounded-[12px] rounded-tl-[4px] border border-border-default bg-surface p-lg flex flex-col gap-md shadow-sm">
         <div className="flex items-center justify-between">
           <strong className="font-sans text-caption-13-bold text-text-primary">
             약관 동의 안내
@@ -177,7 +177,7 @@ export function TermsAgreementCard({ onAgree }: TermsAgreementCardProps) {
         </div>
 
         <Button
-          className="w-full h-[36px] py-0 text-caption-13-bold"
+          className="w-full"
           onClick={handleAgree}
           disabled={!allRequiredChecked}
         >

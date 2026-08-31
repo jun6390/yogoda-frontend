@@ -1,8 +1,16 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ChevronRight, Heart, List, LocateFixed, Map, X } from "lucide-react";
+import {
+  ChevronRight,
+  Heart,
+  List,
+  LocateFixed,
+  Map,
+  RefreshCw,
+  X,
+} from "lucide-react";
 import { useTranslations } from "next-intl";
 
 import { BenefitsSubNav } from "./BenefitsSubNav";
@@ -20,6 +28,14 @@ export function NearbyBenefitsContent() {
   const queryClient = useQueryClient();
   const [selectedId, setSelectedId] = useState<string>();
   const [userLocation, setUserLocation] = useState<{
+    latitude: number;
+    longitude: number;
+  }>();
+  const [mapCenter, setMapCenter] = useState<{
+    latitude: number;
+    longitude: number;
+  }>();
+  const [searchedMapCenter, setSearchedMapCenter] = useState<{
     latitude: number;
     longitude: number;
   }>();
@@ -73,14 +89,37 @@ export function NearbyBenefitsContent() {
   const requestLocation = () => {
     setLocationError(false);
     navigator.geolocation.getCurrentPosition(
-      ({ coords }) =>
-        setUserLocation({
+      ({ coords }) => {
+        const nextLocation = {
           latitude: coords.latitude,
           longitude: coords.longitude,
-        }),
+        };
+        setUserLocation(nextLocation);
+        setMapCenter(nextLocation);
+        setSearchedMapCenter(nextLocation);
+      },
       () => setLocationError(true),
       { enableHighAccuracy: false, timeout: 8000 },
     );
+  };
+  const handleMapCenterChange = useCallback(
+    (nextCenter: { latitude: number; longitude: number }) => {
+      setMapCenter(nextCenter);
+      setSearchedMapCenter((current) => current ?? nextCenter);
+    },
+    [],
+  );
+  const hasMovedMap =
+    mapCenter &&
+    searchedMapCenter &&
+    (Math.abs(mapCenter.latitude - searchedMapCenter.latitude) > 0.0001 ||
+      Math.abs(mapCenter.longitude - searchedMapCenter.longitude) > 0.0001);
+
+  const searchCurrentMapArea = () => {
+    if (!mapCenter) return;
+    setSelectedId(undefined);
+    setUserLocation(mapCenter);
+    setSearchedMapCenter(mapCenter);
   };
 
   return (
@@ -184,11 +223,22 @@ export function NearbyBenefitsContent() {
               locations={mapLocations}
               selectedId={selected?.id}
               onSelect={setSelectedId}
+              onCenterChange={handleMapCenterChange}
               center={userLocation}
               className="h-[440px]"
               errorTitle={t("mapError")}
               errorDescription={t("mapErrorDescription")}
             />
+            {hasMovedMap && (
+              <button
+                type="button"
+                onClick={searchCurrentMapArea}
+                className="absolute left-md top-md z-[210] flex min-h-[40px] items-center gap-sm rounded-full border border-border-default bg-surface px-lg font-sans text-caption-13-bold text-text-primary shadow-md focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-action-primary"
+              >
+                <RefreshCw aria-hidden="true" size={16} />
+                {t("searchThisArea")}
+              </button>
+            )}
             {selected && (
               <article className="absolute inset-x-md bottom-md z-[200] rounded-lg border border-border-default bg-surface p-lg pr-[52px] shadow-lg">
                 <button

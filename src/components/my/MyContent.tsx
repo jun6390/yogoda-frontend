@@ -37,6 +37,7 @@ interface ManagementRowProps {
     | "/my/benefits"
     | "/my/coupons"
     | "/my/points"
+    | "/my/subscriptions"
     | "/my/stores";
   emphasized?: boolean;
 }
@@ -233,6 +234,11 @@ export function MyContent() {
               label={t("couponWallet")}
               value={t("viewCoupons")}
               href="/my/coupons"
+            />
+            <ManagementRow
+              label={t("subscriptions")}
+              value={t("manageSubscriptions")}
+              href="/my/subscriptions"
             />
             <ManagementRow
               label={t("manageBenefits")}

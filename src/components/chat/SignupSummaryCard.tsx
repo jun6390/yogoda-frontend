@@ -26,6 +26,18 @@ export function SignupSummaryCard({
     return `${birth.slice(0, 4)}.${birth.slice(4, 6)}.${birth.slice(6, 8)}`;
   };
 
+  const benefitEntries = signupData.selectedBenefits
+    ? Object.entries(signupData.selectedBenefits)
+    : [];
+
+  // 혜택을 하나의 문자열로 합쳐서 행으로 표시
+  const benefitValue =
+    benefitEntries.length > 0
+      ? benefitEntries
+          .map(([, items]) => (Array.isArray(items) ? items.join(", ") : items))
+          .join(" / ")
+      : undefined;
+
   const rows: SummaryRow[] = [
     { label: "요금제", value: plan?.name },
     {
@@ -34,19 +46,16 @@ export function SignupSummaryCard({
         ? `${plan.monthlyFee.toLocaleString()}원`
         : undefined,
     },
+    { label: "선택 혜택", value: benefitValue },
     { label: "이름", value: signupData.name },
     { label: "생년월일", value: formatBirth(signupData.birth) },
     { label: "결제 수단", value: signupData.paymentMethod },
   ];
 
-  const benefitEntries = signupData.selectedBenefits
-    ? Object.entries(signupData.selectedBenefits)
-    : [];
-
   const visibleRows = rows.filter(({ value }) => !!value);
 
   return (
-    <div className="w-[290px] rounded-xl border border-border-default bg-surface shadow-sm overflow-hidden">
+    <div className="w-full rounded-[12px] rounded-tl-[4px] border border-border-default bg-surface shadow-sm overflow-hidden">
       {/* 헤더 */}
       <div className="flex items-center gap-xs px-lg pt-md pb-sm border-b border-border-default">
         <CheckCircle2 size={13} className="text-action-primary shrink-0" />
@@ -55,7 +64,7 @@ export function SignupSummaryCard({
         </strong>
       </div>
 
-      {/* 기본 정보 */}
+      {/* 가입 정보 목록 */}
       <div className="flex flex-col px-lg py-md gap-sm">
         {visibleRows.map(({ label, value }) => (
           <div key={label} className="flex items-center justify-between gap-md">
@@ -63,7 +72,7 @@ export function SignupSummaryCard({
               {label}
             </span>
             <span
-              className="font-sans text-caption-12-bold text-text-primary text-right truncate"
+              className="font-sans text-caption-12-bold text-text-primary text-right"
               style={{ maxWidth: "160px" }}
             >
               {value}
@@ -71,28 +80,6 @@ export function SignupSummaryCard({
           </div>
         ))}
       </div>
-
-      {/* 선택 혜택 */}
-      {benefitEntries.length > 0 && (
-        <div className="flex flex-col gap-sm px-lg pb-md border-t border-border-default pt-sm">
-          <span className="font-sans text-[10px] text-text-tertiary font-medium">
-            선택 혜택
-          </span>
-          {benefitEntries.map(([category, items]) => (
-            <div
-              key={category}
-              className="flex items-start justify-between gap-sm"
-            >
-              <span className="font-sans text-[11px] text-text-tertiary shrink-0">
-                {category}
-              </span>
-              <span className="font-sans text-[11px] text-text-primary text-right">
-                {Array.isArray(items) ? items.join(", ") : items}
-              </span>
-            </div>
-          ))}
-        </div>
-      )}
     </div>
   );
 }

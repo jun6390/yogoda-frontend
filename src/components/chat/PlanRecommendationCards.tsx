@@ -115,8 +115,8 @@ export function PlanRecommendationCards({
               )}
 
               <Button
-                variant="secondary"
-                className="w-full h-[40px]"
+                variant="primary"
+                className="w-full"
                 onClick={() => router.push(`/plans/${plan.code}?from=chat`)}
               >
                 {t("selectBtn")}
