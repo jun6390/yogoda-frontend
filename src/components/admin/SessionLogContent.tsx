@@ -11,6 +11,7 @@ import { ErrorState } from "@/components/ui/ErrorState/ErrorState";
 import { Button } from "@/components/admin/Button";
 import { DateRangePicker } from "@/components/admin/DateRangePicker";
 import { Select } from "@/components/admin/Select";
+import { ChatMarkdown } from "@/components/ui/ChatMarkdown/ChatMarkdown";
 import { ApiError } from "@/lib/api/client";
 import { getSessionDetail, getSessions } from "@/lib/api/admin/session";
 import { formatDateTime, formatDuration } from "@/lib/admin/format";
@@ -348,29 +349,35 @@ export function SessionLogContent() {
               </header>
 
               <div className="mt-md flex flex-1 flex-col gap-md overflow-y-auto">
-                {detail.messages.map((message) => (
-                  <div
-                    key={message.messageId}
-                    className={cn(
-                      "flex flex-col gap-xs",
-                      message.sender === "user" ? "items-end" : "items-start",
-                    )}
-                  >
+                {detail.messages
+                  .filter((message) => message.content.trim() !== "")
+                  .map((message) => (
                     <div
+                      key={message.messageId}
                       className={cn(
-                        "max-w-[75%] whitespace-pre-line rounded-lg px-md py-sm font-sans text-body-14-regular",
-                        message.sender === "user"
-                          ? "bg-brand-soft text-text-primary"
-                          : "border border-border-default bg-background text-text-primary",
+                        "flex flex-col gap-xs",
+                        message.sender === "user" ? "items-end" : "items-start",
                       )}
                     >
-                      {message.content}
+                      <div
+                        className={cn(
+                          "max-w-[75%] whitespace-pre-line rounded-lg px-md py-sm font-sans text-body-14-regular",
+                          message.sender === "user"
+                            ? "bg-brand-soft text-text-primary"
+                            : "border border-border-default bg-background text-text-primary",
+                        )}
+                      >
+                        {message.sender === "ai" ? (
+                          <ChatMarkdown>{message.content}</ChatMarkdown>
+                        ) : (
+                          message.content
+                        )}
+                      </div>
+                      <span className="font-sans text-caption-12-regular text-text-tertiary">
+                        {formatDateTime(message.createdAt)}
+                      </span>
                     </div>
-                    <span className="font-sans text-caption-12-regular text-text-tertiary">
-                      {formatDateTime(message.createdAt)}
-                    </span>
-                  </div>
-                ))}
+                  ))}
               </div>
             </>
           )}
