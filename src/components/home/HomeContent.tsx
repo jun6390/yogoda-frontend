@@ -19,10 +19,10 @@ import { HomeBannerCarousel } from "@/components/home/HomeBannerCarousel";
 import { PageContainer } from "@/components/layout/PageContainer";
 import { CurrentPlanSummaryCard } from "@/components/plans/CurrentPlanSummaryCard";
 import { ErrorState } from "@/components/ui/ErrorState/ErrorState";
-import { usageReport } from "@/data/usageReport";
 import { ApiError } from "@/lib/api/client";
 import { getMyCoupons } from "@/lib/api/coupon";
 import { getCurrentPlan, getPlanByCode } from "@/lib/api/plan";
+import { getMyUsageReport } from "@/lib/api/usage";
 import { Link, useRouter } from "@/i18n/navigation";
 import { useAuthStore } from "@/stores/useAuthStore";
 
@@ -135,6 +135,13 @@ export function HomeContent() {
     retry: false,
   });
 
+  const usageQuery = useQuery({
+    queryKey: ["my-usage-report"],
+    queryFn: getMyUsageReport,
+    enabled: Boolean(accessToken && currentPlan),
+    retry: false,
+  });
+
   const numberFormatter = new Intl.NumberFormat(locale);
   const joinedAt = currentPlan?.joinedAt;
   const joinedAtLabel = joinedAt
@@ -209,26 +216,53 @@ export function HomeContent() {
 
   const todoCount = t("todoCount", { count: todoItems.length });
 
-  const usageRate = Math.min(
-    100,
-    Math.round((usageReport.dataUsed / usageReport.dataLimit) * 100),
-  );
+  const usageReport = usageQuery.data;
+  const usageRate = usageReport
+    ? Math.min(
+        100,
+        Math.round((usageReport.dataUsed / usageReport.dataLimit) * 100),
+      )
+    : 0;
   const remainingData = Math.max(
     0,
-    usageReport.dataLimit - usageReport.dataUsed,
+    (usageReport?.dataLimit ?? 0) - (usageReport?.dataUsed ?? 0),
   );
   const remainingDataLabel = numberFormatter.format(
     Number(remainingData.toFixed(1)),
   );
+  const usageDataLabel = usageReport
+    ? t("analysisDataAmount", {
+        amount: numberFormatter.format(usageReport.dataUsed),
+      })
+    : t("usageChecking");
+  const usageLimitLabel = usageReport
+    ? t("dataSummaryLimit", {
+        amount: numberFormatter.format(usageReport.dataLimit),
+      })
+    : t("usageChecking");
 
   const analysisAmount = hasCurrentPlan
-    ? t("analysisSavingsAmount", {
-        amount: numberFormatter.format(usageReport.potentialSavings),
-      })
+    ? usageQuery.isPending
+      ? t("usageChecking")
+      : usageQuery.isError || !usageReport
+        ? t("usageCheckRequired")
+        : usageReport.changeRate <= -20
+          ? t("patternDecreaseAmount", {
+              rate: Math.abs(usageReport.changeRate),
+            })
+          : t("patternAverageAmount", {
+              amount: numberFormatter.format(usageReport.recentAverage),
+            })
     : t("noPlanBillingAmount");
 
   const analysisDescription = hasCurrentPlan
-    ? t("analysisSavingsDescription")
+    ? usageQuery.isPending
+      ? t("usageCheckingDescription")
+      : usageQuery.isError || !usageReport
+        ? t("usageLoadError")
+        : usageReport.changeRate <= -20
+          ? t("patternDecreaseDescription")
+          : t("patternAverageDescription")
     : t("noPlanBillingDescription");
 
   const couponCount = hasCurrentPlan
@@ -297,15 +331,10 @@ export function HomeContent() {
               </h2>
               <p className="flex shrink-0 items-baseline gap-xs">
                 <strong className="font-sans text-title-24-bold text-text-primary">
-                  {t("analysisDataAmount", {
-                    amount: numberFormatter.format(usageReport.dataUsed),
-                  })}
+                  {usageDataLabel}
                 </strong>
                 <span className="font-sans text-caption-12-regular text-text-secondary">
-                  /{" "}
-                  {t("dataSummaryLimit", {
-                    amount: numberFormatter.format(usageReport.dataLimit),
-                  })}
+                  / {usageLimitLabel}
                 </span>
               </p>
             </div>
@@ -319,12 +348,16 @@ export function HomeContent() {
 
             <div className="mt-sm flex items-center justify-between gap-lg font-sans text-caption-12-regular">
               <span className="text-text-secondary">
-                {t("dataSummaryUsageRate", { rate: usageRate })}
+                {usageReport
+                  ? t("dataSummaryUsageRate", { rate: usageRate })
+                  : t("usageCheckingDescription")}
               </span>
               <strong className="text-success">
-                {t("dataSummaryRemainingData", {
-                  amount: remainingDataLabel,
-                })}
+                {usageReport
+                  ? t("dataSummaryRemainingData", {
+                      amount: remainingDataLabel,
+                    })
+                  : t("usageChecking")}
               </strong>
             </div>
           </section>
