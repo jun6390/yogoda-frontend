@@ -111,8 +111,8 @@ export function PlanRow({
         {href && (
           <ChevronRight
             aria-hidden="true"
-            size={20}
-            className="shrink-0 text-text-primary"
+            size={18}
+            className="shrink-0 text-icon-secondary"
           />
         )}
       </div>
@@ -121,7 +121,10 @@ export function PlanRow({
 
   return (
     <div
-      className={cn("w-full overflow-hidden rounded-lg bg-surface", className)}
+      className={cn(
+        "w-full overflow-hidden rounded-lg border border-border-default bg-surface shadow-sm",
+        className,
+      )}
       {...props}
     >
       {href ? (

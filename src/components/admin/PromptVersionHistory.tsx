@@ -3,7 +3,7 @@
 import { useState } from "react";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { RotateCcw } from "lucide-react";
+import { ChevronLeft, ChevronRight, RotateCcw, X } from "lucide-react";
 
 import { Badge } from "@/components/ui/Badge/Badge";
 import { ErrorState } from "@/components/ui/ErrorState/ErrorState";
@@ -12,6 +12,7 @@ import { Modal } from "@/components/admin/Modal";
 import { ApiError } from "@/lib/api/client";
 import {
   activatePromptVersion,
+  getPromptDetail,
   getPromptHistory,
 } from "@/lib/api/admin/prompt";
 import { formatDateTime } from "@/lib/admin/format";
@@ -23,14 +24,63 @@ interface PendingRollback {
   version: string;
 }
 
+const PAGE_SIZE = 10;
+
+// 페이지가 많아지면 전부 나열하지 않고 현재 페이지 주변 + 처음/끝만 보여주고
+// 나머지는 "…"으로 생략함 (예: 1 … 4 5 [6] 7 8 … 15)
+function getPageNumbers(
+  current: number,
+  total: number,
+): (number | "ellipsis")[] {
+  if (total <= 7) {
+    return Array.from({ length: total }, (_, i) => i + 1);
+  }
+
+  const pages: (number | "ellipsis")[] = [1];
+
+  if (current > 3) {
+    pages.push("ellipsis");
+  }
+
+  const start = Math.max(2, current - 1);
+  const end = Math.min(total - 1, current + 1);
+  for (let i = start; i <= end; i += 1) {
+    pages.push(i);
+  }
+
+  if (current < total - 2) {
+    pages.push("ellipsis");
+  }
+
+  pages.push(total);
+
+  return pages;
+}
+
 export function PromptVersionHistory() {
   const queryClient = useQueryClient();
   const [pendingRollback, setPendingRollback] =
     useState<PendingRollback | null>(null);
+  const [page, setPage] = useState(1);
+  const [viewingVersionId, setViewingVersionId] = useState<string | null>(null);
 
   const { data, isPending, isError, error, refetch } = useQuery({
-    queryKey: ADMIN_PROMPT_QUERY_KEYS.history,
-    queryFn: getPromptHistory,
+    queryKey: ADMIN_PROMPT_QUERY_KEYS.history({ page, limit: PAGE_SIZE }),
+    queryFn: () => getPromptHistory({ page, limit: PAGE_SIZE }),
+  });
+
+  const totalPages = data
+    ? Math.max(1, Math.ceil(data.totalCount / PAGE_SIZE))
+    : 1;
+
+  const {
+    data: viewingDetail,
+    isPending: isDetailPending,
+    isError: isDetailError,
+  } = useQuery({
+    queryKey: ADMIN_PROMPT_QUERY_KEYS.detail(viewingVersionId ?? ""),
+    queryFn: () => getPromptDetail(viewingVersionId!),
+    enabled: Boolean(viewingVersionId),
   });
 
   const rollbackMutation = useMutation({
@@ -41,7 +91,7 @@ export function PromptVersionHistory() {
         queryKey: ADMIN_PROMPT_QUERY_KEYS.active,
       });
       queryClient.invalidateQueries({
-        queryKey: ADMIN_PROMPT_QUERY_KEYS.history,
+        queryKey: ADMIN_PROMPT_QUERY_KEYS.history(),
       });
     },
   });
@@ -59,10 +109,18 @@ export function PromptVersionHistory() {
   };
 
   return (
-    <section className="mt-xl rounded-lg border border-border-default bg-surface p-lg">
-      <h2 className="font-sans text-title-18-bold text-text-primary">
-        버전 히스토리
-      </h2>
+    <section className="mt-2xl rounded-lg border border-border-default bg-surface p-2xl">
+      <div className="flex items-center justify-between gap-md">
+        <h2 className="font-sans text-title-18-bold text-text-primary">
+          버전 히스토리
+        </h2>
+
+        {data && (
+          <p className="shrink-0 font-sans text-caption-12-regular text-text-tertiary">
+            총 {data.totalCount.toLocaleString("ko-KR")}개
+          </p>
+        )}
+      </div>
 
       <div className="mt-lg">
         {isPending && (
@@ -107,9 +165,10 @@ export function PromptVersionHistory() {
                 {data.versions.map((version) => (
                   <tr
                     key={version.versionId}
+                    onClick={() => setViewingVersionId(version.versionId)}
                     className={cn(
-                      "border-b border-border-default last:border-b-0",
-                      version.isActive && "bg-brand-soft",
+                      "cursor-pointer border-b border-border-default transition-colors last:border-b-0 hover:bg-surface-subtle",
+                      version.isActive && "bg-brand-soft hover:bg-brand-soft",
                     )}
                   >
                     <td className="whitespace-nowrap px-sm py-md font-sans text-label-14-bold text-text-primary">
@@ -148,7 +207,10 @@ export function PromptVersionHistory() {
                       )}
                     </td>
 
-                    <td className="whitespace-nowrap px-sm py-md text-right">
+                    <td
+                      className="whitespace-nowrap px-sm py-md text-right"
+                      onClick={(event) => event.stopPropagation()}
+                    >
                       {version.isActive ? (
                         <span className="font-sans text-caption-12-regular text-text-tertiary">
                           현재 버전
@@ -156,7 +218,7 @@ export function PromptVersionHistory() {
                       ) : (
                         <Button
                           variant="text"
-                          className="px-sm py-xs text-caption-12-bold"
+                          className="px-sm py-xs text-caption-12-bold text-text-secondary hover:bg-surface-subtle hover:text-text-primary"
                           loading={rollingBackVersionId === version.versionId}
                           loadingLabel="되돌리는 중..."
                           disabled={rollbackMutation.isPending}
@@ -175,6 +237,61 @@ export function PromptVersionHistory() {
                 ))}
               </tbody>
             </table>
+          </div>
+        )}
+
+        {data && data.totalCount > 0 && (
+          <div className="mt-md flex justify-center">
+            <div className="flex shrink-0 items-center gap-xs">
+              <button
+                type="button"
+                aria-label="이전 페이지"
+                disabled={page <= 1}
+                onClick={() => setPage((prev) => Math.max(1, prev - 1))}
+                className="flex size-9 items-center justify-center rounded-md text-text-secondary transition-colors hover:bg-surface-subtle disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent"
+              >
+                <ChevronLeft aria-hidden="true" size={16} />
+              </button>
+
+              {getPageNumbers(page, totalPages).map((pageNumber, index) =>
+                pageNumber === "ellipsis" ? (
+                  <span
+                    key={`ellipsis-${index}`}
+                    className="flex size-9 items-center justify-center font-sans text-caption-12-regular text-text-tertiary"
+                  >
+                    …
+                  </span>
+                ) : (
+                  <button
+                    key={pageNumber}
+                    type="button"
+                    aria-label={`${pageNumber}페이지로 이동`}
+                    aria-current={pageNumber === page ? "page" : undefined}
+                    onClick={() => setPage(pageNumber)}
+                    className={cn(
+                      "flex size-9 items-center justify-center rounded-md font-sans text-caption-12-bold transition-colors",
+                      pageNumber === page
+                        ? "bg-surface-subtle text-text-primary"
+                        : "text-text-secondary hover:bg-surface-subtle",
+                    )}
+                  >
+                    {pageNumber}
+                  </button>
+                ),
+              )}
+
+              <button
+                type="button"
+                aria-label="다음 페이지"
+                disabled={page >= totalPages}
+                onClick={() =>
+                  setPage((prev) => Math.min(totalPages, prev + 1))
+                }
+                className="flex size-9 items-center justify-center rounded-md text-text-secondary transition-colors hover:bg-surface-subtle disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent"
+              >
+                <ChevronRight aria-hidden="true" size={16} />
+              </button>
+            </div>
           </div>
         )}
 
@@ -204,6 +321,85 @@ export function PromptVersionHistory() {
             onPrimaryClick={handleConfirmRollback}
             onSecondaryClick={() => setPendingRollback(null)}
           />
+        </div>
+      )}
+
+      {viewingVersionId && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-lg"
+          onMouseDown={() => setViewingVersionId(null)}
+        >
+          <div
+            onMouseDown={(event) => event.stopPropagation()}
+            className="flex max-h-[80vh] w-full max-w-160 flex-col rounded-lg bg-surface p-2xl shadow-md"
+          >
+            <div className="flex items-center justify-between gap-md border-b border-border-default pb-lg">
+              <div className="flex items-center gap-sm">
+                <h3 className="font-sans text-title-18-bold text-text-primary">
+                  {viewingDetail?.version ?? "프롬프트 상세"}
+                </h3>
+                {viewingDetail?.isActive && (
+                  <Badge variant="accent">운영중</Badge>
+                )}
+              </div>
+              <button
+                type="button"
+                aria-label="닫기"
+                onClick={() => setViewingVersionId(null)}
+                className="flex size-touch shrink-0 items-center justify-center text-text-secondary"
+              >
+                <X aria-hidden="true" size={20} />
+              </button>
+            </div>
+
+            {isDetailPending && (
+              <p className="mt-lg font-sans text-body-14-regular text-text-secondary">
+                불러오는 중이에요...
+              </p>
+            )}
+
+            {isDetailError && (
+              <p className="mt-lg font-sans text-caption-12-regular text-error">
+                프롬프트 상세를 불러오지 못했어요.
+              </p>
+            )}
+
+            {viewingDetail && (
+              <>
+                <div className="mt-lg">
+                  <p className="font-sans text-caption-12-regular text-text-tertiary">
+                    {formatDateTime(viewingDetail.deployedAt)} ·{" "}
+                    {viewingDetail.deployedBy}
+                  </p>
+                  <p className="mt-xs font-sans text-body-14-regular text-text-secondary">
+                    {viewingDetail.summary}
+                  </p>
+                </div>
+
+                <pre className="mt-lg flex-1 overflow-y-auto whitespace-pre-wrap rounded-md border border-border-default bg-background p-md font-sans text-body-14-regular text-text-primary">
+                  {viewingDetail.content}
+                </pre>
+
+                {!viewingDetail.isActive && (
+                  <div className="mt-lg flex justify-end">
+                    <Button
+                      variant="secondary"
+                      className="h-[40px] rounded-md px-lg py-0 text-label-14-bold"
+                      onClick={() => {
+                        setPendingRollback({
+                          versionId: viewingDetail.versionId,
+                          version: viewingDetail.version,
+                        });
+                        setViewingVersionId(null);
+                      }}
+                    >
+                      이 버전으로 되돌리기
+                    </Button>
+                  </div>
+                )}
+              </>
+            )}
+          </div>
         </div>
       )}
     </section>

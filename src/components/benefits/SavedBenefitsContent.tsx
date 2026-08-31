@@ -47,7 +47,7 @@ export function SavedBenefitsContent() {
       <PageIntro title={t("title")} description={t("description")} />
       <div className="space-y-xl px-page py-xl">
         {query.isPending ? (
-          <div className="h-[120px] animate-pulse rounded-lg bg-surface-subtle" />
+          <div className="h-[120px] animate-pulse rounded-lg border border-border-default bg-surface-subtle shadow-sm" />
         ) : query.isError ? (
           <ErrorState
             title={t("error")}
@@ -56,7 +56,7 @@ export function SavedBenefitsContent() {
             onRetry={() => query.refetch()}
           />
         ) : query.data?.benefits.length ? (
-          <section className="space-y-sm">
+          <section className="space-y-lg">
             {query.data.benefits.map((benefit) => (
               <div
                 key={benefit.code}
@@ -106,7 +106,7 @@ export function SavedBenefitsContent() {
               <Trash2
                 aria-hidden="true"
                 size={21}
-                className="text-icon-brand"
+                className="text-action-primary"
               />
             }
             heading={t("removeTitle")}

@@ -91,7 +91,7 @@ export function BenefitManagementContent() {
             }}
           />
         ) : !currentPlan ? (
-          <section className="rounded-lg bg-surface p-xl shadow-sm">
+          <section className="rounded-lg border border-border-default bg-surface p-lg shadow-sm">
             <h2 className="font-sans text-title-18-bold text-text-primary">
               {t("noPlan")}
             </h2>
@@ -103,7 +103,7 @@ export function BenefitManagementContent() {
               className="mt-lg inline-flex items-center gap-xs font-sans text-label-14-bold text-text-brand"
             >
               {t("explorePlans")}
-              <ChevronRight aria-hidden="true" size={16} />
+              <ChevronRight aria-hidden="true" size={18} />
             </Link>
           </section>
         ) : (
@@ -153,7 +153,7 @@ export function BenefitManagementContent() {
                 <h2 className="font-sans text-title-16-bold text-text-primary">
                   {t("includedTitle")}
                 </h2>
-                <div className="mt-md divide-y divide-border-default rounded-lg bg-surface px-lg shadow-sm">
+                <div className="mt-md divide-y divide-border-default rounded-lg border border-border-default bg-surface px-lg shadow-sm">
                   {plan.benefitDetails.map((benefit) => (
                     <div
                       key={`${benefit.category}-${benefit.title}`}
@@ -203,7 +203,7 @@ function BenefitCard({
   description: string | null;
 }) {
   return (
-    <article className="flex items-start gap-md rounded-lg border border-border-default bg-surface p-lg">
+    <article className="flex items-start gap-md rounded-lg border border-border-default bg-surface p-lg shadow-sm">
       <span className="flex size-[36px] shrink-0 items-center justify-center rounded-sm bg-brand-soft text-icon-brand">
         <Gift aria-hidden="true" size={20} />
       </span>

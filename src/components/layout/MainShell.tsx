@@ -58,8 +58,13 @@ export function MainShell({ children }: MainShellProps) {
   );
   const [isNotificationPanelOpen, setIsNotificationPanelOpen] = useState(false);
 
-  const { notifications, unreadCount, markAsRead, dismissNotification } =
-    useNotifications();
+  const {
+    notifications,
+    unreadCount,
+    markAsRead,
+    markAllAsRead,
+    dismissNotification,
+  } = useNotifications();
 
   const { resolvedTheme, setTheme } = useTheme();
   const menu = useTranslations("Menu");
@@ -158,6 +163,7 @@ export function MainShell({ children }: MainShellProps) {
               notifications={notifications}
               onClose={() => setIsNotificationPanelOpen(false)}
               onNotificationClick={handleNotificationClick}
+              onMarkAllAsRead={markAllAsRead}
               onNotificationDelete={handleNotificationDelete}
             />
           )
@@ -188,8 +194,8 @@ export function MainShell({ children }: MainShellProps) {
           aria-label={menu("title")}
           className={cn(
             "absolute right-0 top-0",
-            "flex h-full w-[350px] max-w-[calc(100vw-40px)] flex-col",
-            "border-l border-border-default bg-surface px-2xl pb-2xl pt-lg shadow-lg",
+            "flex h-full w-[312px] max-w-[calc(100vw-48px)] flex-col",
+            "border-l border-border-default bg-surface px-xl pb-xl pt-lg shadow-lg",
             "transition-transform duration-[250ms] ease-out",
             isMenuOpen ? "translate-x-0" : "translate-x-full",
           )}
@@ -209,7 +215,7 @@ export function MainShell({ children }: MainShellProps) {
             </button>
           </div>
 
-          <div className="mt-2xl flex flex-1 flex-col gap-2xl">
+          <div className="mt-xl flex flex-1 flex-col gap-xl">
             <section className="space-y-sm">
               <p className="font-sans text-caption-12-bold text-text-tertiary">
                 {menu("language")}

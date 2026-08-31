@@ -46,7 +46,7 @@ export function Modal({
       role="dialog"
       aria-modal="true"
       className={cn(
-        "relative flex w-[calc(100vw-40px)] max-w-[350px] flex-col items-center rounded-2xl bg-surface p-2xl text-center shadow-md",
+        "relative flex w-[calc(100vw-40px)] max-w-[350px] flex-col items-center rounded-xl bg-surface p-2xl text-center shadow-md",
         className,
       )}
       {...props}

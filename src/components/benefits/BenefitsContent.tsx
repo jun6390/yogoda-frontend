@@ -25,6 +25,7 @@ import type { Benefit, BenefitFilter } from "@/types/benefit";
 
 const subscribe = () => () => {};
 const filters: BenefitFilter[] = ["all", "membership", "partner", "discount"];
+const BENEFITS_PER_PAGE = 6;
 
 function useHydrated() {
   return useSyncExternalStore(
@@ -41,6 +42,7 @@ export function BenefitsContent() {
   const [filter, setFilter] = useState<BenefitFilter>("all");
   const [selectedBenefit, setSelectedBenefit] = useState<Benefit | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [visibleCount, setVisibleCount] = useState(BENEFITS_PER_PAGE);
   const isLoggedIn = hydrated && Boolean(accessToken);
 
   useEffect(() => {
@@ -80,7 +82,10 @@ export function BenefitsContent() {
               type="button"
               role="tab"
               aria-selected={filter === item}
-              onClick={() => setFilter(item)}
+              onClick={() => {
+                setFilter(item);
+                setVisibleCount(BENEFITS_PER_PAGE);
+              }}
               className={cn(
                 "h-[36px] shrink-0 rounded-full border px-lg font-sans text-caption-13-bold transition-colors",
                 filter === item
@@ -110,7 +115,7 @@ export function BenefitsContent() {
         ) : benefitQuery.data?.benefits.length ? (
           <section
             aria-labelledby="benefit-list-title"
-            className="rounded-lg bg-surface p-lg shadow-sm"
+            className="rounded-lg border border-border-default bg-surface p-lg shadow-sm"
           >
             <div className="mb-xl flex items-center justify-between">
               <h2
@@ -126,46 +131,59 @@ export function BenefitsContent() {
               )}
             </div>
             <div className="space-y-xl">
-              {benefitQuery.data.benefits.map((benefit) => (
-                <button
-                  key={benefit.code}
-                  type="button"
-                  onClick={() => setSelectedBenefit(benefit)}
-                  className="block w-full text-left"
+              {benefitQuery.data.benefits
+                .slice(0, visibleCount)
+                .map((benefit) => (
+                  <button
+                    key={benefit.code}
+                    type="button"
+                    onClick={() => setSelectedBenefit(benefit)}
+                    className="block w-full text-left"
+                  >
+                    <BenefitRow
+                      iconClassName="size-[40px] bg-transparent"
+                      iconLabel={
+                        <BrandLogo
+                          brand={
+                            resolveBrandLogoName(
+                              benefit.brand,
+                              benefit.partner,
+                              benefit.title,
+                            ) ?? "U+"
+                          }
+                          className="size-[40px]"
+                        />
+                      }
+                      name={benefit.title}
+                      description={benefit.summary}
+                      value={
+                        <span
+                          className={cn(
+                            "flex items-center gap-xs",
+                            benefit.eligible
+                              ? "text-success"
+                              : "text-text-tertiary",
+                          )}
+                        >
+                          {benefit.eligible ? t("available") : t("unavailable")}
+                          <ChevronRight aria-hidden="true" size={18} />
+                        </span>
+                      }
+                      className="max-w-none"
+                    />
+                  </button>
+                ))}
+              {visibleCount < benefitQuery.data.benefits.length && (
+                <Button
+                  variant="secondary"
+                  onClick={() =>
+                    setVisibleCount((count) => count + BENEFITS_PER_PAGE)
+                  }
+                  className="h-[44px] w-full py-0 text-label-14-bold"
                 >
-                  <BenefitRow
-                    iconClassName="size-[40px] bg-transparent"
-                    iconLabel={
-                      <BrandLogo
-                        brand={
-                          resolveBrandLogoName(
-                            benefit.brand,
-                            benefit.partner,
-                            benefit.title,
-                          ) ?? "U+"
-                        }
-                        className="size-[40px]"
-                      />
-                    }
-                    name={benefit.title}
-                    description={benefit.summary}
-                    value={
-                      <span
-                        className={cn(
-                          "flex items-center gap-xs",
-                          benefit.eligible
-                            ? "text-success"
-                            : "text-text-tertiary",
-                        )}
-                      >
-                        {benefit.eligible ? t("available") : t("unavailable")}
-                        <ChevronRight aria-hidden="true" size={16} />
-                      </span>
-                    }
-                    className="max-w-none"
-                  />
-                </button>
-              ))}
+                  {t("loadMore")}
+                </Button>
+              )}
             </div>
           </section>
         ) : (
@@ -177,13 +195,13 @@ export function BenefitsContent() {
 
         <Link
           href="/benefits/nearby"
-          className="block rounded-lg border border-border-default bg-surface p-lg"
+          className="flex items-center justify-between gap-md rounded-lg border border-border-default bg-surface p-lg shadow-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-action-primary"
         >
-          <div className="flex items-start gap-md">
-            <span className="flex size-[40px] shrink-0 items-center justify-center rounded-sm bg-brand-soft text-icon-brand">
-              <MapPin aria-hidden="true" size={21} />
+          <div className="flex min-w-0 items-start gap-md">
+            <span className="flex size-[36px] shrink-0 items-center justify-center rounded-sm bg-brand-soft text-icon-brand">
+              <MapPin aria-hidden="true" size={20} />
             </span>
-            <div>
+            <div className="min-w-0">
               <h2 className="font-sans text-label-14-bold text-text-primary">
                 {t("nearbyTitle")}
               </h2>
@@ -192,6 +210,11 @@ export function BenefitsContent() {
               </p>
             </div>
           </div>
+          <ChevronRight
+            aria-hidden="true"
+            className="shrink-0 text-icon-secondary"
+            size={18}
+          />
         </Link>
       </div>
 
@@ -328,8 +351,8 @@ function DetailRow({ label, value }: { label: string; value: string }) {
 function BenefitSkeleton() {
   return (
     <div className="space-y-md" aria-hidden="true">
-      <div className="h-[210px] animate-pulse rounded-lg bg-surface-subtle" />
-      <div className="h-[88px] animate-pulse rounded-lg bg-surface-subtle" />
+      <div className="h-[210px] animate-pulse rounded-lg border border-border-default bg-surface-subtle shadow-sm" />
+      <div className="h-[88px] animate-pulse rounded-lg border border-border-default bg-surface-subtle shadow-sm" />
     </div>
   );
 }

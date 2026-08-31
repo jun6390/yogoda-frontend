@@ -1,24 +1,48 @@
 "use client";
 
-import { Fragment, useMemo, useState } from "react";
+import { useDeferredValue, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { Search } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 
-import { Spinner, PageSpinner } from "@/components/ui/Spinner/Spinner";
+import { Spinner } from "@/components/ui/Spinner/Spinner";
 import { ErrorState } from "@/components/ui/ErrorState/ErrorState";
 import { Chip } from "@/components/ui/Chip/Chip";
+import { Input } from "@/components/ui/Input/Input";
 import { PlanRow } from "@/components/ui/PlanRow/PlanRow";
+import { Select } from "@/components/ui/Select/Select";
+import { usageReport } from "@/data/usageReport";
 import { getComparedPlans, getCurrentPlan, getPlans } from "@/lib/api/plan";
 import { useAuthStore } from "@/stores/useAuthStore";
+import type { Plan } from "@/types/plan";
 
-type PlanFilter = "popular" | "all" | "unlimited" | "priceHigh" | "priceLow";
+type PlanCategory = "popular" | "all" | "unlimited";
+type PlanSort = "default" | "fit" | "priceHigh" | "priceLow";
+
+const averageUsageMb =
+  (usageReport.history.reduce((sum, item) => sum + item.amount, 0) /
+    usageReport.history.length) *
+  1024;
+const usageWithBufferMb = averageUsageMb * 1.15;
+
+function getUsageFitRank(plan: Plan) {
+  const allowance = plan.data.amountMb;
+
+  if (allowance === null) return Number.MAX_SAFE_INTEGER / 2;
+  if (allowance >= usageWithBufferMb) return allowance - usageWithBufferMb;
+
+  return Number.MAX_SAFE_INTEGER / 4 + (usageWithBufferMb - allowance);
+}
 
 export function PlanBrowseContent() {
   const t = useTranslations("Plans");
   const locale = useLocale();
   const accessToken = useAuthStore((state) => state.accessToken);
 
-  const [activeFilter, setActiveFilter] = useState<PlanFilter>("popular");
+  const [activeCategory, setActiveCategory] = useState<PlanCategory>("popular");
+  const [activeSort, setActiveSort] = useState<PlanSort>("default");
+  const [keyword, setKeyword] = useState("");
+  const deferredKeyword = useDeferredValue(keyword);
 
   const {
     data: plans = [],
@@ -42,8 +66,10 @@ export function PlanBrowseContent() {
     new Intl.NumberFormat(locale).format(value);
 
   const filteredPlans = useMemo(() => {
-    if (activeFilter === "popular") {
-      return plans
+    let nextPlans = plans;
+
+    if (activeCategory === "popular") {
+      nextPlans = plans
         .filter((plan) => plan.isPopular)
         .sort(
           (a, b) =>
@@ -52,23 +78,52 @@ export function PlanBrowseContent() {
         );
     }
 
-    if (activeFilter === "unlimited") {
-      return plans.filter((plan) => plan.data.amountMb === null);
+    if (activeCategory === "unlimited") {
+      nextPlans = plans.filter((plan) => plan.data.amountMb === null);
     }
 
-    if (activeFilter === "priceHigh") {
-      return [...plans].sort((a, b) => b.monthlyFee - a.monthlyFee);
+    const normalizedKeyword = deferredKeyword.trim().toLocaleLowerCase(locale);
+
+    if (normalizedKeyword) {
+      nextPlans = nextPlans.filter((plan) =>
+        [
+          plan.name,
+          plan.code,
+          plan.network,
+          plan.data.display,
+          plan.data.sharingDisplay,
+          plan.voice,
+          plan.sms,
+          ...plan.perks,
+          ...plan.tags,
+          ...plan.recommendationTags,
+        ]
+          .filter(Boolean)
+          .join(" ")
+          .toLocaleLowerCase(locale)
+          .includes(normalizedKeyword),
+      );
     }
 
-    if (activeFilter === "priceLow") {
-      return [...plans].sort((a, b) => a.monthlyFee - b.monthlyFee);
+    if (activeSort === "priceHigh") {
+      return [...nextPlans].sort((a, b) => b.monthlyFee - a.monthlyFee);
     }
 
-    return plans;
-  }, [activeFilter, plans]);
+    if (activeSort === "priceLow") {
+      return [...nextPlans].sort((a, b) => a.monthlyFee - b.monthlyFee);
+    }
+
+    if (activeSort === "fit") {
+      return [...nextPlans].sort(
+        (a, b) => getUsageFitRank(a) - getUsageFitRank(b),
+      );
+    }
+
+    return nextPlans;
+  }, [activeCategory, activeSort, deferredKeyword, locale, plans]);
 
   const filters: {
-    value: PlanFilter;
+    value: PlanCategory;
     label: string;
   }[] = [
     {
@@ -83,14 +138,15 @@ export function PlanBrowseContent() {
       value: "unlimited",
       label: t("filterUnlimited"),
     },
-    {
-      value: "priceHigh",
-      label: t("filterPriceHigh"),
-    },
-    {
-      value: "priceLow",
-      label: t("filterPriceLow"),
-    },
+  ];
+
+  const sortOptions: { value: PlanSort; label: string }[] = [
+    { value: "default", label: t("sortDefault") },
+    ...(accessToken
+      ? ([{ value: "fit", label: t("sortUsageFit") }] as const)
+      : []),
+    { value: "priceHigh", label: t("filterPriceHigh") },
+    { value: "priceLow", label: t("filterPriceLow") },
   ];
 
   if (isPending) {
@@ -118,23 +174,60 @@ export function PlanBrowseContent() {
 
   return (
     <>
-      <div className="mt-xl flex gap-sm overflow-x-auto">
-        {filters.map((filter) => (
-          <Chip
-            key={filter.value}
-            selected={activeFilter === filter.value}
-            onClick={() => setActiveFilter(filter.value)}
-            className="h-auto shrink-0 px-[14px] py-sm text-caption-13-medium"
-          >
-            {filter.label}
-          </Chip>
-        ))}
+      <div className="mt-xl flex items-center gap-md">
+        <div
+          role="group"
+          aria-label={t("filterLabel")}
+          className="flex min-w-0 flex-1 gap-sm overflow-x-auto"
+        >
+          {filters.map((filter) => (
+            <Chip
+              key={filter.value}
+              selected={activeCategory === filter.value}
+              onClick={() => setActiveCategory(filter.value)}
+              className="h-[36px] shrink-0 px-[14px] text-caption-13-bold"
+            >
+              {filter.label}
+            </Chip>
+          ))}
+        </div>
+
+        <Select
+          value={activeSort}
+          options={sortOptions}
+          onChange={setActiveSort}
+          ariaLabel={t("sortLabel")}
+          className="w-[140px] shrink-0"
+          triggerClassName="h-[36px] min-h-[36px] rounded-full bg-surface text-text-secondary"
+          menuClassName="left-auto right-0 min-w-[140px]"
+        />
       </div>
 
-      <div className="mt-xl flex flex-col gap-md">
-        {filteredPlans.map((plan, index) => (
-          <Fragment key={plan._id}>
+      <div className="relative mt-md">
+        <Search
+          aria-hidden="true"
+          className="absolute left-md top-1/2 z-[1] -translate-y-1/2 text-icon-secondary"
+          size={19}
+        />
+        <Input
+          type="search"
+          value={keyword}
+          onChange={(event) => setKeyword(event.target.value)}
+          placeholder={t("searchPlaceholder")}
+          aria-label={t("searchLabel")}
+          className="pl-[40px]"
+        />
+      </div>
+
+      <div className="mt-xl flex flex-col gap-lg">
+        {filteredPlans.length === 0 ? (
+          <p className="rounded-lg border border-border-default bg-surface p-lg text-center font-sans text-body-14-regular text-text-secondary shadow-sm">
+            {t("searchEmpty")}
+          </p>
+        ) : (
+          filteredPlans.map((plan) => (
             <PlanRow
+              key={plan.code}
               name={plan.name}
               planNumber={plan.code.replace("nerget-", "")}
               price={t("monthlyPrice", {
@@ -157,15 +250,8 @@ export function PlanBrowseContent() {
               effectiveMonthlyFee={plan.promotion.effectiveMonthlyFee}
               maxMonthlyBenefit={plan.promotion.maxMonthlyBenefit}
             />
-
-            {index < filteredPlans.length - 1 && (
-              <div
-                aria-hidden="true"
-                className="h-[0.5px] w-full bg-border-default"
-              />
-            )}
-          </Fragment>
-        ))}
+          ))
+        )}
       </div>
     </>
   );

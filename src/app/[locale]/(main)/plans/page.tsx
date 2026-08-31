@@ -3,6 +3,7 @@ import { getTranslations } from "next-intl/server";
 import { PageContainer } from "@/components/layout/PageContainer";
 import { PlanBrowseContent } from "@/components/plans/PlanBrowseContent";
 import { PlanSubNav } from "@/components/plans/PlanSubNav";
+import { BackToChatButton } from "@/components/chat/BackToChatButton";
 
 export default async function PlansPage() {
   const t = await getTranslations("Plans");
@@ -10,6 +11,8 @@ export default async function PlansPage() {
   return (
     <>
       <PlanSubNav />
+
+      <BackToChatButton />
 
       <PageContainer className="pb-2xl pt-lg">
         <section>

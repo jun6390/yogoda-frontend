@@ -6,8 +6,17 @@ export interface ChatSessionMessage {
   id: string;
   role: "user" | "ai";
   content: string;
-  // AI가 요금제를 추천한 메시지에만 존재함 (재접속 시 카드를 그대로 복원하기 위함)
+  messageType?:
+    | "text"
+    | "signup_entry"
+    | "fraud_warning"
+    | "terms"
+    | "identity_verification"
+    | "signup_summary"
+    | "signup_complete";
   plans?: ChatPlanCard[];
+  signupData?: Record<string, unknown>;
+  preselectedPlan?: { code: string; name: string; monthlyFee: number };
   createdAt: string;
 }
 
@@ -31,8 +40,6 @@ export async function getLatestChatSession(): Promise<LatestSessionResponse> {
 }
 
 export interface ImportGuestChatPayload {
-  // 서버가 게스트 소켓 연결 시 발급한 세션 id. 서버가 이미 실시간으로 저장해둔
-  // 해당 세션의 대화 내역을 그대로 로그인한 회원 계정으로 이관함
   sessionId: string;
 }
 

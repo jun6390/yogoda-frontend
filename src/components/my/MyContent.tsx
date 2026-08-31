@@ -8,6 +8,7 @@ import { ChevronRight } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 
 import { ErrorState } from "@/components/ui/ErrorState/ErrorState";
+import { CurrentPlanSummaryCard } from "@/components/plans/CurrentPlanSummaryCard";
 import { Link } from "@/i18n/navigation";
 import { getCurrentPlan, getPlanByCode } from "@/lib/api/plan";
 import { cn } from "@/lib/utils";
@@ -31,7 +32,13 @@ interface ManagementRowProps {
   label: string;
   value: string;
   href?:
-    "/benefits" | "/my/account" | "/my/benefits" | "/my/coupons" | "/my/stores";
+    | "/benefits"
+    | "/my/account"
+    | "/my/benefits"
+    | "/my/coupons"
+    | "/my/points"
+    | "/my/subscriptions"
+    | "/my/stores";
   emphasized?: boolean;
 }
 
@@ -53,7 +60,7 @@ function ManagementRow({
         )}
       >
         <span className="truncate">{value}</span>
-        {href && <ChevronRight aria-hidden="true" size={16} />}
+        {href && <ChevronRight aria-hidden="true" size={18} />}
       </span>
     </>
   );
@@ -96,7 +103,7 @@ export function MyContent() {
   });
 
   const displayName = user?.name || t("defaultUserName");
-  const planPrice = planDetailQuery.data?.monthlyFee;
+  const planPrice = planDetailQuery.data?.monthlyFee ?? currentPlan?.monthlyFee;
   const membershipTier = planDetailQuery.data?.membershipTier
     ? t("membershipTier", { tier: planDetailQuery.data.membershipTier })
     : currentPlan
@@ -108,172 +115,149 @@ export function MyContent() {
         0,
       )
     : 0;
+  const joinedAtLabel = currentPlan?.joinedAt
+    ? new Intl.DateTimeFormat(locale, {
+        month: "long",
+        day: "numeric",
+      }).format(new Date(currentPlan.joinedAt))
+    : null;
 
   return (
-    <div className="min-h-full bg-background pb-lg">
-      <section className="px-2xl pb-lg pt-xl">
-        <h2 className="font-sans text-title-20-bold text-text-primary">
-          {t("greeting", { name: displayName })}
-        </h2>
-        <p className="mt-xs font-sans text-body-14-regular text-text-secondary">
-          {t("benefitNotice", { name: displayName })}
-        </p>
-      </section>
+    <div className="min-h-full bg-background">
+      <main className="flex flex-col gap-xl px-page pb-lg pt-xl">
+        <section>
+          <h2 className="font-sans text-title-20-bold text-text-primary">
+            {t("greeting", { name: displayName })}
+          </h2>
+          <p className="mt-xs font-sans text-body-14-regular text-text-secondary">
+            {t("benefitNotice", { name: displayName })}
+          </p>
+        </section>
 
-      <section className="space-y-md px-2xl pb-lg">
-        {!hydrated || (currentPlanQuery.isPending && isLoggedIn) ? (
-          <div className="h-[128px] animate-pulse rounded-lg border border-border-default bg-surface" />
-        ) : currentPlanQuery.isError ? (
-          <ErrorState
-            title={t("planError")}
-            description={t("planErrorDescription")}
-            retryLabel={t("retry")}
-            onRetry={() => currentPlanQuery.refetch()}
-          />
-        ) : currentPlan ? (
-          <Link
-            href="/my/plan"
-            className="block rounded-lg border border-border-default bg-surface p-xl focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-action-primary"
-          >
-            <div className="flex items-center justify-between gap-md">
+        <section className="flex flex-col gap-lg">
+          {!hydrated || (currentPlanQuery.isPending && isLoggedIn) ? (
+            <div className="h-[226px] animate-pulse rounded-lg border border-border-default bg-surface shadow-sm" />
+          ) : currentPlanQuery.isError ? (
+            <ErrorState
+              title={t("planError")}
+              description={t("planErrorDescription")}
+              retryLabel={t("retry")}
+              onRetry={() => currentPlanQuery.refetch()}
+            />
+          ) : currentPlan ? (
+            <CurrentPlanSummaryCard
+              href="/my/plan"
+              planName={planDetailQuery.data?.name ?? currentPlan.planName}
+              monthlyFeeLabel={
+                typeof planPrice === "number"
+                  ? t("monthlyPrice", {
+                      amount: formatPrice(planPrice, locale),
+                    })
+                  : t("pricePending")
+              }
+              dataLabel={
+                planDetailQuery.data?.data.display ?? t("detailPending")
+              }
+              voiceLabel={planDetailQuery.data?.voice ?? t("detailPending")}
+              selectedBenefitCount={selectedBenefitCount}
+              joinedAtLabel={joinedAtLabel}
+            />
+          ) : (
+            <Link
+              href="/plans"
+              className="block rounded-lg border border-border-default bg-surface p-lg shadow-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-action-primary"
+            >
               <span className="font-sans text-caption-13-medium text-text-secondary">
                 {t("currentPlan")}
               </span>
-              <span className="rounded-full bg-brand-soft px-md py-xs font-sans text-caption-12-bold text-text-brand">
-                {t("changeRecommendation")}
-              </span>
-            </div>
-            <strong className="mt-md block font-sans text-title-20-bold text-text-primary">
-              {currentPlan.planName}
-            </strong>
-            <span className="mt-xs block font-sans text-caption-13-medium text-text-secondary">
-              {typeof planPrice === "number"
-                ? t("monthlyPrice", {
-                    amount: formatPrice(planPrice, locale),
-                  })
-                : t("pricePending")}
-            </span>
-          </Link>
-        ) : (
-          <Link
-            href="/plans"
-            className="block rounded-lg border border-border-default bg-surface p-xl focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-action-primary"
-          >
-            <span className="font-sans text-caption-13-medium text-text-secondary">
-              {t("currentPlan")}
-            </span>
-            <strong className="mt-md block font-sans text-title-18-bold text-text-primary">
-              {t("noPlan")}
-            </strong>
-            <span className="mt-xs flex items-center gap-xs font-sans text-caption-13-bold text-text-brand">
-              {t("explorePlans")}
-              <ChevronRight aria-hidden="true" size={16} />
-            </span>
-          </Link>
-        )}
-
-        <Link
-          href="/ai"
-          className="relative block min-h-[156px] overflow-hidden rounded-2xl border border-[#f6cbd3] bg-[#fcdee2] shadow-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-action-primary"
-        >
-          <Image
-            src="/yogoda-banners/savings-character-scene-v3.webp"
-            alt=""
-            width={382}
-            height={540}
-            sizes="106px"
-            className="pointer-events-none absolute bottom-[-4px] right-lg h-[150px] w-auto"
-          />
-          <span className="relative z-[1] flex min-h-[156px] w-[68%] flex-col justify-center px-xl py-lg text-[#17171c]">
-            <span className="block font-sans text-caption-13-regular text-[#6f6f79]">
-              {t("savingEyebrow")}
-            </span>
-            <strong className="mt-xs block font-sans text-title-18-bold">
-              <span className="text-[#e01485]">{t("savingAmount")}</span>{" "}
-              {t("savingAvailable")}
-            </strong>
-            <span className="mt-md flex flex-wrap items-center gap-sm">
-              <strong className="whitespace-nowrap rounded-full bg-[#ffffff] px-sm py-xs font-sans text-caption-12-bold text-[#e01485] shadow-sm">
-                {t("annualSaving")}
+              <strong className="mt-md block font-sans text-title-18-bold text-text-primary">
+                {t("noPlan")}
               </strong>
-              <span className="whitespace-nowrap font-sans text-caption-12-bold text-[#4b5563]">
-                {t("viewDiagnosis")}
+              <span className="mt-xs flex items-center gap-xs font-sans text-caption-13-bold text-text-brand">
+                {t("explorePlans")}
+                <ChevronRight aria-hidden="true" size={18} />
               </span>
-            </span>
-          </span>
-        </Link>
-      </section>
+            </Link>
+          )}
 
-      {/* 상담 요약 API 연결 전 디자인 검증용 표시 데이터 사용함 */}
-      <section className="px-2xl py-lg">
-        <div className="flex items-center justify-between">
-          <h2 className="font-sans text-label-14-bold text-text-primary">
-            {t("recentConsultation")}
-          </h2>
           <Link
             href="/ai"
-            className="font-sans text-caption-13-medium text-text-secondary"
+            className="relative block min-h-[156px] overflow-hidden rounded-lg border border-border-default bg-[#fcdee2] shadow-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-action-primary"
           >
-            {t("viewAll")}
+            <Image
+              src="/yogoda-banners/savings-character-scene-v3.webp"
+              alt=""
+              width={382}
+              height={540}
+              loading="eager"
+              fetchPriority="high"
+              sizes="106px"
+              className="pointer-events-none absolute bottom-[-4px] right-lg h-[150px] w-auto"
+            />
+            <span className="relative z-[1] flex min-h-[156px] w-[68%] flex-col justify-center px-lg py-lg text-[#17171c]">
+              <span className="block font-sans text-caption-13-regular text-[#6f6f79]">
+                {t("savingEyebrow")}
+              </span>
+              <strong className="mt-xs block font-sans text-title-18-bold">
+                <span className="text-[#e01485]">{t("savingAmount")}</span>{" "}
+                {t("savingAvailable")}
+              </strong>
+              <span className="mt-md flex flex-wrap items-center gap-sm">
+                <strong className="whitespace-nowrap rounded-full bg-[#ffffff] px-sm py-xs font-sans text-caption-12-bold text-[#e01485] shadow-sm">
+                  {t("annualSaving")}
+                </strong>
+                <span className="whitespace-nowrap font-sans text-caption-12-bold text-[#4b5563]">
+                  {t("viewDiagnosis")}
+                </span>
+              </span>
+            </span>
           </Link>
-        </div>
+        </section>
 
-        <Link
-          href="/ai"
-          className="mt-md block rounded-lg border border-border-default bg-surface p-lg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-action-primary"
-        >
-          <span className="flex items-start justify-between gap-lg">
-            <strong className="truncate font-sans text-label-14-bold text-text-primary">
-              {t("consultationTitle")}
-            </strong>
-            <span className="shrink-0 font-sans text-caption-12-regular text-text-tertiary">
-              {t("consultationDate")}
-            </span>
-          </span>
-          <span className="mt-sm flex flex-wrap items-center gap-sm">
-            <span className="font-sans text-caption-13-regular text-text-secondary">
-              {t("recommendedPlan")}
-            </span>
-            <strong className="font-sans text-caption-12-bold text-text-brand">
-              {t("matchRate")}
-            </strong>
-          </span>
-        </Link>
-      </section>
-
-      <section className="px-2xl py-lg">
-        <h2 className="font-sans text-label-14-bold text-text-primary">
-          {t("benefitManagement")}
-        </h2>
-        <div className="mt-md divide-y divide-border-default overflow-hidden rounded-lg border border-border-default bg-surface px-lg">
-          <ManagementRow
-            label={t("myMembership")}
-            value={membershipTier}
-            href="/my/benefits"
-            emphasized
-          />
-          <ManagementRow
-            label={t("couponWallet")}
-            value={t("viewCoupons")}
-            href="/my/coupons"
-          />
-          <ManagementRow
-            label={t("manageBenefits")}
-            value={t("activeBenefitCount", { count: selectedBenefitCount })}
-            href="/my/benefits"
-          />
-          <ManagementRow
-            label={t("stores")}
-            value={t("findStores")}
-            href="/my/stores"
-          />
-          <ManagementRow
-            label={t("securityAccount")}
-            value={t("loginPassword")}
-            href="/my/account"
-          />
-        </div>
-      </section>
+        <section className="flex flex-col gap-md">
+          <h2 className="font-sans text-label-14-bold text-text-primary">
+            {t("benefitManagement")}
+          </h2>
+          <div className="divide-y divide-border-default overflow-hidden rounded-lg border border-border-default bg-surface px-lg shadow-sm">
+            <ManagementRow
+              label={t("myMembership")}
+              value={membershipTier}
+              href="/my/benefits"
+              emphasized
+            />
+            <ManagementRow
+              label={t("pointShop")}
+              value={t("usePoints")}
+              href="/my/points"
+            />
+            <ManagementRow
+              label={t("couponWallet")}
+              value={t("viewCoupons")}
+              href="/my/coupons"
+            />
+            <ManagementRow
+              label={t("subscriptions")}
+              value={t("manageSubscriptions")}
+              href="/my/subscriptions"
+            />
+            <ManagementRow
+              label={t("manageBenefits")}
+              value={t("activeBenefitCount", { count: selectedBenefitCount })}
+              href="/my/benefits"
+            />
+            <ManagementRow
+              label={t("stores")}
+              value={t("findStores")}
+              href="/my/stores"
+            />
+            <ManagementRow
+              label={t("securityAccount")}
+              value={t("loginPassword")}
+              href="/my/account"
+            />
+          </div>
+        </section>
+      </main>
     </div>
   );
 }

@@ -10,7 +10,6 @@
   --primitive-brand-magenta: #e01485;
   --primitive-brand-magenta-dark: #c8006d;
   --primitive-brand-magenta-light: #f06bb6;
-  --primitive-brand-purple: #7b2cbf;
   --primitive-brand-deep: #211524;
   --primitive-brand-pink-50: #fff0f8;
 
@@ -60,7 +59,7 @@
 
   --semantic-action-primary: var(--primitive-brand-magenta);
   --semantic-action-primary-hover: var(--primitive-brand-magenta-dark);
-  --semantic-action-secondary: var(--primitive-brand-purple);
+  --semantic-action-secondary: var(--primitive-brand-magenta-light);
   --semantic-toast-background: var(--primitive-brand-deep);
   --semantic-toast-action-text: var(--primitive-brand-magenta-light);
 
@@ -76,7 +75,7 @@
   --semantic-icon-default: var(--primitive-gray-900);
   --semantic-icon-secondary: var(--primitive-gray-500);
   --semantic-icon-disabled: var(--primitive-gray-300);
-  --semantic-icon-brand: var(--primitive-brand-magenta);
+  --semantic-icon-brand: var(--primitive-brand-magenta-light);
   --semantic-icon-inverse: var(--primitive-white);
 
   color-scheme: light;
@@ -106,7 +105,7 @@
 
   --semantic-action-primary: var(--primitive-brand-magenta);
   --semantic-action-primary-hover: var(--primitive-brand-magenta-dark);
-  --semantic-action-secondary: var(--primitive-brand-purple);
+  --semantic-action-secondary: var(--primitive-brand-magenta-light);
   --semantic-toast-background: var(--primitive-brand-deep);
   --semantic-toast-action-text: var(--primitive-brand-magenta-light);
 
@@ -236,7 +235,7 @@
 
   --text-display-32-bold: 32px;
   --text-display-32-bold--line-height: 42px;
-  --text-display-32-bold--letter-spacing: -0.3px;
+  --text-display-32-bold--letter-spacing: 0;
   --text-display-32-bold--font-weight: 700;
 
   --text-display-28-bold: 28px;
@@ -247,12 +246,12 @@
   /* Typography - Title */
   --text-title-24-bold: 24px;
   --text-title-24-bold--line-height: 34px;
-  --text-title-24-bold--letter-spacing: -0.2px;
+  --text-title-24-bold--letter-spacing: 0;
   --text-title-24-bold--font-weight: 700;
 
   --text-title-20-bold: 20px;
   --text-title-20-bold--line-height: 30px;
-  --text-title-20-bold--letter-spacing: -0.1px;
+  --text-title-20-bold--letter-spacing: 0;
   --text-title-20-bold--font-weight: 700;
 
   --text-title-18-bold: 18px;

@@ -64,7 +64,7 @@ export function HomeBannerCarousel() {
 
   return (
     <section aria-label={t("bannerAriaLabel")} className="relative">
-      <div className="relative overflow-hidden rounded-2xl bg-surface shadow-sm">
+      <div className="relative overflow-hidden rounded-lg border border-border-default bg-surface shadow-sm">
         <div
           // 이미지 안에 있던 컨트롤은 제거하고 실제 조작은 이 컴포넌트가 담당함
           className="flex transition-transform duration-300 ease-out"

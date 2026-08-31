@@ -1,19 +1,22 @@
-import type { InputHTMLAttributes } from "react";
+import type { InputHTMLAttributes, Ref } from "react";
 
 import { cn } from "@/lib/utils";
 
 interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
   error?: boolean;
+  ref?: Ref<HTMLInputElement>;
 }
 
 export function Input({
   error = false,
   disabled = false,
   className,
+  ref,
   ...props
 }: InputProps) {
   return (
     <input
+      ref={ref}
       disabled={disabled}
       aria-invalid={error || undefined}
       className={cn(

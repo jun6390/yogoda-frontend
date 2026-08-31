@@ -7,6 +7,7 @@ import { AlertTriangle, ChevronRight } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 
 import { MySubpageHeader } from "@/components/my/MySubpageHeader";
+import { PlanVisual } from "@/components/plans/PlanVisual";
 import { Button } from "@/components/ui/Button/Button";
 import { ErrorState } from "@/components/ui/ErrorState/ErrorState";
 import { Link, useRouter } from "@/i18n/navigation";
@@ -87,7 +88,7 @@ export function PlanManagementContent() {
 
       <div className="space-y-xl px-page py-xl">
         {!hydrated || currentPlanQuery.isPending ? (
-          <div className="h-[220px] animate-pulse rounded-lg bg-surface-subtle" />
+          <div className="h-[220px] animate-pulse rounded-lg border border-border-default bg-surface-subtle shadow-sm" />
         ) : currentPlanQuery.isError ? (
           <ErrorState
             title={t("loadError")}
@@ -96,7 +97,7 @@ export function PlanManagementContent() {
             onRetry={() => currentPlanQuery.refetch()}
           />
         ) : !currentPlan ? (
-          <section className="rounded-lg bg-surface p-xl shadow-sm">
+          <section className="rounded-lg border border-border-default bg-surface p-lg shadow-sm">
             <h2 className="font-sans text-title-18-bold text-text-primary">
               {t("noPlan")}
             </h2>
@@ -105,23 +106,28 @@ export function PlanManagementContent() {
               className="mt-lg inline-flex items-center gap-xs font-sans text-label-14-bold text-text-brand"
             >
               {t("explorePlans")}
-              <ChevronRight aria-hidden="true" size={16} />
+              <ChevronRight aria-hidden="true" size={18} />
             </Link>
           </section>
         ) : (
           <>
-            <section className="rounded-lg bg-surface p-xl shadow-sm">
-              <span className="font-sans text-caption-12-bold text-text-secondary">
-                {t("currentPlan")}
-              </span>
-              <h2 className="mt-sm font-sans text-title-20-bold text-text-primary">
-                {currentPlan.planName}
-              </h2>
-              <p className="mt-xs font-sans text-label-14-bold text-text-brand">
-                {monthlyFee}
-              </p>
+            <section className="rounded-lg border border-border-default bg-surface p-lg shadow-sm">
+              <div className="flex items-start justify-between gap-lg">
+                <div className="min-w-0">
+                  <span className="font-sans text-caption-12-bold text-text-secondary">
+                    {t("currentPlan")}
+                  </span>
+                  <h2 className="mt-sm truncate font-sans text-title-20-bold text-text-primary">
+                    {currentPlan.planName}
+                  </h2>
+                  <p className="mt-xs font-sans text-label-14-bold text-text-brand">
+                    {monthlyFee}
+                  </p>
+                </div>
+                <PlanVisual planName={currentPlan.planName} className="mt-xs" />
+              </div>
 
-              <dl className="mt-xl divide-y divide-border-default border-y border-border-default">
+              <dl className="mt-xl divide-y divide-border-default border-t border-border-default">
                 <PlanInfoRow label={t("joinedAt")} value={joinedAt} />
                 <PlanInfoRow
                   label={t("data")}
@@ -174,7 +180,7 @@ export function PlanManagementContent() {
             role="dialog"
             aria-modal="true"
             aria-labelledby="cancel-plan-title"
-            className="w-full max-w-[350px] rounded-lg bg-surface p-2xl shadow-lg"
+            className="w-full max-w-[350px] rounded-xl bg-surface p-2xl shadow-lg"
           >
             <span className="flex size-[40px] items-center justify-center rounded-full bg-error-soft text-error">
               <AlertTriangle aria-hidden="true" size={22} />

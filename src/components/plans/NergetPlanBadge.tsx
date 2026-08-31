@@ -44,7 +44,7 @@ export function NergetPlanBadge({ number, size = "sm" }: NergetPlanBadgeProps) {
         }}
       >
         <span
-          className={`${styles.logo} whitespace-nowrap font-sans font-extrabold leading-none tracking-[-0.09em] text-white`}
+          className={`${styles.logo} whitespace-nowrap font-sans font-extrabold leading-none tracking-normal text-white`}
         >
           너겟
           <span className="ml-[1px] text-[#FF2D8D]">.</span>
@@ -58,7 +58,7 @@ export function NergetPlanBadge({ number, size = "sm" }: NergetPlanBadgeProps) {
         }}
       >
         <span
-          className={`${styles.number} font-sans font-extrabold leading-none tracking-[-0.06em] text-white`}
+          className={`${styles.number} font-sans font-extrabold leading-none tracking-normal text-white`}
         >
           {number}
         </span>

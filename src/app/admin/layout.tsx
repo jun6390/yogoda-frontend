@@ -9,7 +9,7 @@ import { AdminSidebar } from "@/components/admin/AdminSidebar";
 import "../globals.css";
 
 export const metadata: Metadata = {
-  title: "YOGODA Admin",
+  title: "요고다 - 관리자페이지",
 };
 
 interface AdminLayoutProps {

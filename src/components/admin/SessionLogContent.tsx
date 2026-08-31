@@ -5,12 +5,18 @@ import { useState } from "react";
 import { useSearchParams } from "next/navigation";
 
 import { useQuery } from "@tanstack/react-query";
+import { ChevronDown, ChevronUp } from "lucide-react";
 
 import { Badge } from "@/components/ui/Badge/Badge";
 import { ErrorState } from "@/components/ui/ErrorState/ErrorState";
 import { Button } from "@/components/admin/Button";
 import { DateRangePicker } from "@/components/admin/DateRangePicker";
 import { Select } from "@/components/admin/Select";
+import {
+  AIChatBubble,
+  UserChatBubble,
+} from "@/components/ui/ChatBubble/ChatBubble";
+import { ChatMarkdown } from "@/components/ui/ChatMarkdown/ChatMarkdown";
 import { ApiError } from "@/lib/api/client";
 import { getSessionDetail, getSessions } from "@/lib/api/admin/session";
 import { formatDateTime, formatDuration } from "@/lib/admin/format";
@@ -46,13 +52,27 @@ interface FilterState {
   promptVersion: string;
 }
 
-const EMPTY_FILTERS: FilterState = {
-  startDate: "",
-  endDate: "",
-  status: "all",
-  dropStage: "all",
-  promptVersion: "",
-};
+const DEFAULT_PERIOD_DAYS = 7;
+
+function toDateKey(date: Date) {
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+}
+
+// 이탈 대화를 우선 노출하는 게 더 중요해서, 기본값은 "최근 7일 · 이탈"로 좁혀두고
+// 필요할 때 "전체"로 넓혀 보도록 함
+function getDefaultFilters(): FilterState {
+  const today = new Date();
+  const start = new Date();
+  start.setDate(today.getDate() - (DEFAULT_PERIOD_DAYS - 1));
+
+  return {
+    startDate: toDateKey(start),
+    endDate: toDateKey(today),
+    status: "dropped",
+    dropStage: "all",
+    promptVersion: "",
+  };
+}
 
 function toListParams(filters: FilterState): SessionListParams {
   return {
@@ -60,7 +80,9 @@ function toListParams(filters: FilterState): SessionListParams {
     end_date: filters.endDate || undefined,
     status: filters.status === "all" ? undefined : filters.status,
     drop_stage: filters.dropStage === "all" ? undefined : filters.dropStage,
-    prompt_version: filters.promptVersion || undefined,
+    prompt_version: filters.promptVersion
+      ? `v${filters.promptVersion}`
+      : undefined,
   };
 }
 
@@ -71,13 +93,19 @@ const filterInputClassName = cn(
 );
 
 export function SessionLogContent() {
-  // 대시보드의 "해당 로그 보기" 링크에서 ?drop_stage=xxx로 들어오면 그 단계로 미리 필터링해둠
+  // 대시보드의 퍼널 행 클릭에서 ?drop_stage=xxx&start_date=...&end_date=...로 들어오면
+  // 대시보드에서 보던 단계·기간 그대로 미리 필터링해둠
   const searchParams = useSearchParams();
   const initialDropStage =
     (searchParams.get("drop_stage") as SessionDropStage | null) ?? "all";
+  const initialStartDate = searchParams.get("start_date");
+  const initialEndDate = searchParams.get("end_date");
   const initialFilters: FilterState = {
-    ...EMPTY_FILTERS,
+    ...getDefaultFilters(),
     dropStage: initialDropStage,
+    ...(initialStartDate && initialEndDate
+      ? { startDate: initialStartDate, endDate: initialEndDate }
+      : {}),
   };
 
   const [draftFilters, setDraftFilters] = useState<FilterState>(initialFilters);
@@ -111,15 +139,24 @@ export function SessionLogContent() {
     enabled: Boolean(selectedSessionId),
   });
 
+  const handleVersionStep = (delta: number) => {
+    setDraftFilters((prev) => {
+      const current = prev.promptVersion ? Number(prev.promptVersion) : 0;
+      const next = Math.max(0, current + delta);
+      return { ...prev, promptVersion: next === 0 ? "" : String(next) };
+    });
+  };
+
   const handleApplyFilters = () => setAppliedFilters(draftFilters);
 
   const handleResetFilters = () => {
-    setDraftFilters(EMPTY_FILTERS);
-    setAppliedFilters(EMPTY_FILTERS);
+    const defaultFilters = getDefaultFilters();
+    setDraftFilters(defaultFilters);
+    setAppliedFilters(defaultFilters);
   };
 
   return (
-    <div className="p-2xl">
+    <div className="p-3xl">
       <h1 className="font-sans text-title-24-bold text-text-primary">
         AI 채팅 로그
       </h1>
@@ -127,7 +164,7 @@ export function SessionLogContent() {
         이탈이 발생한 실제 대화를 읽고 프롬프트 개선 지점을 찾으세요
       </p>
 
-      <section className="mt-xl flex flex-wrap items-end gap-md rounded-lg border border-border-default bg-surface p-lg">
+      <section className="mt-2xl flex flex-wrap items-end gap-md rounded-lg border border-border-default bg-surface p-2xl">
         <label className="flex flex-col gap-xs">
           <span className="font-sans text-caption-12-bold text-text-tertiary">
             기간
@@ -148,10 +185,12 @@ export function SessionLogContent() {
           <Select
             value={draftFilters.status}
             options={STATUS_OPTIONS}
+            ariaLabel="상태"
             onChange={(status) =>
               setDraftFilters((prev) => ({ ...prev, status }))
             }
             className="w-[140px]"
+            triggerClassName="min-h-[40px] rounded-md"
           />
         </label>
 
@@ -162,10 +201,12 @@ export function SessionLogContent() {
           <Select
             value={draftFilters.dropStage}
             options={DROP_STAGE_OPTIONS}
+            ariaLabel="이탈 단계"
             onChange={(dropStage) =>
               setDraftFilters((prev) => ({ ...prev, dropStage }))
             }
             className="w-[160px]"
+            triggerClassName="min-h-[40px] rounded-md"
           />
         </label>
 
@@ -173,30 +214,62 @@ export function SessionLogContent() {
           <span className="font-sans text-caption-12-bold text-text-tertiary">
             프롬프트 버전
           </span>
-          <input
-            type="text"
-            placeholder="예: v4"
-            value={draftFilters.promptVersion}
-            onChange={(e) =>
-              setDraftFilters((prev) => ({
-                ...prev,
-                promptVersion: e.target.value,
-              }))
-            }
-            className={cn(filterInputClassName, "w-[100px]")}
-          />
+          <div className="relative">
+            <span className="pointer-events-none absolute left-sm top-1/2 -translate-y-1/2 font-sans text-body-14-regular text-text-tertiary">
+              v
+            </span>
+            <input
+              type="text"
+              inputMode="numeric"
+              value={draftFilters.promptVersion}
+              onChange={(e) =>
+                setDraftFilters((prev) => ({
+                  ...prev,
+                  promptVersion: e.target.value.replace(/\D/g, ""),
+                }))
+              }
+              className={cn(filterInputClassName, "w-21 pl-xl pr-2xl")}
+            />
+            <div className="absolute right-xs top-1/2 flex -translate-y-1/2 flex-col">
+              <button
+                type="button"
+                aria-label="버전 올리기"
+                onClick={() => handleVersionStep(1)}
+                className="flex h-[16px] w-[20px] items-center justify-center text-text-tertiary hover:text-text-primary"
+              >
+                <ChevronUp aria-hidden="true" size={12} />
+              </button>
+              <button
+                type="button"
+                aria-label="버전 내리기"
+                onClick={() => handleVersionStep(-1)}
+                className="flex h-[16px] w-[20px] items-center justify-center text-text-tertiary hover:text-text-primary"
+              >
+                <ChevronDown aria-hidden="true" size={12} />
+              </button>
+            </div>
+          </div>
         </label>
 
         <div className="flex gap-sm">
-          <Button onClick={handleApplyFilters}>필터 적용</Button>
-          <Button variant="secondary" onClick={handleResetFilters}>
+          <Button
+            className="h-[40px] rounded-md px-lg py-0 text-label-14-bold"
+            onClick={handleApplyFilters}
+          >
+            필터 적용
+          </Button>
+          <Button
+            variant="secondary"
+            className="h-[40px] rounded-md px-lg py-0 text-label-14-bold"
+            onClick={handleResetFilters}
+          >
             초기화
           </Button>
         </div>
       </section>
 
-      <div className="mt-xl flex flex-col gap-lg md:flex-row">
-        <section className="flex h-[400px] w-full shrink-0 flex-col rounded-lg border border-border-default bg-surface p-lg md:h-[600px] md:w-[360px]">
+      <div className="mt-2xl flex flex-col gap-2xl md:flex-row">
+        <section className="flex h-[400px] w-full shrink-0 flex-col rounded-lg border border-border-default bg-surface p-2xl md:h-[600px] md:w-[360px]">
           <h2 className="font-sans text-title-18-bold text-text-primary">
             세션 목록
             {listData && (
@@ -281,7 +354,7 @@ export function SessionLogContent() {
           </div>
         </section>
 
-        <section className="flex h-[500px] flex-col rounded-lg border border-border-default bg-surface p-lg md:h-[600px] md:flex-1">
+        <section className="flex h-[500px] flex-col rounded-lg border border-border-default bg-surface p-2xl md:h-[600px] md:flex-1">
           {!selectedSessionId && (
             <p className="font-sans text-body-14-regular text-text-secondary">
               왼쪽 목록에서 세션을 선택하면 대화 내용을 볼 수 있어요.
@@ -331,29 +404,28 @@ export function SessionLogContent() {
               </header>
 
               <div className="mt-md flex flex-1 flex-col gap-md overflow-y-auto">
-                {detail.messages.map((message) => (
-                  <div
-                    key={message.messageId}
-                    className={cn(
-                      "flex flex-col gap-xs",
-                      message.sender === "user" ? "items-end" : "items-start",
-                    )}
-                  >
+                {detail.messages
+                  .filter((message) => message.content.trim() !== "")
+                  .map((message) => (
                     <div
+                      key={message.messageId}
                       className={cn(
-                        "max-w-[75%] whitespace-pre-line rounded-lg px-md py-sm font-sans text-body-14-regular",
-                        message.sender === "user"
-                          ? "bg-brand-soft text-text-primary"
-                          : "border border-border-default bg-background text-text-primary",
+                        "flex flex-col gap-xs",
+                        message.sender === "user" ? "items-end" : "items-start",
                       )}
                     >
-                      {message.content}
+                      {message.sender === "user" ? (
+                        <UserChatBubble>{message.content}</UserChatBubble>
+                      ) : (
+                        <AIChatBubble>
+                          <ChatMarkdown>{message.content}</ChatMarkdown>
+                        </AIChatBubble>
+                      )}
+                      <span className="font-sans text-caption-12-regular text-text-tertiary">
+                        {formatDateTime(message.createdAt)}
+                      </span>
                     </div>
-                    <span className="font-sans text-caption-12-regular text-text-tertiary">
-                      {formatDateTime(message.createdAt)}
-                    </span>
-                  </div>
-                ))}
+                  ))}
               </div>
             </>
           )}

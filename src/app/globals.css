@@ -89,3 +89,14 @@ button:disabled {
     transform: translateY(-1.5px);
   }
 }
+
+/* 음성 인식 중 마이크 아이콘 색이 진했다 연해지는 효과용 keyframes */
+@keyframes micPulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.35;
+  }
+}

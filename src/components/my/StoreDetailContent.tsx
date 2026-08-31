@@ -33,9 +33,9 @@ export function StoreDetailContent({ code }: { code: string }) {
       />
 
       {storeQuery.isPending ? (
-        <div className="space-y-md px-page py-xl" aria-hidden="true">
-          <div className="h-[176px] animate-pulse rounded-lg bg-surface-subtle" />
-          <div className="h-[220px] animate-pulse rounded-lg bg-surface-subtle" />
+        <div className="space-y-2xl px-page py-xl" aria-hidden="true">
+          <div className="h-[176px] animate-pulse rounded-lg border border-border-default bg-surface-subtle shadow-sm" />
+          <div className="h-[220px] animate-pulse rounded-lg border border-border-default bg-surface-subtle shadow-sm" />
         </div>
       ) : storeQuery.isError || !store ? (
         <div className="px-page py-xl">
@@ -48,7 +48,7 @@ export function StoreDetailContent({ code }: { code: string }) {
         </div>
       ) : (
         <div className="space-y-2xl px-page py-xl">
-          <section className="rounded-lg bg-surface p-xl shadow-sm">
+          <section className="rounded-lg border border-border-default bg-surface p-lg shadow-sm">
             <span className="flex size-[48px] items-center justify-center rounded-lg bg-brand-soft text-icon-brand">
               <StoreIcon aria-hidden="true" size={25} />
             </span>
@@ -77,7 +77,7 @@ export function StoreDetailContent({ code }: { code: string }) {
             </div>
           </section>
 
-          <section className="divide-y divide-border-default rounded-lg border border-border-default bg-surface px-lg">
+          <section className="divide-y divide-border-default rounded-lg border border-border-default bg-surface px-lg shadow-sm">
             <DetailRow
               icon={<Clock3 size={19} />}
               label={t("weekday")}
@@ -99,7 +99,7 @@ export function StoreDetailContent({ code }: { code: string }) {
             {store.phone ? (
               <a
                 href={`tel:${store.phone}`}
-                className="flex h-[52px] items-center justify-center gap-sm rounded-lg border border-border-default bg-surface font-sans text-label-14-bold text-text-primary"
+                className="flex h-[52px] items-center justify-center gap-sm rounded-lg border border-border-default bg-surface font-sans text-label-14-bold text-text-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-action-primary"
               >
                 <Phone aria-hidden="true" size={18} />
                 {t("call")}
@@ -113,7 +113,7 @@ export function StoreDetailContent({ code }: { code: string }) {
               href={`https://map.naver.com/p/search/${encodeURIComponent(store.address)}`}
               target="_blank"
               rel="noreferrer"
-              className="flex h-[52px] items-center justify-center gap-sm rounded-lg bg-action-primary font-sans text-label-14-bold text-text-on-primary"
+              className="flex h-[52px] items-center justify-center gap-sm rounded-lg bg-action-primary font-sans text-label-14-bold text-text-on-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-action-primary"
             >
               <Navigation aria-hidden="true" size={18} />
               {t("directions")}

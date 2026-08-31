@@ -2,6 +2,7 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
 import type { AuthUser } from "@/types/auth";
+import { clearChatSessionStorage } from "@/lib/chatSessionStorage";
 
 const AUTH_COOKIE = "yogoda_authenticated";
 
@@ -40,6 +41,7 @@ export const useAuthStore = create<AuthState>()(
       },
 
       clearAuth: () => {
+        clearChatSessionStorage();
         document.cookie = `${AUTH_COOKIE}=; path=/; max-age=0; samesite=lax`;
 
         set({

@@ -135,7 +135,7 @@ export function BenefitCalendarContent() {
                   {events.map((event) => (
                     <div
                       key={event.id}
-                      className="flex w-[164px] shrink-0 snap-start flex-col items-start rounded-lg border border-border-default bg-surface p-lg text-left"
+                      className="flex w-[164px] shrink-0 snap-start flex-col items-start rounded-lg border border-border-default bg-surface p-lg text-left shadow-sm"
                     >
                       <div className="flex w-full items-start justify-between gap-sm">
                         <button
@@ -158,7 +158,12 @@ export function BenefitCalendarContent() {
                             event.saved ? t("removeSaved") : t("save")
                           }
                           onClick={() => saveMutation.mutate(event)}
-                          className="flex size-[36px] items-center justify-center text-icon-brand"
+                          className={cn(
+                            "flex size-[36px] items-center justify-center",
+                            event.saved
+                              ? "text-action-primary"
+                              : "text-action-secondary",
+                          )}
                         >
                           <Heart
                             size={19}
@@ -230,7 +235,7 @@ function CalendarEventModal({
         role="dialog"
         aria-modal="true"
         aria-labelledby="calendar-event-title"
-        className="w-full max-w-mobile rounded-lg bg-surface p-xl shadow-lg"
+        className="w-full max-w-mobile rounded-xl bg-surface p-2xl shadow-lg"
       >
         <div className="flex items-start justify-between gap-lg">
           <div>
@@ -272,7 +277,10 @@ function CalendarEventModal({
                 type="button"
                 aria-label={event.saved ? t("removeSaved") : t("save")}
                 onClick={() => onToggleSaved(event)}
-                className="flex size-touch shrink-0 items-center justify-center text-icon-brand"
+                className={cn(
+                  "flex size-touch shrink-0 items-center justify-center",
+                  event.saved ? "text-action-primary" : "text-action-secondary",
+                )}
               >
                 <Heart size={20} fill={event.saved ? "currentColor" : "none"} />
               </button>

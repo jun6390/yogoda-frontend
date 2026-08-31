@@ -23,12 +23,22 @@ import { ErrorState } from "@/components/ui/ErrorState/ErrorState";
 import { PageSpinner } from "@/components/ui/Spinner/Spinner";
 import { NergetPlanBadge } from "@/components/plans/NergetPlanBadge";
 import { Button } from "@/components/ui/Button/Button";
+import { BackToChatButton } from "@/components/chat/BackToChatButton";
 import { useRouter } from "@/i18n/navigation";
 import { getCurrentPlan, getPlanByCode } from "@/lib/api/plan";
 import { useAuthStore } from "@/stores/useAuthStore";
 import type { PlanChoiceBenefit, PlanChoiceBenefitOption } from "@/types/plan";
 
 type SelectedBenefits = Record<string, string[]>;
+
+/*
+ * /ai로 이동할 때 매번 다른 값의 쿼리 파라미터를 만들기 위한 헬퍼.
+ * Date.now() 등 impure 호출은 컴포넌트 함수 본문에서 직접 하면 안 되므로 분리함
+ * (react-hooks/purity)
+ */
+function createNavigationNonce() {
+  return Date.now().toString(36);
+}
 
 export default function PlanDetailPage() {
   const { code } = useParams<{ code: string }>();
@@ -440,6 +450,12 @@ function PlanDetailContent({ code }: PlanDetailContentProps) {
       router.push("/login");
       return;
     }
+    // 이전 가입 플로우 잔여 상태 초기화 (새 가입 시작)
+    sessionStorage.removeItem("signupEntryShown");
+    sessionStorage.removeItem("signupStep");
+    sessionStorage.removeItem("signupQuickReplies");
+    sessionStorage.removeItem("signupCollectedData");
+    sessionStorage.removeItem("signupKickoffSent");
     sessionStorage.setItem(
       "preselectedPlan",
       JSON.stringify({
@@ -448,11 +464,25 @@ function PlanDetailContent({ code }: PlanDetailContentProps) {
         monthlyFee: plan.monthlyFee,
       }),
     );
-    router.push("/ai");
+    // 사용자가 선택한 혜택 타이틀을 AI 인삿말 생성에 활용
+    const benefitTitles = selectedOptions.map((opt) => opt.title);
+    if (benefitTitles.length > 0) {
+      sessionStorage.setItem(
+        "preselectedPlanBenefits",
+        JSON.stringify(benefitTitles),
+      );
+    } else {
+      sessionStorage.removeItem("preselectedPlanBenefits");
+    }
+    // entry 쿼리 파라미터로 매번 다른 값을 붙여, 직전에 /ai를 방문한 적이 있어
+    // 페이지가 재사용되는 경우에도 preselectedPlan을 다시 읽어오도록 강제함
+    router.push(`/ai?entry=${createNavigationNonce()}`);
   };
 
   return (
     <>
+      <BackToChatButton />
+
       <PageContainer className="pb-xl pt-md">
         <div className="flex flex-col gap-lg">
           <button
