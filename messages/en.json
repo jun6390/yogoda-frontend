@@ -1116,6 +1116,7 @@
     "comparePlan": "Compare with my plan",
     "explorePlans": "Explore other plans",
     "inputPlaceholder": "Enter a message",
+    "stopGeneration": "Stop generating",
     "carouselDotAriaLabel": "Go to plan card {index}",
     "guestLimitModal": {
       "heading": "You've used all your free AI consultations",

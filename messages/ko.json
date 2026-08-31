@@ -1115,6 +1115,7 @@
     "comparePlan": "내 요금제와 비교",
     "explorePlans": "다른 요금제 탐색하기",
     "inputPlaceholder": "메시지를 입력하세요",
+    "stopGeneration": "생성 정지",
     "carouselDotAriaLabel": "{index}번째 요금제 카드로 이동",
     "guestLimitModal": {
       "heading": "무료 AI 상담을 모두 사용했어요",
