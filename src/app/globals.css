@@ -101,21 +101,15 @@ button:disabled {
   }
 }
 
-/* "채팅으로 돌아가기" 버튼이 언제든 누를 수 있음을 알리기 위해 통통 튀는 효과용 keyframes.
-   부드러운 사인파가 아니라, 쉬었다가 두 번 튀어오르고 다시 쉬는 "통!! 통!!" 리듬을 냄 */
-@keyframes ctaBounce {
-  0%,
-  20%,
-  50%,
-  80%,
+/* 스켈레톤 텍스트 막대 위를 좌→우로 흐르는 빛 띠(shimmer) 효과용 keyframes.
+   막대 자체는 bg-gradient-to-r + bg-[length:200%_100%]로 그라데이션을 두 배 늘려두고,
+   이 keyframes로 background-position만 움직여서 빛이 지나가는 것처럼 보이게 함 */
+@keyframes skeletonShimmer {
+  0% {
+    background-position: 150% 0;
+  }
   100% {
-    transform: translateY(0);
-  }
-  40% {
-    transform: translateY(-10px);
-  }
-  60% {
-    transform: translateY(-5px);
+    background-position: -150% 0;
   }
 }
 
