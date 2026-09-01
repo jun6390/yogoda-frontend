@@ -141,7 +141,11 @@ export function useAIChat({ preselectedPlan }: UseAIChatOptions = {}) {
 
   // quickReplies가 바뀌면 일반 채팅 한정으로 sessionStorage에 저장 (새로고침 복원용)
   // 빈 배열이 되면 키를 제거해 "사용자가 이미 답변했음"을 표시
+  // 복원(init) 완료 전에는 실행하지 않음 — 새로고침 직후 quickReplies가 아직
+  // 빈 배열인 첫 렌더에서 이 이펙트가 먼저 돌면, init()이 sessionStorage에서
+  // 읽어오기도 전에 저장해둔 값을 지워버리는 경합이 있었음
   useEffect(() => {
+    if (isRestoringHistory) return;
     try {
       if (preselectedPlanRef.current) {
         // 가입 플로우 퀵답변: signupQuickReplies 키로 분리 저장
@@ -166,7 +170,7 @@ export function useAIChat({ preselectedPlan }: UseAIChatOptions = {}) {
     } catch {
       /* noop */
     }
-  }, [quickReplies]);
+  }, [quickReplies, isRestoringHistory]);
   // 가입 플로우 진행 중 수집된 데이터 (단계별 카드 렌더링에 사용)
   const [signupCollectedData, setSignupCollectedData] =
     useState<SignupCollectedData>({});
@@ -277,6 +281,7 @@ export function useAIChat({ preselectedPlan }: UseAIChatOptions = {}) {
     socket.on(
       "session_created",
       (data: { sessionId: string; promptVersion: string }) => {
+        console.log("[AI 채팅] 적용된 프롬프트 버전:", data.promptVersion);
         sessionIdRef.current = data.sessionId;
         if (!isLoggedInRef.current) {
           useChatHistoryStore.getState().setSessionId(data.sessionId);

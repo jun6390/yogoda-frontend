@@ -20,7 +20,7 @@ export function UserChatBubble({ children, className }: UserChatBubbleProps) {
       <div
         className={cn(
           "rounded-[12px] rounded-tr-[4px] px-lg py-md font-sans text-body-14-regular whitespace-pre-line break-words shadow-sm",
-          "bg-action-primary text-text-on-primary max-w-[80%]",
+          "bg-bubble-user text-text-primary border border-border-default max-w-[80%]",
           className,
         )}
       >
