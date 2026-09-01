@@ -95,7 +95,7 @@ export function DateRangePicker({
         type="button"
         onClick={() => setIsOpen((prev) => !prev)}
         className={cn(
-          "flex h-[40px] w-70 items-center gap-xs rounded-md border border-border-default bg-background px-md",
+          "flex h-9 w-70 items-center gap-xs rounded-md border border-border-default bg-background px-md",
           "font-sans text-body-14-regular text-text-primary",
           "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-action-primary",
         )}
@@ -163,7 +163,7 @@ export function DateRangePicker({
                   type="button"
                   onClick={() => handleSelectDate(dateKey)}
                   className={cn(
-                    "mx-auto flex size-[32px] items-center justify-center rounded-full",
+                    "mx-auto flex size-8 items-center justify-center rounded-full",
                     "font-sans text-caption-13-medium text-text-primary transition-colors",
                     isInRange && "rounded-none bg-brand-soft",
                     (isStart || isEnd) &&

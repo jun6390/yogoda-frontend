@@ -18,7 +18,10 @@ interface SelectProps<T extends string> {
   icon?: ReactNode;
   className?: string;
   triggerClassName?: string;
+  openTriggerClassName?: string;
   menuClassName?: string;
+  optionClassName?: string;
+  selectedOptionClassName?: string;
 }
 
 export function Select<T extends string>({
@@ -29,7 +32,10 @@ export function Select<T extends string>({
   icon,
   className,
   triggerClassName,
+  openTriggerClassName,
   menuClassName,
+  optionClassName,
+  selectedOptionClassName,
 }: SelectProps<T>) {
   const containerRef = useRef<HTMLDivElement>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
@@ -78,7 +84,9 @@ export function Select<T extends string>({
         className={cn(
           "flex min-h-[48px] w-full items-center rounded-lg border bg-surface px-md text-left text-text-primary transition-colors",
           "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-action-primary",
-          isOpen ? "border-action-primary" : "border-border-default",
+          isOpen
+            ? cn("border-action-primary", openTriggerClassName)
+            : "border-border-default",
           triggerClassName,
         )}
       >
@@ -132,8 +140,12 @@ export function Select<T extends string>({
                   "flex min-h-[42px] w-full items-center justify-between gap-sm rounded-sm px-md text-left font-sans text-body-14-regular",
                   "focus-visible:outline-2 focus-visible:outline-action-primary",
                   isSelected
-                    ? "bg-brand-soft font-bold text-text-brand"
+                    ? cn(
+                        "bg-brand-soft font-bold text-text-brand",
+                        selectedOptionClassName,
+                      )
                     : "text-text-primary hover:bg-surface-subtle",
+                  optionClassName,
                 )}
               >
                 <span>{option.label}</span>

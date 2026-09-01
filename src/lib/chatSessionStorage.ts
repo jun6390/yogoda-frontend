@@ -8,6 +8,7 @@ const CHAT_SESSION_KEYS = [
   "signupKickoffSent",
   "chatQuickReplies",
   "termsAgreementChecked",
+  "chatLogConsentAsked",
 ] as const;
 
 export function clearChatSessionStorage() {

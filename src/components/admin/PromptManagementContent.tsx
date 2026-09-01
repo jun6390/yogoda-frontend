@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
@@ -11,10 +11,17 @@ import { PromptCompareChat } from "@/components/admin/PromptCompareChat";
 import { PromptTestChat } from "@/components/admin/PromptTestChat";
 import { PromptVersionHistory } from "@/components/admin/PromptVersionHistory";
 import { ApiError } from "@/lib/api/client";
-import { createPrompt, getActivePrompt } from "@/lib/api/admin/prompt";
+import {
+  createPrompt,
+  getActivePrompt,
+  getPromptDraft,
+  savePromptDraft,
+} from "@/lib/api/admin/prompt";
 import { formatDateTime } from "@/lib/admin/format";
 import { ADMIN_PROMPT_QUERY_KEYS } from "@/lib/admin/queryKeys";
 import { cn } from "@/lib/utils";
+
+const DRAFT_AUTOSAVE_DELAY_MS = 1000;
 
 type TestMode = "single" | "compare";
 type PageView = "editor" | "history";
@@ -35,34 +42,51 @@ export function PromptManagementContent() {
     queryFn: getActivePrompt,
   });
 
+  // 임시저장된 초안이 있으면 그걸, 없으면 현재 운영 버전을 기본값으로 돌려줌.
+  // 편집 중 자동저장이 이 쿼리를 다시 무효화하지 않으므로, 창을 다시 포커스해도
+  // 방금 GET으로 받아온(=자기 자신이 막 저장한) 내용으로 덮어써지지 않음
+  const { data: draft } = useQuery({
+    queryKey: ADMIN_PROMPT_QUERY_KEYS.draft,
+    queryFn: getPromptDraft,
+    refetchOnWindowFocus: false,
+    staleTime: Infinity,
+  });
+
   const [content, setContent] = useState("");
   const [summary, setSummary] = useState("");
   const [deployedMessage, setDeployedMessage] = useState<string | null>(null);
 
-  // prompt?.versionId로 초기화하면, 다른 탭 갔다 왔을 때 TanStack Query 캐시가
-  // 첫 렌더부터 데이터를 즉시 채워줘서 아래 동기화 조건이 처음부터 거짓이 되어버림
-  // (그러면 content가 절대 채워지지 않음). 항상 값이 달라지는 상태로 시작해야 함
-  const [syncedVersionId, setSyncedVersionId] = useState<string | undefined>(
-    undefined,
-  );
-
   /*
-   * conversionRate 같은 통계값은 배경에서 계속 refetch되며 바뀔 수 있어서
-   * prompt 객체 전체가 아니라 versionId가 바뀔 때만 편집 중인 값을 리셋함
-   * (그렇지 않으면 입력 중에 통계 갱신만으로 작성 중이던 내용이 날아감)
-   * effect 대신 렌더링 중 상태 조정 패턴을 씀 (setState-in-effect 경고 회피)
+   * 초안 로드는 페이지 진입 후 딱 한 번만 편집 상태에 반영함. 그 이후로는 로컬
+   * content가 정본이고, 우리가 직접 PUT으로 서버에 반영하는 쪽이므로 다시
+   * 덮어쓰면 안 됨 (그러면 입력 중이던 내용이 날아감)
    */
-  if (prompt && prompt.versionId !== syncedVersionId) {
-    setSyncedVersionId(prompt.versionId);
-    setContent(prompt.content);
-    setSummary("");
-    setDeployedMessage(null);
+  const [hasSyncedDraft, setHasSyncedDraft] = useState(false);
+  if (draft && !hasSyncedDraft) {
+    setHasSyncedDraft(true);
+    setContent(draft.content);
   }
+
+  const draftMutation = useMutation({ mutationFn: savePromptDraft });
+  const { mutate: saveDraft } = draftMutation;
+
+  useEffect(() => {
+    if (!hasSyncedDraft) {
+      return;
+    }
+
+    const timeoutId = window.setTimeout(() => {
+      saveDraft({ content });
+    }, DRAFT_AUTOSAVE_DELAY_MS);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [content, hasSyncedDraft, saveDraft]);
 
   const deployMutation = useMutation({
     mutationFn: createPrompt,
     onSuccess: (data) => {
       setDeployedMessage(`${data.version} 버전으로 배포됐어요.`);
+      setSummary("");
       queryClient.invalidateQueries({
         queryKey: ADMIN_PROMPT_QUERY_KEYS.active,
       });
@@ -166,7 +190,7 @@ export function PromptManagementContent() {
               />
             )}
 
-            {prompt && (
+            {prompt && draft && (
               <div className="flex flex-col gap-2xl lg:flex-row">
                 <div className="flex flex-1 flex-col gap-md">
                   <p className="flex h-11 shrink-0 items-center font-sans text-label-14-bold text-text-primary">
@@ -188,16 +212,28 @@ export function PromptManagementContent() {
                   />
 
                   <div className="flex flex-wrap items-center justify-between gap-md">
-                    <p className="font-sans text-caption-12-regular text-text-tertiary">
-                      {content.length}자 · 전환율 {prompt.conversionRate}% ·{" "}
-                      {prompt.sessionCount.toLocaleString("ko-KR")}건 세션 ·
-                      저장 시 새 버전으로 즉시 배포돼요
-                    </p>
+                    <div className="flex flex-col gap-xs">
+                      <p className="font-sans text-caption-12-regular text-text-tertiary">
+                        {content.length}자 · 전환율 {prompt.conversionRate}% ·{" "}
+                        {prompt.sessionCount.toLocaleString("ko-KR")}건 세션 ·
+                        저장 시 새 버전으로 즉시 배포돼요
+                      </p>
+
+                      <p className="font-sans text-caption-12-regular text-text-tertiary">
+                        {draftMutation.isPending
+                          ? "임시저장 중..."
+                          : draftMutation.data?.updatedAt
+                            ? `임시저장됨 ${formatDateTime(draftMutation.data.updatedAt)} · ${draftMutation.data.updatedBy}`
+                            : draft.updatedAt
+                              ? `임시저장됨 ${formatDateTime(draft.updatedAt)} · ${draft.updatedBy}`
+                              : ""}
+                      </p>
+                    </div>
 
                     <div className="flex shrink-0 items-center gap-sm">
                       <Button
                         variant="secondary"
-                        className="h-[40px] rounded-md px-lg py-0 text-label-14-bold"
+                        className="h-10 rounded-md px-lg py-0 text-label-14-bold"
                         disabled={!hasChanges || deployMutation.isPending}
                         onClick={handleReset}
                       >
@@ -206,7 +242,7 @@ export function PromptManagementContent() {
 
                       <Button
                         variant="primary"
-                        className="h-[40px] rounded-md px-lg py-0 text-label-14-bold"
+                        className="h-10 rounded-md px-lg py-0 text-label-14-bold"
                         loading={deployMutation.isPending}
                         loadingLabel="배포하는 중..."
                         disabled={!canDeploy}
@@ -262,7 +298,7 @@ export function PromptManagementContent() {
 
                   <div className="sm:h-160">
                     {testMode === "single" ? (
-                      <PromptTestChat />
+                      <PromptTestChat promptContent={content} />
                     ) : (
                       <PromptCompareChat
                         draftContent={content}

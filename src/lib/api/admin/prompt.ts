@@ -6,12 +6,25 @@ import type {
   CreatePromptPayload,
   CreatePromptResponse,
   PromptDetail,
+  PromptDraft,
   PromptHistoryParams,
   PromptHistoryResponse,
+  SavePromptDraftPayload,
 } from "@/types/prompt";
 
 export function getActivePrompt() {
   return apiFetch<ActivePrompt>("/api/admin/prompts/active");
+}
+
+export function getPromptDraft() {
+  return apiFetch<PromptDraft>("/api/admin/prompts/draft");
+}
+
+export function savePromptDraft(payload: SavePromptDraftPayload) {
+  return apiFetch<PromptDraft>("/api/admin/prompts/draft", {
+    method: "PUT",
+    body: payload,
+  });
 }
 
 export function createPrompt(payload: CreatePromptPayload) {

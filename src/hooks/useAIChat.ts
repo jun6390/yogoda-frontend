@@ -23,6 +23,7 @@ import type {
   PreselectedPlan,
   SignupCollectedData,
 } from "@/types/chat";
+import type { UiElement } from "@/types/ui-elements";
 
 import { useTypewriter } from "./useTypewriter";
 
@@ -138,6 +139,9 @@ export function useAIChat({ preselectedPlan }: UseAIChatOptions = {}) {
   const [showGuestLimitModal, setShowGuestLimitModal] = useState(false);
   // AI의 질문에 바로 탭해서 답할 수 있는 빠른 답변 후보. 다음 메시지를 보내면 비워짐
   const [quickReplies, setQuickReplies] = useState<string[]>([]);
+  // 관리자의 대화 열람에 동의하는지 묻는 배너. 세션당 한 번만 물어보면 되므로
+  // sessionStorage에 물어봤음을 남겨서 새로고침해도 다시 뜨지 않게 함
+  const [showConsentBanner, setShowConsentBanner] = useState(false);
 
   // quickReplies가 바뀌면 일반 채팅 한정으로 sessionStorage에 저장 (새로고침 복원용)
   // 빈 배열이 되면 키를 제거해 "사용자가 이미 답변했음"을 표시
@@ -285,6 +289,19 @@ export function useAIChat({ preselectedPlan }: UseAIChatOptions = {}) {
         sessionIdRef.current = data.sessionId;
         if (!isLoggedInRef.current) {
           useChatHistoryStore.getState().setSessionId(data.sessionId);
+        }
+
+        // session_created는 재연결마다 다시 오므로, 이미 이번 세션에 물어봤으면
+        // (새로고침 등으로 재연결돼도) 배너를 다시 띄우지 않음
+        let alreadyAskedConsent = false;
+        try {
+          alreadyAskedConsent =
+            sessionStorage.getItem("chatLogConsentAsked") === "true";
+        } catch {
+          /* noop */
+        }
+        if (!alreadyAskedConsent) {
+          setShowConsentBanner(true);
         }
       },
     );
@@ -977,7 +994,34 @@ export function useAIChat({ preselectedPlan }: UseAIChatOptions = {}) {
 
     setMessages([WELCOME_MESSAGE]);
     setQuickReplies([]);
+    setShowConsentBanner(false);
   }, [isLoggedIn, openSocket]);
+
+  /*
+   * 추천 카드 UI 요소의 노출/클릭을 관리자 "UI 행동 분석" 통계용으로 기록함.
+   * 응답 이벤트 없는 fire-and-forget이고, 같은 세션에서 같은 element+action
+   * 조합은 서버가 알아서 중복 집계를 걸러주므로 프론트에서 디바운스하지 않음
+   */
+  const trackUiEvent = useCallback(
+    (element: UiElement, action: "view" | "click") => {
+      socketRef.current?.emit("ui_event", { element, action });
+    },
+    [],
+  );
+
+  /*
+   * 유저가 채팅 로그 열람 동의 배너에 응답하면 서버에 1회 통지함 (응답 이벤트 없이 emit만).
+   * sessionStorage에 물어봤음을 남겨서 새로고침해도 배너가 다시 뜨지 않게 함
+   */
+  const respondToConsent = useCallback((consented: boolean) => {
+    socketRef.current?.emit("consent", { consented });
+    try {
+      sessionStorage.setItem("chatLogConsentAsked", "true");
+    } catch {
+      /* noop */
+    }
+    setShowConsentBanner(false);
+  }, []);
 
   // sessionIdRef는 마지막으로 "성공"한 응답 기준으로만 갱신되므로, 실패한 턴을 다시 보내도
   // 자동으로 그 직전까지의 대화에 이어붙게 됨 (별도로 히스토리를 잘라낼 필요 없음)
@@ -1084,6 +1128,9 @@ export function useAIChat({ preselectedPlan }: UseAIChatOptions = {}) {
     isLoggedIn,
     endCurrentChat,
     quickReplies,
+    trackUiEvent,
+    showConsentBanner,
+    respondToConsent,
     // 가입 플로우 전용
     signupCollectedData,
     isSignupComplete,

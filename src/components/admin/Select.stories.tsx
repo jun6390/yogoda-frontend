@@ -31,7 +31,7 @@ function SelectExample() {
       options={STATUS_OPTIONS}
       ariaLabel="상태"
       onChange={setValue}
-      className="w-[140px]"
+      className="w-35"
     />
   );
 }

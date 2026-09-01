@@ -16,6 +16,7 @@ export interface SessionListItem {
   promptVersion: string;
   createdAt: string;
   duration: number;
+  chatLogConsent: boolean;
 }
 
 export interface SessionListResponse {
@@ -33,6 +34,7 @@ export interface SessionListParams {
   status?: SessionStatus;
   drop_stage?: SessionDropStage;
   prompt_version?: string;
+  chat_log_consent?: boolean;
   page?: number;
   limit?: number;
 }
@@ -53,5 +55,6 @@ export interface SessionDetail {
   promptVersion: string;
   createdAt: string;
   duration: number;
+  chatLogConsent: boolean;
   messages: SessionMessage[];
 }

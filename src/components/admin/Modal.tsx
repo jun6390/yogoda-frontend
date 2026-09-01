@@ -39,7 +39,7 @@ export function Modal({
       role="dialog"
       aria-modal="true"
       className={cn(
-        "relative flex w-[calc(100vw-40px)] max-w-[350px] flex-col items-center rounded-2xl bg-surface p-2xl text-center shadow-md",
+        "relative flex w-[calc(100vw-40px)] max-w-content flex-col items-center rounded-2xl bg-surface p-2xl text-center shadow-md",
         className,
       )}
       {...props}
@@ -53,7 +53,7 @@ export function Modal({
         <X size={20} aria-hidden="true" />
       </button>
       <div className="h-3xl" />
-      <div className="flex size-[40px] items-center justify-center rounded-full bg-brand-soft text-text-brand">
+      <div className="flex size-10 items-center justify-center rounded-full bg-brand-soft text-text-brand">
         {icon}
       </div>
       <h2 className="mt-lg font-sans text-title-16-bold text-text-primary">
@@ -63,7 +63,7 @@ export function Modal({
         {description}
       </p>
       <Button
-        className="h-[48px] w-full rounded-lg"
+        className="h-12 w-full rounded-lg"
         loading={primaryLoading}
         onClick={onPrimaryClick}
       >
