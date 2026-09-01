@@ -14,6 +14,7 @@ export interface TestMessage {
 export function usePromptTestConversation(promptContent: string) {
   const [messages, setMessages] = useState<TestMessage[]>([]);
   const [isTyping, setIsTyping] = useState(false);
+  const [isFinalizing, setIsFinalizing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const previousInteractionIdRef = useRef<string | null>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
@@ -40,6 +41,7 @@ export function usePromptTestConversation(promptContent: string) {
         { id: aiMessageId, sender: "ai", text: "" },
       ]);
       setIsTyping(true);
+      setIsFinalizing(false);
       setError(null);
 
       const abortController = new AbortController();
@@ -58,6 +60,11 @@ export function usePromptTestConversation(promptContent: string) {
                 : testMessage,
             ),
           );
+        },
+        // 텍스트 스트리밍은 끝났지만 done(인터랙션 ID+추천 결과)은 아직 안 온
+        // "정리 중" 구간에 진입했다는 서버 신호. 데이터는 없고 신호 용도로만 씀
+        onLoadingExtra: () => {
+          setIsFinalizing(true);
         },
       })
         .then(({ interactionId }) => {
@@ -83,6 +90,7 @@ export function usePromptTestConversation(promptContent: string) {
         .finally(() => {
           if (abortControllerRef.current === abortController) {
             setIsTyping(false);
+            setIsFinalizing(false);
           }
         });
     },
@@ -94,8 +102,9 @@ export function usePromptTestConversation(promptContent: string) {
     previousInteractionIdRef.current = null;
     setMessages([]);
     setIsTyping(false);
+    setIsFinalizing(false);
     setError(null);
   }, []);
 
-  return { messages, isTyping, error, sendMessage, reset };
+  return { messages, isTyping, isFinalizing, error, sendMessage, reset };
 }

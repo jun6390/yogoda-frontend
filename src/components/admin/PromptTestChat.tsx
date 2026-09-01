@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { RotateCcw, Send } from "lucide-react";
 
+import { AdminTypingIndicator } from "@/components/admin/AdminTypingIndicator";
 import { Badge } from "@/components/ui/Badge/Badge";
 import {
   AIChatBubble,
@@ -25,7 +26,7 @@ interface PromptTestChatProps {
 
 export function PromptTestChat({ promptContent }: PromptTestChatProps) {
   const [input, setInput] = useState("");
-  const { messages, isTyping, error, sendMessage, reset } =
+  const { messages, isTyping, isFinalizing, error, sendMessage, reset } =
     usePromptTestConversation(promptContent);
 
   const handleSend = (text: string) => {
@@ -66,31 +67,27 @@ export function PromptTestChat({ promptContent }: PromptTestChatProps) {
           </p>
         )}
 
-        {messages.map((message, index) => {
-          const isStreaming =
-            isTyping &&
-            message.sender === "ai" &&
-            index === messages.length - 1;
-
-          return message.sender === "user" ? (
+        {messages.map((message) =>
+          message.sender === "user" ? (
             <UserChatBubble key={message.id}>{message.text}</UserChatBubble>
           ) : (
             <AIChatBubble key={message.id}>
               {message.text ? (
-                <>
-                  <ChatMarkdown>{message.text}</ChatMarkdown>
-                  {isStreaming && (
-                    <span className="ml-0.5 inline-block h-3 w-0.5 animate-pulse bg-text-tertiary align-middle" />
-                  )}
-                </>
+                <ChatMarkdown>{message.text}</ChatMarkdown>
               ) : (
                 <span className="font-sans text-body-14-regular text-text-tertiary">
                   입력 중...
                 </span>
               )}
             </AIChatBubble>
-          );
-        })}
+          ),
+        )}
+
+        {isTyping && isFinalizing && (
+          <AIChatBubble noBackground>
+            <AdminTypingIndicator message="정리하는 중..." />
+          </AIChatBubble>
+        )}
       </div>
 
       {error && (

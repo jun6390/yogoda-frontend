@@ -12,6 +12,7 @@ interface StreamPromptTestParams {
   message: string;
   previousInteractionId: string | null;
   onChunk: (text: string) => void;
+  onLoadingExtra?: () => void;
   signal?: AbortSignal;
 }
 
@@ -108,6 +109,8 @@ export async function streamPromptTest(
       if (event.event === "chunk") {
         const chunk = JSON.parse(event.data) as { text: string };
         params.onChunk(chunk.text);
+      } else if (event.event === "loading_extra") {
+        params.onLoadingExtra?.();
       } else if (event.event === "done") {
         result = JSON.parse(event.data) as StreamPromptTestResult;
       } else if (event.event === "error") {

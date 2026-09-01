@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { RotateCcw, Send } from "lucide-react";
 
+import { AdminTypingIndicator } from "@/components/admin/AdminTypingIndicator";
 import { Select } from "@/components/admin/Select";
 import { Badge } from "@/components/ui/Badge/Badge";
 import {
@@ -72,11 +73,13 @@ function ChatColumn({
   label,
   messages,
   isTyping,
+  isFinalizing,
   error,
 }: {
   label: string;
   messages: TestMessage[];
   isTyping: boolean;
+  isFinalizing: boolean;
   error: string | null;
 }) {
   return (
@@ -94,31 +97,27 @@ function ChatColumn({
           </p>
         )}
 
-        {messages.map((message, index) => {
-          const isStreaming =
-            isTyping &&
-            message.sender === "ai" &&
-            index === messages.length - 1;
-
-          return message.sender === "user" ? (
+        {messages.map((message) =>
+          message.sender === "user" ? (
             <UserChatBubble key={message.id}>{message.text}</UserChatBubble>
           ) : (
             <AIChatBubble key={message.id}>
               {message.text ? (
-                <>
-                  <ChatMarkdown>{message.text}</ChatMarkdown>
-                  {isStreaming && (
-                    <span className="ml-0.5 inline-block h-3 w-0.5 animate-pulse bg-text-tertiary align-middle" />
-                  )}
-                </>
+                <ChatMarkdown>{message.text}</ChatMarkdown>
               ) : (
                 <span className="font-sans text-body-14-regular text-text-tertiary">
                   입력 중...
                 </span>
               )}
             </AIChatBubble>
-          );
-        })}
+          ),
+        )}
+
+        {isTyping && isFinalizing && (
+          <AIChatBubble noBackground>
+            <AdminTypingIndicator message="정리하는 중..." />
+          </AIChatBubble>
+        )}
       </div>
 
       {error && (
@@ -228,6 +227,7 @@ export function PromptCompareChat({
           }
           messages={left.messages}
           isTyping={left.isTyping}
+          isFinalizing={left.isFinalizing}
           error={left.error}
         />
         <ChatColumn
@@ -237,6 +237,7 @@ export function PromptCompareChat({
           }
           messages={right.messages}
           isTyping={right.isTyping}
+          isFinalizing={right.isFinalizing}
           error={right.error}
         />
       </div>
