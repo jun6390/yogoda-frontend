@@ -15,6 +15,7 @@ export function getSessions(params: SessionListParams = {}) {
   if (params.drop_stage) search.set("drop_stage", params.drop_stage);
   if (params.prompt_version)
     search.set("prompt_version", params.prompt_version);
+  if (params.chat_log_consent) search.set("chat_log_consent", "true");
   if (params.page) search.set("page", String(params.page));
   if (params.limit) search.set("limit", String(params.limit));
 

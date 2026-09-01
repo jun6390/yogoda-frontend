@@ -50,6 +50,7 @@ interface FilterState {
   status: SessionStatus;
   dropStage: SessionDropStage | "all";
   promptVersion: string;
+  consentOnly: boolean;
 }
 
 const DEFAULT_PERIOD_DAYS = 7;
@@ -71,6 +72,7 @@ function getDefaultFilters(): FilterState {
     status: "dropped",
     dropStage: "all",
     promptVersion: "",
+    consentOnly: false,
   };
 }
 
@@ -83,6 +85,7 @@ function toListParams(filters: FilterState): SessionListParams {
     prompt_version: filters.promptVersion
       ? `v${filters.promptVersion}`
       : undefined,
+    chat_log_consent: filters.consentOnly ? true : undefined,
   };
 }
 
@@ -259,6 +262,28 @@ export function SessionLogContent() {
           </div>
         </label>
 
+        <div className="flex flex-col gap-sm">
+          <span className="font-sans text-micro-11-bold text-text-tertiary">
+            동의 여부
+          </span>
+          <label className="flex h-9 items-center gap-xs">
+            <input
+              type="checkbox"
+              checked={draftFilters.consentOnly}
+              onChange={(e) =>
+                setDraftFilters((prev) => ({
+                  ...prev,
+                  consentOnly: e.target.checked,
+                }))
+              }
+              className="size-4 accent-text-secondary"
+            />
+            <span className="font-sans text-caption-12-regular text-text-secondary">
+              동의한 것만
+            </span>
+          </label>
+        </div>
+
         <div className="flex gap-sm">
           <Button
             className="h-9 rounded-md px-lg py-0 text-label-14-bold"
@@ -332,15 +357,22 @@ export function SessionLogContent() {
                           <span className="truncate font-sans text-caption-12-bold text-text-primary">
                             {session.userName}
                           </span>
-                          <Badge
-                            variant={
-                              session.status === "dropped" ? "error" : "success"
-                            }
-                          >
-                            {session.status === "dropped"
-                              ? "이탈"
-                              : "가입 완료"}
-                          </Badge>
+                          <div className="flex shrink-0 items-center gap-xs">
+                            {!session.chatLogConsent && (
+                              <Badge variant="default">🔒 동의 안 함</Badge>
+                            )}
+                            <Badge
+                              variant={
+                                session.status === "dropped"
+                                  ? "error"
+                                  : "success"
+                              }
+                            >
+                              {session.status === "dropped"
+                                ? "이탈"
+                                : "가입 완료"}
+                            </Badge>
+                          </div>
                         </div>
 
                         <p className="mt-xs font-sans text-micro-11-regular text-text-tertiary">
@@ -402,46 +434,61 @@ export function SessionLogContent() {
                   </p>
                 </div>
 
-                <Badge
-                  variant={detail.status === "dropped" ? "error" : "success"}
-                >
-                  {detail.status === "dropped"
-                    ? `${detail.dropStageLabel ?? ""} 이탈`
-                    : "가입 완료"}
-                </Badge>
+                <div className="flex shrink-0 items-center gap-xs">
+                  {!detail.chatLogConsent && (
+                    <Badge variant="default">🔒 동의 안 함</Badge>
+                  )}
+                  <Badge
+                    variant={detail.status === "dropped" ? "error" : "success"}
+                  >
+                    {detail.status === "dropped"
+                      ? `${detail.dropStageLabel ?? ""} 이탈`
+                      : "가입 완료"}
+                  </Badge>
+                </div>
               </header>
 
-              <div className="mt-md flex min-h-0 flex-1 flex-col gap-md overflow-y-auto">
-                {detail.messages
-                  .filter((message) => message.content.trim() !== "")
-                  .map((message) => (
-                    <div
-                      key={message.messageId}
-                      className={cn(
-                        "mx-auto flex w-full max-w-160 flex-col gap-xs",
-                        message.sender === "user" ? "items-end" : "items-start",
-                      )}
-                    >
-                      {message.sender === "user" ? (
-                        <UserChatBubble>{message.content}</UserChatBubble>
-                      ) : (
-                        <AIChatBubble>
-                          <ChatMarkdown>{message.content}</ChatMarkdown>
-                        </AIChatBubble>
-                      )}
-                      <span
+              {detail.chatLogConsent ? (
+                <div className="mt-md flex min-h-0 flex-1 flex-col gap-md overflow-y-auto">
+                  {detail.messages
+                    .filter((message) => message.content.trim() !== "")
+                    .map((message) => (
+                      <div
+                        key={message.messageId}
                         className={cn(
-                          "font-sans text-caption-12-regular text-text-tertiary",
-                          // AIChatBubble은 아바타(32px)+gap만큼 말풍선이 안쪽에서 시작해서,
-                          // 그 만큼 들여쓰지 않으면 시간이 말풍선이 아니라 아바타 밑에 정렬됨
-                          message.sender === "ai" && "ml-10",
+                          "mx-auto flex w-full max-w-160 flex-col gap-xs",
+                          message.sender === "user"
+                            ? "items-end"
+                            : "items-start",
                         )}
                       >
-                        {formatDateTime(message.createdAt)}
-                      </span>
-                    </div>
-                  ))}
-              </div>
+                        {message.sender === "user" ? (
+                          <UserChatBubble>{message.content}</UserChatBubble>
+                        ) : (
+                          <AIChatBubble>
+                            <ChatMarkdown>{message.content}</ChatMarkdown>
+                          </AIChatBubble>
+                        )}
+                        <span
+                          className={cn(
+                            "font-sans text-caption-12-regular text-text-tertiary",
+                            // AIChatBubble은 아바타(32px)+gap만큼 말풍선이 안쪽에서 시작해서,
+                            // 그 만큼 들여쓰지 않으면 시간이 말풍선이 아니라 아바타 밑에 정렬됨
+                            message.sender === "ai" && "ml-10",
+                          )}
+                        >
+                          {formatDateTime(message.createdAt)}
+                        </span>
+                      </div>
+                    ))}
+                </div>
+              ) : (
+                <div className="mt-md flex min-h-0 flex-1 flex-col items-center justify-center gap-xs">
+                  <p className="font-sans text-body-14-regular text-text-tertiary">
+                    🔒 사용자가 대화 내용 열람에 동의하지 않았어요
+                  </p>
+                </div>
+              )}
             </>
           )}
         </section>

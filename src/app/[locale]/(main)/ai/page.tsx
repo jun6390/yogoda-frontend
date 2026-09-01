@@ -14,6 +14,7 @@ import { useTranslations } from "next-intl";
 import { useSearchParams } from "next/navigation";
 
 import { PlanRecommendationCards } from "@/components/chat/PlanRecommendationCards";
+import { ChatLogConsentBanner } from "@/components/chat/ChatLogConsentBanner";
 import { FraudWarningCard } from "@/components/chat/FraudWarningCard";
 import { TermsAgreementCard } from "@/components/chat/TermsAgreementCard";
 import { IdentityVerificationCard } from "@/components/chat/IdentityVerificationCard";
@@ -83,6 +84,8 @@ export default function AIConsultationPage() {
     currentSignupStep,
     sendMessageSilent,
     trackUiEvent,
+    showConsentBanner,
+    respondToConsent,
   } = useAIChat({ preselectedPlan });
 
   const [inputText, setInputText] = useState("");
@@ -296,79 +299,93 @@ export default function AIConsultationPage() {
             <p className="text-center text-caption-12-regular text-text-tertiary px-md">
               원활한 상담을 위해 대화 내용이 저장될 수 있습니다.
             </p>
-            {messages.map((msg) => {
-              if (msg.sender === "user") {
-                return <UserChatBubble key={msg.id}>{msg.text}</UserChatBubble>;
-              }
 
-              // 응답 대기 중인 빈 AI 자리표시 메시지는 렌더링하지 않음
-              // (하단의 타이핑 인디케이터가 대신 표시되므로, 그리지 않으면 말풍선이 2개로 보임)
-              if (msg.type === "text" && !msg.text) {
-                return null;
-              }
+            {/* 관리자의 대화 열람 동의를 묻는 배너 (세션당 한 번, 응답 전까지 노출) */}
+            {showConsentBanner && (
+              <ChatLogConsentBanner onRespond={respondToConsent} />
+            )}
 
-              // 가입 완료 카드는 풀너비 페이지형으로 AIChatBubble 밖에서 독립 렌더링
-              if (msg.type === "signup_complete") {
-                return <SignupCompleteCard key={msg.id} />;
-              }
+            {/*
+              배너에 응답하기 전까지는 웰컴 메시지도 같이 숨겨서 배너에 먼저 집중하게 함.
+              이미 대화 내역이 있는 경우(길이 1 초과)는 배너 응답 전이어도 그대로 보여줌 —
+              돌아온 유저의 기존 대화까지 가리면 안 되므로
+            */}
+            {!(showConsentBanner && messages.length <= 1) &&
+              messages.map((msg) => {
+                if (msg.sender === "user") {
+                  return (
+                    <UserChatBubble key={msg.id}>{msg.text}</UserChatBubble>
+                  );
+                }
 
-              return (
-                <AIChatBubble key={msg.id} noBackground={msg.type !== "text"}>
-                  {/* 일반 텍스트 말풍선 (AI 응답의 마크다운 서식을 그대로 렌더링) */}
-                  {msg.type === "text" && msg.text && (
-                    <ChatMarkdown>{msg.text}</ChatMarkdown>
-                  )}
+                // 응답 대기 중인 빈 AI 자리표시 메시지는 렌더링하지 않음
+                // (하단의 타이핑 인디케이터가 대신 표시되므로, 그리지 않으면 말풍선이 2개로 보임)
+                if (msg.type === "text" && !msg.text) {
+                  return null;
+                }
 
-                  {/* 추천 요금제 카드 */}
-                  {msg.type === "plans" && msg.plans && (
-                    <PlanRecommendationCards
-                      plans={msg.plans}
-                      trackUiEvent={trackUiEvent}
-                    />
-                  )}
+                // 가입 완료 카드는 풀너비 페이지형으로 AIChatBubble 밖에서 독립 렌더링
+                if (msg.type === "signup_complete") {
+                  return <SignupCompleteCard key={msg.id} />;
+                }
 
-                  {/* 명의도용 방지 안내 카드 */}
-                  {msg.type === "fraud_warning" && <FraudWarningCard />}
+                return (
+                  <AIChatBubble key={msg.id} noBackground={msg.type !== "text"}>
+                    {/* 일반 텍스트 말풍선 (AI 응답의 마크다운 서식을 그대로 렌더링) */}
+                    {msg.type === "text" && msg.text && (
+                      <ChatMarkdown>{msg.text}</ChatMarkdown>
+                    )}
 
-                  {/* 약관 동의 카드. 이미 다음 단계로 넘어갔다면(=지난 대화의 카드라면)
+                    {/* 추천 요금제 카드 */}
+                    {msg.type === "plans" && msg.plans && (
+                      <PlanRecommendationCards
+                        plans={msg.plans}
+                        trackUiEvent={trackUiEvent}
+                      />
+                    )}
+
+                    {/* 명의도용 방지 안내 카드 */}
+                    {msg.type === "fraud_warning" && <FraudWarningCard />}
+
+                    {/* 약관 동의 카드. 이미 다음 단계로 넘어갔다면(=지난 대화의 카드라면)
                       체크박스/다음 버튼을 잠가서 재제출을 막음 */}
-                  {msg.type === "terms" && (
-                    <TermsAgreementCard
-                      onAgree={sendMessageSilent}
-                      disabled={currentSignupStep !== "terms_agreement"}
-                    />
-                  )}
+                    {msg.type === "terms" && (
+                      <TermsAgreementCard
+                        onAgree={sendMessageSilent}
+                        disabled={currentSignupStep !== "terms_agreement"}
+                      />
+                    )}
 
-                  {/* 휴대폰 본인인증 카드 */}
-                  {msg.type === "identity_verification" && (
-                    <IdentityVerificationCard onVerify={sendMessageSilent} />
-                  )}
+                    {/* 휴대폰 본인인증 카드 */}
+                    {msg.type === "identity_verification" && (
+                      <IdentityVerificationCard onVerify={sendMessageSilent} />
+                    )}
 
-                  {/* 가입 정보 최종 확인 카드 */}
-                  {msg.type === "signup_summary" && (
-                    <SignupSummaryCard
-                      signupData={msg.signupData ?? {}}
-                      plan={msg.preselectedPlan ?? preselectedPlan}
-                    />
-                  )}
+                    {/* 가입 정보 최종 확인 카드 */}
+                    {msg.type === "signup_summary" && (
+                      <SignupSummaryCard
+                        signupData={msg.signupData ?? {}}
+                        plan={msg.preselectedPlan ?? preselectedPlan}
+                      />
+                    )}
 
-                  {/* 링크 이동 말풍선 */}
-                  {msg.type === "link" && msg.textKey && (
-                    <button className="flex items-center gap-xs font-sans text-caption-13-bold text-text-brand hover:underline self-start">
-                      {t(msg.textKey)} <ChevronRight size={16} />
-                    </button>
-                  )}
+                    {/* 링크 이동 말풍선 */}
+                    {msg.type === "link" && msg.textKey && (
+                      <button className="flex items-center gap-xs font-sans text-caption-13-bold text-text-brand hover:underline self-start">
+                        {t(msg.textKey)} <ChevronRight size={16} />
+                      </button>
+                    )}
 
-                  {/* 에러 발생 시 재시도 배너 */}
-                  {msg.type === "error" && (
-                    <AITypingIndicator
-                      state="error"
-                      onRetry={() => retryMessage(msg.id)}
-                    />
-                  )}
-                </AIChatBubble>
-              );
-            })}
+                    {/* 에러 발생 시 재시도 배너 */}
+                    {msg.type === "error" && (
+                      <AITypingIndicator
+                        state="error"
+                        onRetry={() => retryMessage(msg.id)}
+                      />
+                    )}
+                  </AIChatBubble>
+                );
+              })}
           </>
         )}
         {/* 타이핑 애니메이션 인디케이터 */}
