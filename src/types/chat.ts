@@ -15,7 +15,6 @@ export type SignupStep =
   | "fraud_warning"
   | "terms_agreement"
   | "identity_verification"
-  | "collect_info"
   | "select_benefits"
   | "select_payment"
   | "final_confirm"

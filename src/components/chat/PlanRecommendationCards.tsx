@@ -1,12 +1,12 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { ChevronRight } from "lucide-react";
+import { ChevronRight, Phone, Wifi } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useQuery } from "@tanstack/react-query";
 
 import { Badge } from "@/components/ui/Badge/Badge";
-import { Button } from "@/components/ui/Button/Button";
+import { NergetPlanBadge } from "@/components/plans/NergetPlanBadge";
 import { Link, useRouter } from "@/i18n/navigation";
 import { cn } from "@/lib/utils";
 import { getCurrentPlan } from "@/lib/api/plan";
@@ -15,6 +15,39 @@ import type { ChatPlanCard } from "@/types/chat";
 
 interface PlanRecommendationCardsProps {
   plans: ChatPlanCard[];
+}
+
+// "월 46,000원" → 숫자 부분만("46,000") 큰 글씨로 강조하기 위해 분리함
+function parsePriceNumber(price: string): string {
+  return price.match(/[\d,]+/)?.[0] ?? price;
+}
+
+// "너겟46" 같은 요금제명에서 티켓 뱃지에 넣을 숫자만 뽑아냄. 숫자가 없으면 뱃지를 생략함
+function parseTicketNumber(name: string): string | null {
+  return name.match(/\d+/)?.[0] ?? null;
+}
+
+// specs.service가 "데이터 · 통화" 형태(" · "로 구분)로 내려오는 걸 행 단위로 분리함.
+// 아이콘은 첫 항목=데이터, 두 번째 항목=통화로 가정하고, 그 외엔 기본 아이콘을 씀
+const SPEC_ICONS = [Wifi, Phone];
+function splitSpecs(specs: string): string[] {
+  return specs
+    .split("·")
+    .map((s) => s.trim())
+    .filter(Boolean);
+}
+
+// AI가 "**...**"로 감싸 보내는, 사용자가 원한 조건과 일치하는 구절만 뽑아내기 위한 파싱.
+// 짝수 인덱스는 일반 텍스트, 홀수 인덱스는 강조 대상 텍스트
+interface ReasonSegment {
+  text: string;
+  highlighted: boolean;
+}
+function parseHighlightedReason(reason: string): ReasonSegment[] {
+  return reason
+    .split(/\*\*(.+?)\*\*/g)
+    .map((text, i) => ({ text, highlighted: i % 2 === 1 }))
+    .filter((segment) => segment.text !== "");
 }
 
 /**
@@ -67,63 +100,124 @@ export function PlanRecommendationCards({
         onScroll={handleScroll}
         className="flex gap-md overflow-x-auto snap-x snap-mandatory scrollbar-none pb-xs w-full"
       >
-        {plans.map((plan, idx) => (
-          <div
-            key={idx}
-            ref={(el) => {
-              cardRefs.current[idx] = el;
-            }}
-            className="flex flex-col rounded-lg bg-surface border border-border-default p-lg shadow-sm w-[250px] shrink-0 snap-start h-[260px] overflow-hidden"
-          >
-            <div className="flex items-center justify-between">
-              {/* 순위 뱃지 */}
-              <Badge variant={idx === 0 ? "accent" : "default"}>
-                {plan.badge}
-              </Badge>
-              <span className="font-sans text-caption-12-bold text-text-brand">
-                {plan.matchRate}
-              </span>
-            </div>
+        {plans.map((plan, idx) => {
+          const priceNumber = parsePriceNumber(plan.price);
+          const specRows = splitSpecs(plan.specs);
+          const ticketNumber = parseTicketNumber(plan.name);
+          const reasonSegments = parseHighlightedReason(plan.savings);
 
-            <div className="flex-1 min-h-0 overflow-hidden space-y-xs">
-              <strong className="block font-sans text-title-18-bold text-text-primary">
-                {plan.name}
-              </strong>
-              <span className="block font-sans text-caption-13-bold text-text-primary">
-                {plan.price}
-              </span>
-              <p className="font-sans text-[10px] leading-[13px] text-text-secondary">
-                {plan.specs}
-              </p>
-              <p className="font-sans text-caption-12-bold text-success pt-xs">
-                {plan.savings}
-              </p>
-            </div>
+          return (
+            <div
+              key={idx}
+              ref={(el) => {
+                cardRefs.current[idx] = el;
+              }}
+              role="button"
+              tabIndex={0}
+              onClick={() => router.push(`/plans/${plan.code}?from=chat`)}
+              onKeyDown={(e) => {
+                if (e.key !== "Enter" && e.key !== " ") return;
+                e.preventDefault();
+                router.push(`/plans/${plan.code}?from=chat`);
+              }}
+              className="flex flex-col rounded-2xl bg-surface border border-border-default shadow-sm w-62.5 shrink-0 snap-start overflow-hidden cursor-pointer transition-transform active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-action-primary"
+            >
+              {/* 히어로 영역: 순위/매칭률과 요금제명·가격을 강조.
+                  배경은 내 채팅 말풍선과 같은 토큰(bg-bubble-user)을 써서, 다크모드에서도
+                  (남색 계열로) 자연스럽게 어울리도록 함 */}
+              <div className="flex flex-col gap-xs bg-bubble-user px-lg pt-md pb-lg">
+                <div className="flex items-center justify-between gap-sm">
+                  {/* 1순위만 진하게 채우고, 나머지는 연하게 채워서 순위를 구분함 */}
+                  <Badge
+                    variant="solid"
+                    className={idx !== 0 ? "bg-action-primary/60" : undefined}
+                  >
+                    {plan.badge}
+                  </Badge>
+                  {/* 매칭률: 뱃지와 같은 줄 오른쪽 끝에 텍스트로만 표시 */}
+                  <span className="font-sans text-caption-12-bold text-action-primary shrink-0">
+                    {plan.matchRate}
+                  </span>
+                </div>
+                <div className="flex items-end justify-between gap-sm">
+                  <div className="flex flex-col gap-xs min-w-0">
+                    <strong className="font-sans text-title-18-bold text-text-primary">
+                      {plan.name}
+                    </strong>
+                    <div className="flex items-baseline gap-xs">
+                      <span className="font-sans text-title-20-bold text-text-primary">
+                        {priceNumber}
+                      </span>
+                      <span className="font-sans text-caption-12-medium text-text-secondary">
+                        원 / 월
+                      </span>
+                    </div>
+                  </div>
+                  {/* 요금제 상세 페이지와 동일한 티켓 뱃지를 재사용함 */}
+                  {ticketNumber && (
+                    <NergetPlanBadge number={ticketNumber} size="sm" />
+                  )}
+                </div>
+              </div>
 
-            <div className="border-t border-border-default pt-md space-y-xs mt-auto">
-              {/* 현재 가입 요금제가 있을 때만 비교 버튼 표시 */}
+              <div className="flex flex-col gap-sm px-lg pt-md pb-lg">
+                <div className="flex flex-col gap-xs">
+                  {specRows.map((spec, specIdx) => {
+                    const SpecIcon = SPEC_ICONS[specIdx] ?? Wifi;
+                    return (
+                      <div key={specIdx} className="flex items-center gap-xs">
+                        <SpecIcon
+                          size={14}
+                          className="text-text-tertiary shrink-0"
+                        />
+                        <span className="font-sans text-caption-12-medium text-text-secondary">
+                          {spec}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {/* AI가 이 요금제를 추천한 이유. 사용자가 채팅으로 말한 조건과 실제로
+                    일치하는 구절만 AI가 **굵게** 표시해서 보내주는데, 그 부분만 프라이머리 색으로 강조함 */}
+                <div className="rounded-md bg-surface-subtle px-sm py-xs">
+                  <span className="font-sans text-caption-12-medium leading-relaxed text-text-secondary">
+                    {reasonSegments.map((segment, segIdx) =>
+                      segment.highlighted ? (
+                        <span
+                          key={segIdx}
+                          className="font-bold text-action-primary"
+                        >
+                          {segment.text}
+                        </span>
+                      ) : (
+                        <span key={segIdx}>{segment.text}</span>
+                      ),
+                    )}
+                  </span>
+                </div>
+              </div>
+
+              {/* 현재 가입 요금제가 있을 때만 비교 버튼 표시. 카드 전체 클릭(상세 이동)과
+                  겹치지 않도록 클릭 전파를 막음. mt-auto로 바닥에 고정 — AI 한줄평이 몇
+                  줄이든 카드마다 버튼 위치가 흔들리지 않게 함 */}
               {hasCurrentPlan && (
-                <button
-                  type="button"
-                  onClick={() =>
-                    router.push(`/ai/compare?code=${plan.code}&from=chat`)
-                  }
-                  className="flex items-center gap-xs font-sans text-caption-12-medium text-text-secondary hover:text-text-primary"
-                >
-                  {t("comparePlan")} <ChevronRight size={14} />
-                </button>
+                <div className="px-lg pb-lg mt-auto">
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      router.push(`/ai/compare?code=${plan.code}&from=chat`);
+                    }}
+                    className="flex items-center justify-start gap-xs w-full font-sans text-caption-13-medium text-text-secondary hover:text-text-primary"
+                  >
+                    {t("comparePlan")} <ChevronRight size={16} />
+                  </button>
+                </div>
               )}
-
-              <Button
-                variant="primary"
-                className="w-full"
-                onClick={() => router.push(`/plans/${plan.code}?from=chat`)}
-              >
-                {t("selectBtn")}
-              </Button>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
       {/* 캐러셀 인디케이터 도트 */}

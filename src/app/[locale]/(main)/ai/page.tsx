@@ -80,7 +80,7 @@ export default function AIConsultationPage() {
     endCurrentChat,
     quickReplies,
     isSignupFlow,
-    isSignupComplete,
+    currentSignupStep,
     sendMessageSilent,
   } = useAIChat({ preselectedPlan });
 
@@ -114,9 +114,41 @@ export default function AIConsultationPage() {
     return el.scrollHeight - el.scrollTop - el.clientHeight < 100;
   }, []);
 
+  // 프로그램적으로(버튼 클릭) 맨 아래로 스크롤하는 중인지 추적. smooth 스크롤은
+  // 한 번에 끝나지 않고 애니메이션 도중 onScroll이 여러 번 발생하는데, 그때마다
+  // isAtBottom()을 그대로 믿으면 아직 도착하기 전 중간 위치를 "아직 안 내려갔다"고
+  // 오판해서 화살표 버튼이 사라졌다 다시 나타나며 깜빡거림. 스크롤이 실제로 끝날
+  // 때까지는 onScroll의 판단을 무시하고 버튼을 숨긴 채로 고정함
+  const isProgrammaticScrollRef = useRef(false);
+  const programmaticScrollTimeoutRef = useRef<ReturnType<
+    typeof setTimeout
+  > | null>(null);
+
   const scrollToBottom = useCallback(() => {
-    chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    const el = scrollContainerRef.current;
+    isProgrammaticScrollRef.current = true;
     setShowScrollBottom(false);
+    chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
+
+    if (programmaticScrollTimeoutRef.current) {
+      clearTimeout(programmaticScrollTimeoutRef.current);
+    }
+    const clearFlag = () => {
+      isProgrammaticScrollRef.current = false;
+      el?.removeEventListener("scrollend", clearFlag);
+    };
+    // scrollend를 지원하는 브라우저에선 정확한 시점에 풀리고, 못해도 1초 뒤
+    // 타임아웃이 안전망 역할을 함 (smooth 스크롤은 보통 그 안에 끝남)
+    el?.addEventListener("scrollend", clearFlag, { once: true });
+    programmaticScrollTimeoutRef.current = setTimeout(clearFlag, 1000);
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      if (programmaticScrollTimeoutRef.current) {
+        clearTimeout(programmaticScrollTimeoutRef.current);
+      }
+    };
   }, []);
 
   // 채팅 내역 복원 완료 시 즉시 맨 아래로 스크롤
@@ -132,6 +164,7 @@ export default function AIConsultationPage() {
   }, [messages, isTyping]);
 
   const handleScroll = useCallback(() => {
+    if (isProgrammaticScrollRef.current) return;
     const atBottom = isAtBottom();
     wasAtBottomRef.current = atBottom;
     setShowScrollBottom(!atBottom);
@@ -208,9 +241,9 @@ export default function AIConsultationPage() {
     }, 280);
   };
 
-  // 가입 완료 후에는 입력창 비활성화. 약관 동의 단계는 입력창을 막지 않고 자유
-  // 텍스트도 받되, 다음 단계로의 진행 여부는 서버가 결정론적으로 판단함
-  const isInputDisabled = isSignupComplete;
+  // 가입 완료 후에도 입력창을 막지 않고 계속 대화를 이어갈 수 있게 함. 완료 시점에
+  // preselectedPlan이 초기화돼서, 이후 메시지는 자연스럽게 일반 상담 플로우로 이어짐
+  const isInputDisabled = false;
 
   return (
     <div className="relative flex h-full flex-col bg-background">
@@ -293,9 +326,13 @@ export default function AIConsultationPage() {
                   {/* 명의도용 방지 안내 카드 */}
                   {msg.type === "fraud_warning" && <FraudWarningCard />}
 
-                  {/* 약관 동의 카드 */}
+                  {/* 약관 동의 카드. 이미 다음 단계로 넘어갔다면(=지난 대화의 카드라면)
+                      체크박스/다음 버튼을 잠가서 재제출을 막음 */}
                   {msg.type === "terms" && (
-                    <TermsAgreementCard onAgree={sendMessageSilent} />
+                    <TermsAgreementCard
+                      onAgree={sendMessageSilent}
+                      disabled={currentSignupStep !== "terms_agreement"}
+                    />
                   )}
 
                   {/* 휴대폰 본인인증 카드 */}

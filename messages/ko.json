@@ -1002,6 +1002,12 @@
       "cancel": "취소",
       "confirm": "확인"
     },
+    "switchPlanModal": {
+      "title": "다른 요금제로 전환할까요?",
+      "description": "{from} 요금제 가입이 진행 중이에요. 지금 멈추고 {to} 요금제로 가입을 진행할까요?",
+      "cancel": "취소",
+      "confirm": "전환하기"
+    },
     "retry": "다시 불러오기",
     "errorDescription": "잠시 후 다시 시도해 주세요."
   },
