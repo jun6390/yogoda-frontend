@@ -82,6 +82,7 @@ export default function AIConsultationPage() {
     isSignupFlow,
     currentSignupStep,
     sendMessageSilent,
+    trackUiEvent,
   } = useAIChat({ preselectedPlan });
 
   const [inputText, setInputText] = useState("");
@@ -320,7 +321,10 @@ export default function AIConsultationPage() {
 
                   {/* 추천 요금제 카드 */}
                   {msg.type === "plans" && msg.plans && (
-                    <PlanRecommendationCards plans={msg.plans} />
+                    <PlanRecommendationCards
+                      plans={msg.plans}
+                      trackUiEvent={trackUiEvent}
+                    />
                   )}
 
                   {/* 명의도용 방지 안내 카드 */}

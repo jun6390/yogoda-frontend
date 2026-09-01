@@ -23,6 +23,7 @@ import type {
   PreselectedPlan,
   SignupCollectedData,
 } from "@/types/chat";
+import type { UiElement } from "@/types/ui-elements";
 
 import { useTypewriter } from "./useTypewriter";
 
@@ -979,6 +980,18 @@ export function useAIChat({ preselectedPlan }: UseAIChatOptions = {}) {
     setQuickReplies([]);
   }, [isLoggedIn, openSocket]);
 
+  /*
+   * 추천 카드 UI 요소의 노출/클릭을 관리자 "UI 행동 분석" 통계용으로 기록함.
+   * 응답 이벤트 없는 fire-and-forget이고, 같은 세션에서 같은 element+action
+   * 조합은 서버가 알아서 중복 집계를 걸러주므로 프론트에서 디바운스하지 않음
+   */
+  const trackUiEvent = useCallback(
+    (element: UiElement, action: "view" | "click") => {
+      socketRef.current?.emit("ui_event", { element, action });
+    },
+    [],
+  );
+
   // sessionIdRef는 마지막으로 "성공"한 응답 기준으로만 갱신되므로, 실패한 턴을 다시 보내도
   // 자동으로 그 직전까지의 대화에 이어붙게 됨 (별도로 히스토리를 잘라낼 필요 없음)
 
@@ -1084,6 +1097,7 @@ export function useAIChat({ preselectedPlan }: UseAIChatOptions = {}) {
     isLoggedIn,
     endCurrentChat,
     quickReplies,
+    trackUiEvent,
     // 가입 플로우 전용
     signupCollectedData,
     isSignupComplete,

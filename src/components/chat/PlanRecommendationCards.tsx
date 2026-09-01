@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ChevronRight, Phone, Wifi } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useQuery } from "@tanstack/react-query";
@@ -13,9 +13,11 @@ import { cn } from "@/lib/utils";
 import { getCurrentPlan } from "@/lib/api/plan";
 import { useAuthStore } from "@/stores/useAuthStore";
 import type { ChatPlanCard } from "@/types/chat";
+import type { UiElement } from "@/types/ui-elements";
 
 interface PlanRecommendationCardsProps {
   plans: ChatPlanCard[];
+  trackUiEvent: (element: UiElement, action: "view" | "click") => void;
 }
 
 // "월 46,000원" → 숫자 부분만("46,000") 큰 글씨로 강조하기 위해 분리함
@@ -44,6 +46,7 @@ function splitSpecs(specs: string): string[] {
  */
 export function PlanRecommendationCards({
   plans,
+  trackUiEvent,
 }: PlanRecommendationCardsProps) {
   const t = useTranslations("AIChat");
   const router = useRouter();
@@ -64,6 +67,20 @@ export function PlanRecommendationCards({
   });
 
   const hasCurrentPlan = Boolean(currentPlan?.planCode);
+
+  // 카드가 렌더링되는 시점을 "노출"로 기록함. 비교 버튼은 currentPlan 조회가
+  // 비동기로 늦게 끝날 수 있어 hasCurrentPlan이 true가 되는 시점에 따로 기록함
+  useEffect(() => {
+    trackUiEvent("plan_detail", "view");
+    trackUiEvent("explore_plans", "view");
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- 카드가 처음 뜰 때 한 번만 기록하면 됨
+  }, []);
+
+  useEffect(() => {
+    if (hasCurrentPlan) {
+      trackUiEvent("plan_comparison", "view");
+    }
+  }, [hasCurrentPlan, trackUiEvent]);
 
   const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
     const { scrollLeft, clientWidth } = e.currentTarget;
@@ -101,10 +118,14 @@ export function PlanRecommendationCards({
               }}
               role="button"
               tabIndex={0}
-              onClick={() => router.push(`/plans/${plan.code}?from=chat`)}
+              onClick={() => {
+                trackUiEvent("plan_detail", "click");
+                router.push(`/plans/${plan.code}?from=chat`);
+              }}
               onKeyDown={(e) => {
                 if (e.key !== "Enter" && e.key !== " ") return;
                 e.preventDefault();
+                trackUiEvent("plan_detail", "click");
                 router.push(`/plans/${plan.code}?from=chat`);
               }}
               className="flex flex-col rounded-2xl bg-surface border border-border-default shadow-sm w-62.5 shrink-0 snap-start overflow-hidden cursor-pointer transition-transform active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-action-primary"
@@ -183,6 +204,7 @@ export function PlanRecommendationCards({
                     type="button"
                     onClick={(e) => {
                       e.stopPropagation();
+                      trackUiEvent("plan_comparison", "click");
                       router.push(`/ai/compare?code=${plan.code}&from=chat`);
                     }}
                     className="flex items-center justify-start gap-xs w-full font-sans text-caption-13-medium text-text-secondary hover:text-text-primary"
@@ -221,6 +243,7 @@ export function PlanRecommendationCards({
       {/* 다른 요금제 탐색하기: 요금제 전체 목록 페이지로 이동 */}
       <Link
         href="/plans?from=chat"
+        onClick={() => trackUiEvent("explore_plans", "click")}
         className="flex items-center gap-xs font-sans text-caption-13-bold text-text-secondary hover:text-text-primary"
       >
         {t("explorePlans")} <ChevronRight size={16} />
