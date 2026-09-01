@@ -115,31 +115,9 @@ export function useAIChat({ preselectedPlan }: UseAIChatOptions = {}) {
   const [isSignupFlowActive, setIsSignupFlowActive] = useState(
     Boolean(preselectedPlan),
   );
-  // 현재 진행 중인 가입 플로우의 단계. currentSignupStepRef(아래에서 선언)와 같은 값을
-  // 가리키지만, 이 값은 그보다 앞서 선언돼야 해서 별도 ref로 분리함 — 아래
-  // currentSignupStepRef sync 이펙트에서 함께 갱신됨
-  const activeSignupStepRef = useRef<string | null>(null);
-  // 다른 요금제로 가입 중간에 새 요금제 가입하기를 눌러, 기존 진행을 중단할지 확인이
-  // 필요한 상태. 확인/취소 전까지는 preselectedPlanRef를 기존 요금제로 유지함
-  const [pendingPlanSwitch, setPendingPlanSwitch] = useState<
-    { from: PreselectedPlan; to: PreselectedPlan } | undefined
-  >(undefined);
   useEffect(() => {
-    const previousPlan = preselectedPlanRef.current;
-
-    // 이미 다른 요금제로 가입이 진행 중인데(단계가 시작됨) 새 요금제 가입하기를 눌러
-    // preselectedPlan이 바뀐 경우: 조용히 덮어쓰지 않고 먼저 전환 확인부터 받음
-    if (
-      preselectedPlan &&
-      previousPlan &&
-      previousPlan.code !== preselectedPlan.code &&
-      activeSignupStepRef.current
-    ) {
-      setPendingPlanSwitch({ from: previousPlan, to: preselectedPlan });
-      return;
-    }
-
     preselectedPlanRef.current = preselectedPlan;
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- 페이지가 sessionStorage에서 요금제를 복원한 뒤 가입 모드에 진입함
     setIsSignupFlowActive(Boolean(preselectedPlan));
   }, [preselectedPlan]);
 
@@ -212,7 +190,6 @@ export function useAIChat({ preselectedPlan }: UseAIChatOptions = {}) {
   const currentSignupStepRef = useRef(currentSignupStep);
   useEffect(() => {
     currentSignupStepRef.current = currentSignupStep;
-    activeSignupStepRef.current = currentSignupStep;
   }, [currentSignupStep]);
 
   useEffect(() => {
@@ -957,31 +934,6 @@ export function useAIChat({ preselectedPlan }: UseAIChatOptions = {}) {
   }, []);
 
   /*
-   * 가입 플로우 진행 중 다른 요금제로 새로 가입하기를 눌러 전환 확인이 뜬 경우.
-   * confirmPlanSwitch: 기존 요금제 가입 진행 상태를 모두 초기화하고 새 요금제로 시작함.
-   * (요금제 상세 페이지의 "AI와 가입하기" 버튼이 sessionStorage의 signupStep/
-   * signupCollectedData 등은 이미 지워둔 상태라, 여기서는 이 훅이 들고 있는 메모리상
-   * state만 초기화하면 됨 — 아래 entry effect가 이어서 새 요금제 인삿말을 붙여줌)
-   * cancelPlanSwitch: 아무것도 바꾸지 않고 확인만 닫음 — preselectedPlanRef가 여전히
-   * 기존 요금제를 가리키고 있어 진행 중이던 흐름이 그대로 이어짐
-   */
-  const confirmPlanSwitch = useCallback(() => {
-    if (!pendingPlanSwitch) return;
-    preselectedPlanRef.current = pendingPlanSwitch.to;
-    signupEntrySentRef.current = null;
-    setIsSignupComplete(false);
-    setCurrentSignupStep(null);
-    setSignupCollectedData({});
-    setQuickReplies([]);
-    setIsSignupFlowActive(true);
-    setPendingPlanSwitch(undefined);
-  }, [pendingPlanSwitch]);
-
-  const cancelPlanSwitch = useCallback(() => {
-    setPendingPlanSwitch(undefined);
-  }, []);
-
-  /*
    * 회원이 "채팅 끝내기"를 누르면 현재 세션을 서버에 종료 처리하고(대화 내역은 삭제하지 않음),
    * 화면을 웰컴 메시지로 초기화함. 소켓을 재연결해 새 세션으로 이어갈 준비를 함
    */
@@ -1125,8 +1077,5 @@ export function useAIChat({ preselectedPlan }: UseAIChatOptions = {}) {
     isSignupComplete,
     currentSignupStep,
     isSignupFlow: isSignupFlowActive,
-    pendingPlanSwitch,
-    confirmPlanSwitch,
-    cancelPlanSwitch,
   };
 }

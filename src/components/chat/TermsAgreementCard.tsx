@@ -74,9 +74,15 @@ const TERMS: Term[] = [
 
 interface TermsAgreementCardProps {
   onAgree?: (message: string) => void;
+  // 이미 이 단계를 지나 다음 단계로 넘어간 경우 true. 지난 대화에 남아있는 카드를
+  // 다시 조작해서 재제출하는 걸 막기 위해 체크박스/다음 버튼을 모두 잠금
+  disabled?: boolean;
 }
 
-export function TermsAgreementCard({ onAgree }: TermsAgreementCardProps) {
+export function TermsAgreementCard({
+  onAgree,
+  disabled = false,
+}: TermsAgreementCardProps) {
   // 새로고침해도 체크 상태가 유지되도록 sessionStorage에서 초기값을 복원함
   const [checked, setChecked] =
     useState<Record<string, boolean>>(readStoredChecked);
@@ -97,10 +103,12 @@ export function TermsAgreementCard({ onAgree }: TermsAgreementCardProps) {
   const allChecked = TERMS.every((t) => checked[t.id]);
 
   const toggleCheck = (id: string) => {
+    if (disabled) return;
     setChecked((prev) => ({ ...prev, [id]: !prev[id] }));
   };
 
   const toggleAll = () => {
+    if (disabled) return;
     if (allChecked) {
       setChecked({});
     } else {
@@ -113,7 +121,7 @@ export function TermsAgreementCard({ onAgree }: TermsAgreementCardProps) {
   };
 
   const handleAgree = () => {
-    if (!allRequiredChecked) return;
+    if (disabled || !allRequiredChecked) return;
     const optionalAgreed = allOptional
       .filter((t) => checked[t.id])
       .map((t) => t.label);
@@ -205,7 +213,7 @@ export function TermsAgreementCard({ onAgree }: TermsAgreementCardProps) {
         <Button
           className="w-full"
           onClick={handleAgree}
-          disabled={!allRequiredChecked}
+          disabled={disabled || !allRequiredChecked}
         >
           다음
         </Button>

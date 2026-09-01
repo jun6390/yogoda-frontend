@@ -81,10 +81,8 @@ export default function AIConsultationPage() {
     quickReplies,
     isSignupFlow,
     isSignupComplete,
+    currentSignupStep,
     sendMessageSilent,
-    pendingPlanSwitch,
-    confirmPlanSwitch,
-    cancelPlanSwitch,
   } = useAIChat({ preselectedPlan });
 
   const [inputText, setInputText] = useState("");
@@ -296,9 +294,13 @@ export default function AIConsultationPage() {
                   {/* 명의도용 방지 안내 카드 */}
                   {msg.type === "fraud_warning" && <FraudWarningCard />}
 
-                  {/* 약관 동의 카드 */}
+                  {/* 약관 동의 카드. 이미 다음 단계로 넘어갔다면(=지난 대화의 카드라면)
+                      체크박스/다음 버튼을 잠가서 재제출을 막음 */}
                   {msg.type === "terms" && (
-                    <TermsAgreementCard onAgree={sendMessageSilent} />
+                    <TermsAgreementCard
+                      onAgree={sendMessageSilent}
+                      disabled={currentSignupStep !== "terms_agreement"}
+                    />
                   )}
 
                   {/* 휴대폰 본인인증 카드 */}
@@ -492,28 +494,6 @@ export default function AIConsultationPage() {
             onClose={() => setShowEndChatModal(false)}
             onPrimaryClick={handleEndChatConfirm}
             onSecondaryClick={() => setShowEndChatModal(false)}
-          />
-        </div>
-      )}
-
-      {/* 가입 플로우 진행 중 다른 요금제로 전환 확인 팝업 */}
-      {pendingPlanSwitch && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-lg"
-          onMouseDown={cancelPlanSwitch}
-        >
-          <Modal
-            onMouseDown={(e) => e.stopPropagation()}
-            heading={t("planSwitchModal.heading")}
-            description={t("planSwitchModal.description", {
-              from: pendingPlanSwitch.from.name,
-              to: pendingPlanSwitch.to.name,
-            })}
-            primaryLabel={t("planSwitchModal.primaryLabel")}
-            secondaryLabel={t("planSwitchModal.secondaryLabel")}
-            onClose={cancelPlanSwitch}
-            onPrimaryClick={confirmPlanSwitch}
-            onSecondaryClick={cancelPlanSwitch}
           />
         </div>
       )}

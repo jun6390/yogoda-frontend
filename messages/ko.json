@@ -1002,6 +1002,12 @@
       "cancel": "취소",
       "confirm": "확인"
     },
+    "switchPlanModal": {
+      "title": "다른 요금제로 전환할까요?",
+      "description": "{from} 요금제 가입이 진행 중이에요. 지금 멈추고 {to} 요금제로 가입을 진행할까요?",
+      "cancel": "취소",
+      "confirm": "전환하기"
+    },
     "retry": "다시 불러오기",
     "errorDescription": "잠시 후 다시 시도해 주세요."
   },
@@ -1130,12 +1136,6 @@
       "description": "다음에 다시 들어오면\n새로운 대화로 시작하게 돼요.",
       "primaryLabel": "채팅 끝내기",
       "secondaryLabel": "취소"
-    },
-    "planSwitchModal": {
-      "heading": "다른 요금제로 전환할까요?",
-      "description": "{from} 요금제 가입이 진행 중이에요.\n지금 중단하고 {to} 요금제로\n새로 가입을 진행할까요?",
-      "primaryLabel": "전환하기",
-      "secondaryLabel": "기존대로 계속하기"
     },
     "voiceInput": {
       "start": "음성으로 입력하기",
