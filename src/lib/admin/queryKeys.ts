@@ -4,6 +4,7 @@ import type { SessionListParams } from "@/types/session";
 
 export const ADMIN_PROMPT_QUERY_KEYS = {
   active: ["admin", "prompts", "active"],
+  draft: ["admin", "prompts", "draft"],
   // params 없이 부르면 페이지 구분 없는 짧은 키가 나와서, 배포/롤백 후
   // invalidateQueries에 쓰면 페이지와 상관없이 히스토리 전체가 무효화됨
   history: (params?: { page: number; limit: number }) =>

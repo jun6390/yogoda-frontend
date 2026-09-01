@@ -62,6 +62,17 @@ export interface PromptDetail {
   charCount: number;
 }
 
+export interface PromptDraft {
+  content: string;
+  baseVersion: string;
+  updatedAt: string | null;
+  updatedBy: string | null;
+}
+
+export interface SavePromptDraftPayload {
+  content: string;
+}
+
 export interface ActivatePromptResponse {
   versionId: string;
   version: string;

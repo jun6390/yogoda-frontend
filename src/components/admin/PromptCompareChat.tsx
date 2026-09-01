@@ -11,15 +11,13 @@ import {
   UserChatBubble,
 } from "@/components/ui/ChatBubble/ChatBubble";
 import { ChatMarkdown } from "@/components/ui/ChatMarkdown/ChatMarkdown";
+import {
+  usePromptTestConversation,
+  type TestMessage,
+} from "@/hooks/usePromptTestConversation";
 import { getPromptDetail, getPromptHistory } from "@/lib/api/admin/prompt";
 import { ADMIN_PROMPT_QUERY_KEYS } from "@/lib/admin/queryKeys";
 import { cn } from "@/lib/utils";
-
-interface TestMessage {
-  id: string;
-  sender: "user" | "ai";
-  text: string;
-}
 
 interface PromptCompareChatProps {
   draftContent: string;
@@ -34,24 +32,6 @@ const QUICK_TEST_MESSAGES = [
   "제일 저렴한 요금제 추천해줘",
   "가입은 어떻게 하나요?",
 ];
-
-/*
- * "초안 프롬프트로 테스트"용 백엔드 엔드포인트가 아직 없어서, 두 버전이 실제로
- * 다르게 답하는 걸 흉내 내기 위한 목업 응답 풀. 실제 엔드포인트가 생기면
- * sendMessage 안의 setTimeout 블록만 API 호출로 교체하면 됨
- */
-const MOCK_REPLY_POOLS: Record<"left" | "right", string[]> = {
-  left: [
-    "말씀해주신 사용 패턴을 보니 **데이터 무제한 요금제**가 잘 맞을 것 같아요. 평소 OTT도 자주 보시나요?",
-    "네, 좋아요! 그럼 몇 가지 요금제를 비교해서 보여드릴게요.",
-    "가입은 화면 하단의 **가입하기** 버튼을 누르시면 3분 안에 끝나요.",
-  ],
-  right: [
-    "데이터 사용량을 여쭤봐도 될까요? 평균적으로 한 달에 얼마나 쓰시는지 알려주시면 더 정확히 추천해드릴 수 있어요.",
-    "혹시 넷플릭스 외에 다른 OTT도 자주 보시나요? 결합 혜택이 있는 요금제도 있어요.",
-    "**가입하기** 버튼으로 지금 바로 진행하실 수 있어요. 궁금한 점 더 있으신가요?",
-  ],
-};
 
 // 비교 대상 드롭다운은 표 페이지네이션과 무관하게 전체 목록이 필요해서,
 // 넉넉한 limit으로 별도 조회함 (버전이 100개를 넘어가면 오래된 것부터 안 보임)
@@ -72,10 +52,6 @@ function formatDate(iso: string) {
   return `${date.getMonth() + 1}/${date.getDate()}`;
 }
 
-/*
- * 실제 테스트 엔드포인트가 생기면, 드롭다운에서 고른 버전이 초안(DRAFT_VALUE)이
- * 아닐 때 이 훅으로 해당 버전의 content를 가져와 API 호출에 실어 보내면 됨
- */
 function useVersionContent(selectedValue: string, draftContent: string) {
   const isDraft = selectedValue === DRAFT_VALUE;
 
@@ -96,10 +72,12 @@ function ChatColumn({
   label,
   messages,
   isTyping,
+  error,
 }: {
   label: string;
   messages: TestMessage[];
   isTyping: boolean;
+  error: string | null;
 }) {
   return (
     <div className="flex flex-1 flex-col rounded-lg border border-border-default bg-background">
@@ -116,24 +94,38 @@ function ChatColumn({
           </p>
         )}
 
-        {messages.map((message) =>
-          message.sender === "user" ? (
+        {messages.map((message, index) => {
+          const isStreaming =
+            isTyping &&
+            message.sender === "ai" &&
+            index === messages.length - 1;
+
+          return message.sender === "user" ? (
             <UserChatBubble key={message.id}>{message.text}</UserChatBubble>
           ) : (
             <AIChatBubble key={message.id}>
-              <ChatMarkdown>{message.text}</ChatMarkdown>
+              {message.text ? (
+                <>
+                  <ChatMarkdown>{message.text}</ChatMarkdown>
+                  {isStreaming && (
+                    <span className="ml-0.5 inline-block h-3 w-0.5 animate-pulse bg-text-tertiary align-middle" />
+                  )}
+                </>
+              ) : (
+                <span className="font-sans text-body-14-regular text-text-tertiary">
+                  입력 중...
+                </span>
+              )}
             </AIChatBubble>
-          ),
-        )}
-
-        {isTyping && (
-          <AIChatBubble>
-            <span className="font-sans text-body-14-regular text-text-tertiary">
-              입력 중...
-            </span>
-          </AIChatBubble>
-        )}
+          );
+        })}
       </div>
+
+      {error && (
+        <p className="shrink-0 border-t border-border-default px-lg py-sm font-sans text-caption-12-regular text-error">
+          {error}
+        </p>
+      )}
     </div>
   );
 }
@@ -160,14 +152,12 @@ export function PromptCompareChat({
     setRightValue(versionOptions[0].value);
   }
 
-  useVersionContent(leftValue, draftContent);
-  useVersionContent(rightValue, draftContent);
+  const { content: leftContent } = useVersionContent(leftValue, draftContent);
+  const { content: rightContent } = useVersionContent(rightValue, draftContent);
 
-  const [leftMessages, setLeftMessages] = useState<TestMessage[]>([]);
-  const [rightMessages, setRightMessages] = useState<TestMessage[]>([]);
-  const [leftReplyIndex, setLeftReplyIndex] = useState(0);
-  const [rightReplyIndex, setRightReplyIndex] = useState(0);
-  const [isTyping, setIsTyping] = useState(false);
+  const left = usePromptTestConversation(leftContent);
+  const right = usePromptTestConversation(rightContent);
+  const isTyping = left.isTyping || right.isTyping;
   const [input, setInput] = useState("");
 
   const selectOptions = [
@@ -175,57 +165,20 @@ export function PromptCompareChat({
     ...versionOptions,
   ];
 
-  const sendMessage = (text: string) => {
-    const trimmed = text.trim();
-    if (!trimmed || isTyping) {
+  const handleSend = (text: string) => {
+    if (!text.trim() || isTyping) {
       return;
     }
 
-    setLeftMessages((prev) => [
-      ...prev,
-      { id: `user-left-${Date.now()}`, sender: "user", text: trimmed },
-    ]);
-    setRightMessages((prev) => [
-      ...prev,
-      { id: `user-right-${Date.now()}`, sender: "user", text: trimmed },
-    ]);
+    left.sendMessage(text);
+    right.sendMessage(text);
     setInput("");
-    setIsTyping(true);
-
-    setTimeout(() => {
-      setLeftMessages((prev) => [
-        ...prev,
-        {
-          id: `left-${Date.now()}`,
-          sender: "ai",
-          text: MOCK_REPLY_POOLS.left[
-            leftReplyIndex % MOCK_REPLY_POOLS.left.length
-          ],
-        },
-      ]);
-      setRightMessages((prev) => [
-        ...prev,
-        {
-          id: `right-${Date.now()}`,
-          sender: "ai",
-          text: MOCK_REPLY_POOLS.right[
-            rightReplyIndex % MOCK_REPLY_POOLS.right.length
-          ],
-        },
-      ]);
-      setLeftReplyIndex((prev) => prev + 1);
-      setRightReplyIndex((prev) => prev + 1);
-      setIsTyping(false);
-    }, 700);
   };
 
   const handleReset = () => {
-    setLeftMessages([]);
-    setRightMessages([]);
-    setLeftReplyIndex(0);
-    setRightReplyIndex(0);
+    left.reset();
+    right.reset();
     setInput("");
-    setIsTyping(false);
   };
 
   return (
@@ -234,7 +187,7 @@ export function PromptCompareChat({
         <div className="flex items-center gap-sm">
           <Badge variant="accent">버전 비교</Badge>
           <span className="font-sans text-caption-12-regular text-text-tertiary">
-            같은 메시지를 두 버전에 동시에 보내서 답변을 비교해요 (목업 응답)
+            같은 메시지를 두 버전에 동시에 보내서 답변을 비교해요
           </span>
         </div>
 
@@ -273,16 +226,18 @@ export function PromptCompareChat({
             selectOptions.find((option) => option.value === leftValue)?.label ??
             ""
           }
-          messages={leftMessages}
-          isTyping={isTyping}
+          messages={left.messages}
+          isTyping={left.isTyping}
+          error={left.error}
         />
         <ChatColumn
           label={
             selectOptions.find((option) => option.value === rightValue)
               ?.label ?? ""
           }
-          messages={rightMessages}
-          isTyping={isTyping}
+          messages={right.messages}
+          isTyping={right.isTyping}
+          error={right.error}
         />
       </div>
 
@@ -291,7 +246,7 @@ export function PromptCompareChat({
           <button
             key={quickMessage}
             type="button"
-            onClick={() => sendMessage(quickMessage)}
+            onClick={() => handleSend(quickMessage)}
             disabled={isTyping}
             className={cn(
               "shrink-0 whitespace-nowrap rounded-full border border-border-default px-md py-xs",
@@ -307,7 +262,7 @@ export function PromptCompareChat({
       <form
         onSubmit={(event) => {
           event.preventDefault();
-          sendMessage(input);
+          handleSend(input);
         }}
         className="flex items-center gap-sm"
       >

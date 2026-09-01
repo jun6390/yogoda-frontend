@@ -27,7 +27,7 @@ interface RefreshResponse {
 
 let refreshPromise: Promise<string> | null = null;
 
-function extractMessage(data: unknown): string | null {
+export function extractMessage(data: unknown): string | null {
   if (data && typeof data === "object" && "message" in data) {
     const { message } = data as { message: unknown };
 
@@ -37,7 +37,7 @@ function extractMessage(data: unknown): string | null {
   return null;
 }
 
-async function refreshAccessToken(): Promise<string> {
+export async function refreshAccessToken(): Promise<string> {
   /*
    * 여러 API 요청에서 동시에 401이 발생하더라도
    * refresh 요청은 한 번만 실행하도록 Promise를 공유함
