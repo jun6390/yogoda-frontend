@@ -14,6 +14,9 @@ export interface SheetProps {
   open: boolean;
   onClose: () => void;
   title?: string;
+  // 시트 자체 헤더 바 없이 내용 안에서 직접 제목을 그리는 경우, 접근성 라벨만
+  // 따로 지정하기 위한 값. 생략하면 title을 그대로 씀
+  ariaLabel?: string;
   children?: ReactNode;
   className?: string;
 }
@@ -29,6 +32,7 @@ export function Sheet({
   open,
   onClose,
   title,
+  ariaLabel,
   children,
   className,
 }: SheetProps) {
@@ -132,7 +136,7 @@ export function Sheet({
       <div
         role="dialog"
         aria-modal="true"
-        aria-label={title}
+        aria-label={ariaLabel ?? title}
         style={{
           transform: `translateY(${dragY}px)`,
           transition: isDragging ? "none" : "transform 0.3s ease-out",

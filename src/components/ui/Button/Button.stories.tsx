@@ -15,7 +15,7 @@ const meta = {
   argTypes: {
     variant: {
       control: "select",
-      options: ["primary", "secondary", "text"],
+      options: ["primary", "secondary", "text", "inChat"],
     },
   },
 } satisfies Meta<typeof Button>;
@@ -37,6 +37,13 @@ export const Text: Story = {
   args: {
     variant: "text",
     children: "자세히 보기",
+  },
+};
+
+export const InChat: Story = {
+  args: {
+    variant: "inChat",
+    children: "다음",
   },
 };
 

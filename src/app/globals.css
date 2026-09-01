@@ -118,3 +118,15 @@ button:disabled {
     transform: translateY(-5px);
   }
 }
+
+/* 인증번호 토스트가 화면 위에서 톡 떨어지듯 나타나는 효과용 keyframes */
+@keyframes toastDropIn {
+  0% {
+    opacity: 0;
+    transform: translateY(-16px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

@@ -211,6 +211,7 @@ export function TermsAgreementCard({
         </div>
 
         <Button
+          variant="inChat"
           className="w-full"
           onClick={handleAgree}
           disabled={disabled || !allRequiredChecked}
