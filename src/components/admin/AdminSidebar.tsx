@@ -42,7 +42,7 @@ function SidebarBody({ onNavigate }: SidebarBodyProps) {
         onClick={onNavigate}
         className="flex items-center gap-sm px-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-action-primary"
       >
-        <FigmaImage alt="" src="/yogoda-logo.svg" className="h-[20px] w-auto" />
+        <FigmaImage alt="" src="/yogoda-logo.svg" className="h-5 w-auto" />
         <span className="font-sans text-caption-12-bold tracking-wide text-text-tertiary">
           ADMIN
         </span>
@@ -59,7 +59,7 @@ function SidebarBody({ onNavigate }: SidebarBodyProps) {
               href={item.href}
               onClick={onNavigate}
               className={cn(
-                "flex h-[44px] items-center gap-sm rounded-lg px-md",
+                "flex h-11 items-center gap-sm rounded-lg px-md",
                 "font-sans text-label-14-bold transition-colors",
                 isActive
                   ? "bg-surface-subtle text-text-primary"
@@ -75,7 +75,7 @@ function SidebarBody({ onNavigate }: SidebarBodyProps) {
 
       <div className="flex flex-col gap-lg border-t border-border-default pt-lg">
         <div className="flex items-center gap-sm px-sm">
-          <span className="flex size-[36px] shrink-0 items-center justify-center rounded-full bg-action-primary font-sans text-label-14-bold text-text-on-primary">
+          <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-action-primary font-sans text-label-14-bold text-text-on-primary">
             {user?.name?.slice(0, 1) ?? "?"}
           </span>
 
@@ -112,7 +112,7 @@ export function AdminSidebar() {
         로고는 여기 안 두고 데스크톱 사이드바에만 둠 — 반응형 전환 때 로고 위치가
         왔다갔다 하는 걸 막기 위함. 로고/홈 이동은 패널을 열면(SidebarBody) 여전히 가능함
       */}
-      <div className="flex h-[56px] shrink-0 items-center border-b border-border-default bg-surface px-lg md:hidden">
+      <div className="flex h-14 shrink-0 items-center border-b border-border-default bg-surface px-lg md:hidden">
         <button
           type="button"
           aria-label="메뉴 열기"
@@ -144,9 +144,9 @@ export function AdminSidebar() {
           aria-label="관리자 메뉴"
           className={cn(
             "absolute left-0 top-0",
-            "flex h-full w-[260px] max-w-[calc(100vw-40px)] flex-col",
+            "flex h-full w-65 max-w-[calc(100vw-40px)] flex-col",
             "border-r border-border-default bg-surface px-lg py-2xl",
-            "transition-transform duration-[250ms] ease-out",
+            "transition-transform duration-250 ease-out",
             isMenuOpen ? "translate-x-0" : "-translate-x-full",
           )}
         >
@@ -163,7 +163,7 @@ export function AdminSidebar() {
         </aside>
       </div>
 
-      <aside className="hidden h-full w-[260px] shrink-0 flex-col border-r border-border-default bg-surface px-lg py-2xl md:flex">
+      <aside className="hidden h-full w-65 shrink-0 flex-col border-r border-border-default bg-surface px-lg py-2xl md:flex">
         <SidebarBody />
       </aside>
     </>

@@ -3,19 +3,15 @@
 import { useState } from "react";
 import { RotateCcw, Send } from "lucide-react";
 
+import { AdminTypingIndicator } from "@/components/admin/AdminTypingIndicator";
 import { Badge } from "@/components/ui/Badge/Badge";
 import {
   AIChatBubble,
   UserChatBubble,
 } from "@/components/ui/ChatBubble/ChatBubble";
 import { ChatMarkdown } from "@/components/ui/ChatMarkdown/ChatMarkdown";
+import { usePromptTestConversation } from "@/hooks/usePromptTestConversation";
 import { cn } from "@/lib/utils";
-
-interface TestMessage {
-  id: string;
-  sender: "user" | "ai";
-  text: string;
-}
 
 const QUICK_TEST_MESSAGES = [
   "데이터 많이 쓰는 편이에요",
@@ -24,55 +20,23 @@ const QUICK_TEST_MESSAGES = [
   "가입은 어떻게 하나요?",
 ];
 
-/*
- * 아직 "초안 프롬프트로 테스트"용 백엔드 엔드포인트가 없어서, API 계약이
- * 정해지기 전까지 UI/흐름을 먼저 검증하기 위한 목업 응답. 실제 엔드포인트가
- * 생기면 sendMessage 안의 setTimeout 블록만 API 호출로 교체하면 됨
- */
-const MOCK_AI_REPLIES = [
-  "말씀해주신 사용 패턴을 보니 **데이터 무제한 요금제**가 잘 맞을 것 같아요. 평소 OTT도 자주 보시나요?",
-  "네, 좋아요! 그럼 몇 가지 요금제를 비교해서 보여드릴게요. 예산은 어느 정도로 생각하고 계세요?",
-  "가입은 화면 하단의 **가입하기** 버튼을 누르시면 3분 안에 끝나요. 지금 바로 진행해볼까요?",
-];
+interface PromptTestChatProps {
+  promptContent: string;
+}
 
-export function PromptTestChat() {
-  const [messages, setMessages] = useState<TestMessage[]>([]);
+export function PromptTestChat({ promptContent }: PromptTestChatProps) {
   const [input, setInput] = useState("");
-  const [isTyping, setIsTyping] = useState(false);
-  const [mockReplyIndex, setMockReplyIndex] = useState(0);
+  const { messages, isTyping, isFinalizing, error, sendMessage, reset } =
+    usePromptTestConversation(promptContent);
 
-  const sendMessage = (text: string) => {
-    const trimmed = text.trim();
-    if (!trimmed || isTyping) {
-      return;
-    }
-
-    setMessages((prev) => [
-      ...prev,
-      { id: `user-${Date.now()}`, sender: "user", text: trimmed },
-    ]);
+  const handleSend = (text: string) => {
+    sendMessage(text);
     setInput("");
-    setIsTyping(true);
-
-    setTimeout(() => {
-      setMessages((prev) => [
-        ...prev,
-        {
-          id: `ai-${Date.now()}`,
-          sender: "ai",
-          text: MOCK_AI_REPLIES[mockReplyIndex % MOCK_AI_REPLIES.length],
-        },
-      ]);
-      setMockReplyIndex((prev) => prev + 1);
-      setIsTyping(false);
-    }, 700);
   };
 
   const handleReset = () => {
-    setMessages([]);
+    reset();
     setInput("");
-    setIsTyping(false);
-    setMockReplyIndex(0);
   };
 
   return (
@@ -81,7 +45,7 @@ export function PromptTestChat() {
         <div className="flex items-center gap-sm">
           <Badge variant="accent">테스트 모드</Badge>
           <span className="font-sans text-caption-12-regular text-text-tertiary">
-            저장 전 프롬프트로 대화 중 (목업 응답)
+            저장 전 프롬프트로 대화 중
           </span>
         </div>
 
@@ -108,26 +72,36 @@ export function PromptTestChat() {
             <UserChatBubble key={message.id}>{message.text}</UserChatBubble>
           ) : (
             <AIChatBubble key={message.id}>
-              <ChatMarkdown>{message.text}</ChatMarkdown>
+              {message.text ? (
+                <ChatMarkdown>{message.text}</ChatMarkdown>
+              ) : (
+                <span className="font-sans text-body-14-regular text-text-tertiary">
+                  입력 중...
+                </span>
+              )}
             </AIChatBubble>
           ),
         )}
 
-        {isTyping && (
-          <AIChatBubble>
-            <span className="font-sans text-body-14-regular text-text-tertiary">
-              입력 중...
-            </span>
+        {isTyping && isFinalizing && (
+          <AIChatBubble noBackground>
+            <AdminTypingIndicator message="정리하는 중..." />
           </AIChatBubble>
         )}
       </div>
+
+      {error && (
+        <p className="border-t border-border-default px-lg pt-md font-sans text-caption-12-regular text-error">
+          {error}
+        </p>
+      )}
 
       <div className="flex flex-wrap gap-xs border-t border-border-default px-lg pt-md">
         {QUICK_TEST_MESSAGES.map((quickMessage) => (
           <button
             key={quickMessage}
             type="button"
-            onClick={() => sendMessage(quickMessage)}
+            onClick={() => handleSend(quickMessage)}
             disabled={isTyping}
             className={cn(
               "shrink-0 whitespace-nowrap rounded-full border border-border-default px-md py-xs",
@@ -143,7 +117,7 @@ export function PromptTestChat() {
       <form
         onSubmit={(event) => {
           event.preventDefault();
-          sendMessage(input);
+          handleSend(input);
         }}
         className="flex items-center gap-sm p-lg pt-md"
       >

@@ -1,20 +1,23 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ChevronRight, Phone, Wifi } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useQuery } from "@tanstack/react-query";
 
 import { Badge } from "@/components/ui/Badge/Badge";
+import { HighlightedText } from "@/components/ui/HighlightedText/HighlightedText";
 import { NergetPlanBadge } from "@/components/plans/NergetPlanBadge";
 import { Link, useRouter } from "@/i18n/navigation";
 import { cn } from "@/lib/utils";
 import { getCurrentPlan } from "@/lib/api/plan";
 import { useAuthStore } from "@/stores/useAuthStore";
 import type { ChatPlanCard } from "@/types/chat";
+import type { UiElement } from "@/types/ui-elements";
 
 interface PlanRecommendationCardsProps {
   plans: ChatPlanCard[];
+  trackUiEvent: (element: UiElement, action: "view" | "click") => void;
 }
 
 // "월 46,000원" → 숫자 부분만("46,000") 큰 글씨로 강조하기 위해 분리함
@@ -37,25 +40,13 @@ function splitSpecs(specs: string): string[] {
     .filter(Boolean);
 }
 
-// AI가 "**...**"로 감싸 보내는, 사용자가 원한 조건과 일치하는 구절만 뽑아내기 위한 파싱.
-// 짝수 인덱스는 일반 텍스트, 홀수 인덱스는 강조 대상 텍스트
-interface ReasonSegment {
-  text: string;
-  highlighted: boolean;
-}
-function parseHighlightedReason(reason: string): ReasonSegment[] {
-  return reason
-    .split(/\*\*(.+?)\*\*/g)
-    .map((text, i) => ({ text, highlighted: i % 2 === 1 }))
-    .filter((segment) => segment.text !== "");
-}
-
 /**
  * AI가 추천한 요금제 카드를 가로로 스크롤하며 보는 캐러셀.
  * 현재 보고 있는 카드 인덱스는 이 컴포넌트 안에서만 쓰이는 표시용 상태라 여기서 관리함.
  */
 export function PlanRecommendationCards({
   plans,
+  trackUiEvent,
 }: PlanRecommendationCardsProps) {
   const t = useTranslations("AIChat");
   const router = useRouter();
@@ -76,6 +67,20 @@ export function PlanRecommendationCards({
   });
 
   const hasCurrentPlan = Boolean(currentPlan?.planCode);
+
+  // 카드가 렌더링되는 시점을 "노출"로 기록함. 비교 버튼은 currentPlan 조회가
+  // 비동기로 늦게 끝날 수 있어 hasCurrentPlan이 true가 되는 시점에 따로 기록함
+  useEffect(() => {
+    trackUiEvent("plan_detail", "view");
+    trackUiEvent("explore_plans", "view");
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- 카드가 처음 뜰 때 한 번만 기록하면 됨
+  }, []);
+
+  useEffect(() => {
+    if (hasCurrentPlan) {
+      trackUiEvent("plan_comparison", "view");
+    }
+  }, [hasCurrentPlan, trackUiEvent]);
 
   const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
     const { scrollLeft, clientWidth } = e.currentTarget;
@@ -104,7 +109,6 @@ export function PlanRecommendationCards({
           const priceNumber = parsePriceNumber(plan.price);
           const specRows = splitSpecs(plan.specs);
           const ticketNumber = parseTicketNumber(plan.name);
-          const reasonSegments = parseHighlightedReason(plan.savings);
 
           return (
             <div
@@ -114,10 +118,14 @@ export function PlanRecommendationCards({
               }}
               role="button"
               tabIndex={0}
-              onClick={() => router.push(`/plans/${plan.code}?from=chat`)}
+              onClick={() => {
+                trackUiEvent("plan_detail", "click");
+                router.push(`/plans/${plan.code}?from=chat`);
+              }}
               onKeyDown={(e) => {
                 if (e.key !== "Enter" && e.key !== " ") return;
                 e.preventDefault();
+                trackUiEvent("plan_detail", "click");
                 router.push(`/plans/${plan.code}?from=chat`);
               }}
               className="flex flex-col rounded-2xl bg-surface border border-border-default shadow-sm w-62.5 shrink-0 snap-start overflow-hidden cursor-pointer transition-transform active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-action-primary"
@@ -182,18 +190,7 @@ export function PlanRecommendationCards({
                     일치하는 구절만 AI가 **굵게** 표시해서 보내주는데, 그 부분만 프라이머리 색으로 강조함 */}
                 <div className="rounded-md bg-surface-subtle px-sm py-xs">
                   <span className="font-sans text-caption-12-medium leading-relaxed text-text-secondary">
-                    {reasonSegments.map((segment, segIdx) =>
-                      segment.highlighted ? (
-                        <span
-                          key={segIdx}
-                          className="font-bold text-action-primary"
-                        >
-                          {segment.text}
-                        </span>
-                      ) : (
-                        <span key={segIdx}>{segment.text}</span>
-                      ),
-                    )}
+                    <HighlightedText text={plan.savings} />
                   </span>
                 </div>
               </div>
@@ -207,6 +204,7 @@ export function PlanRecommendationCards({
                     type="button"
                     onClick={(e) => {
                       e.stopPropagation();
+                      trackUiEvent("plan_comparison", "click");
                       router.push(`/ai/compare?code=${plan.code}&from=chat`);
                     }}
                     className="flex items-center justify-start gap-xs w-full font-sans text-caption-13-medium text-text-secondary hover:text-text-primary"
@@ -245,6 +243,7 @@ export function PlanRecommendationCards({
       {/* 다른 요금제 탐색하기: 요금제 전체 목록 페이지로 이동 */}
       <Link
         href="/plans?from=chat"
+        onClick={() => trackUiEvent("explore_plans", "click")}
         className="flex items-center gap-xs font-sans text-caption-13-bold text-text-secondary hover:text-text-primary"
       >
         {t("explorePlans")} <ChevronRight size={16} />

@@ -15,7 +15,7 @@ const meta = {
   argTypes: {
     variant: {
       control: "select",
-      options: ["primary", "secondary", "text", "inChat"],
+      options: ["primary", "secondary", "text", "inChat", "inChatOutline"],
     },
   },
 } satisfies Meta<typeof Button>;
@@ -44,6 +44,13 @@ export const InChat: Story = {
   args: {
     variant: "inChat",
     children: "다음",
+  },
+};
+
+export const InChatOutline: Story = {
+  args: {
+    variant: "inChatOutline",
+    children: "인증번호 전송",
   },
 };
 

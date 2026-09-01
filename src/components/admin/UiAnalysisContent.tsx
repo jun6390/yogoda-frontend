@@ -120,7 +120,7 @@ export function UiAnalysisContent() {
             </div>
 
             <div className="mt-lg overflow-x-auto">
-              <table className="w-full min-w-[560px] border-collapse text-left">
+              <table className="w-full min-w-140 border-collapse text-left">
                 <thead>
                   <tr className="border-b border-border-default">
                     <th className="px-sm py-sm font-sans text-caption-12-bold text-text-tertiary">
@@ -132,7 +132,7 @@ export function UiAnalysisContent() {
                     <th className="px-sm py-sm text-right font-sans text-caption-12-bold text-text-tertiary">
                       클릭 수
                     </th>
-                    <th className="w-[180px] px-sm py-sm text-right font-sans text-caption-12-bold text-text-tertiary">
+                    <th className="w-45 px-sm py-sm text-right font-sans text-caption-12-bold text-text-tertiary">
                       CTR
                     </th>
                   </tr>
@@ -177,7 +177,7 @@ export function UiAnalysisContent() {
                             {formatChange(element.ctrChange)}
                           </span>
                         </div>
-                        <div className="mt-xs h-[6px] w-full overflow-hidden rounded-sm bg-surface-subtle">
+                        <div className="mt-xs h-1.5 w-full overflow-hidden rounded-sm bg-surface-subtle">
                           <div
                             className={cn(
                               "h-full rounded-sm transition-all",

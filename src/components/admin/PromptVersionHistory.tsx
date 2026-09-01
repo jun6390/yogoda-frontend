@@ -140,7 +140,7 @@ export function PromptVersionHistory() {
 
         {data && (
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[640px] border-collapse text-left">
+            <table className="w-full min-w-160 border-collapse text-left">
               <thead>
                 <tr className="border-b border-border-default">
                   <th className="whitespace-nowrap px-sm py-sm font-sans text-caption-12-bold text-text-tertiary">
@@ -384,7 +384,7 @@ export function PromptVersionHistory() {
                   <div className="mt-lg flex justify-end">
                     <Button
                       variant="secondary"
-                      className="h-[40px] rounded-md px-lg py-0 text-label-14-bold"
+                      className="h-10 rounded-md px-lg py-0 text-label-14-bold"
                       onClick={() => {
                         setPendingRollback({
                           versionId: viewingDetail.versionId,

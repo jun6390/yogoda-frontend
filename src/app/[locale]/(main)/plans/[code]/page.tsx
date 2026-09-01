@@ -517,6 +517,8 @@ function PlanDetailContent({ code }: PlanDetailContentProps) {
 
   return (
     <>
+      {/* 채팅으로 돌아가기 버튼은 하단 CTA 표시 여부(스크롤)와 무관하게
+          항상 같은 자리에 떠 있어야 하는 독립적인 요소라 여기서 별도로 그림 */}
       <BackToChatButton />
 
       <PageContainer className="pb-xl pt-md">

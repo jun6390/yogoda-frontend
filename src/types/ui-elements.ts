@@ -1,9 +1,5 @@
 export type UiElement =
-  | "plan_detail"
-  | "plan_comparison"
-  | "signup_button"
-  | "benefit_detail"
-  | "agent_connect";
+  "plan_detail" | "plan_comparison" | "explore_plans" | "signup_button";
 
 export interface UiElementStat {
   element: UiElement;
