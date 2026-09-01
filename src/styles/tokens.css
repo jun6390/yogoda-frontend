@@ -146,7 +146,6 @@
    */
   --font-sans: var(--font-noto-sans-kr), sans-serif;
 
-  /* 색상임 */
   --color-background: var(--semantic-background);
   --color-surface: var(--semantic-surface);
   --color-surface-subtle: var(--semantic-surface-subtle);
@@ -231,6 +230,11 @@
   --shadow-sm: 0 2px 8px rgb(18 20 31 / 8%);
   --shadow-md: 0 6px 18px -2px rgb(18 20 31 / 12%);
   --shadow-lg: 0 14px 32px -6px rgb(18 20 31 / 16%);
+
+  --animate-toast-drop-in: toastDropIn 0.3s ease-out;
+
+  /* 인증번호 등 자릿수를 눈으로 구분해야 하는 코드 입력란 전용 자간 */
+  --tracking-code: 4px;
 
   /* Typography - Display */
   --text-display-40-bold: 40px;
