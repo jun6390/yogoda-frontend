@@ -260,7 +260,7 @@ export function PromptManagementContent() {
                     </button>
                   </div>
 
-                  <div className="h-160">
+                  <div className="sm:h-160">
                     {testMode === "single" ? (
                       <PromptTestChat />
                     ) : (

@@ -193,43 +193,47 @@ export function DashboardContent() {
       {data && (
         <>
           {showDropStageAlert && (
-            <div className="mt-2xl flex flex-wrap items-center gap-md rounded-lg border border-error-soft bg-error-soft px-lg py-md">
-              <AlertTriangle
-                aria-hidden="true"
-                size={20}
-                className="shrink-0 text-error"
-              />
-              <p className="flex-1 font-sans text-body-14-regular text-text-primary">
-                <strong className="font-sans text-label-14-bold text-error">
-                  {maxDropStageLabel}
-                </strong>{" "}
-                단계 이탈률이 가장 높아요. 전체 이탈률은{" "}
-                {data.funnel.totalDropRate}%예요.
-              </p>
+            <div className="relative mt-2xl flex flex-col gap-md rounded-lg border border-error-soft bg-error-soft py-md pl-lg pr-4xl sm:flex-row sm:flex-wrap sm:items-start">
+              <div className="flex items-start gap-md">
+                <AlertTriangle
+                  aria-hidden="true"
+                  size={20}
+                  className="mt-0.5 shrink-0 text-error"
+                />
+                <p className="font-sans text-body-14-regular text-text-primary">
+                  <strong className="font-sans text-label-14-bold text-error">
+                    {maxDropStageLabel}
+                  </strong>{" "}
+                  단계 이탈률이 가장 높아요. 전체 이탈률은{" "}
+                  {data.funnel.totalDropRate}%예요.
+                </p>
+              </div>
 
-              {actualDropStage && (
-                <NextLink
-                  href={`/admin/logs?drop_stage=${actualDropStage}`}
-                  className="shrink-0 font-sans text-caption-12-bold text-text-primary underline underline-offset-2"
-                >
-                  해당 로그 보기
+              <div className="flex shrink-0 flex-wrap items-center gap-md pl-8 sm:ml-auto sm:pl-0">
+                {actualDropStage && (
+                  <NextLink
+                    href={`/admin/logs?drop_stage=${actualDropStage}`}
+                    className="shrink-0 font-sans text-caption-12-bold text-text-primary underline underline-offset-2"
+                  >
+                    해당 로그 보기
+                  </NextLink>
+                )}
+
+                <NextLink href="/admin/prompts" className="shrink-0">
+                  <Button
+                    variant="primary"
+                    className="h-7 rounded-md px-md py-0 text-caption-12-bold"
+                  >
+                    프롬프트 개선하기
+                  </Button>
                 </NextLink>
-              )}
-
-              <NextLink href="/admin/prompts" className="shrink-0">
-                <Button
-                  variant="primary"
-                  className="h-7 rounded-md px-md py-0 text-caption-12-bold"
-                >
-                  프롬프트 개선하기
-                </Button>
-              </NextLink>
+              </div>
 
               <button
                 type="button"
                 aria-label="배너 닫기"
                 onClick={() => setDismissedStage(maxDropStage)}
-                className="shrink-0 text-text-secondary hover:text-text-primary"
+                className="absolute right-lg top-md shrink-0 text-text-secondary hover:text-text-primary"
               >
                 <X aria-hidden="true" size={18} />
               </button>
@@ -305,13 +309,13 @@ export function DashboardContent() {
 
                 const row = (
                   <>
-                    <span className="w-23 shrink-0 whitespace-nowrap font-sans text-label-14-bold text-text-primary">
+                    <span className="order-1 shrink-0 whitespace-nowrap font-sans text-label-14-bold text-text-primary sm:w-23">
                       {stage.label}
                     </span>
 
                     <span
                       className={cn(
-                        "flex w-20 shrink-0 items-center",
+                        "order-2 flex shrink-0 items-center sm:w-20",
                         !isMaxDrop && "invisible",
                       )}
                     >
@@ -323,7 +327,7 @@ export function DashboardContent() {
                       </Badge>
                     </span>
 
-                    <div className="relative h-9 flex-1 overflow-hidden rounded-md bg-border-default">
+                    <div className="relative order-5 h-9 w-full overflow-hidden rounded-md bg-border-default sm:order-3 sm:w-auto sm:flex-1">
                       <div
                         className={cn(
                           "flex h-full items-center gap-xs overflow-hidden rounded-md px-md transition-all",
@@ -352,13 +356,13 @@ export function DashboardContent() {
                       )}
                     </div>
 
-                    <span className="w-[72px] shrink-0 text-right font-sans text-micro-11-regular text-text-tertiary">
+                    <span className="order-3 ml-auto shrink-0 text-right font-sans text-micro-11-regular text-text-tertiary sm:order-4 sm:ml-0 sm:w-[72px]">
                       진입 {stage.entryRate}%
                     </span>
 
                     <span
                       className={cn(
-                        "w-16 shrink-0 text-right font-sans text-label-14-bold",
+                        "order-4 shrink-0 text-right font-sans text-label-14-bold sm:order-5 sm:w-16",
                         stage.dropRate === null
                           ? "text-text-tertiary"
                           : "text-error",
@@ -375,7 +379,7 @@ export function DashboardContent() {
                   return (
                     <div
                       key={stage.stage}
-                      className="-mx-sm flex items-center gap-md px-sm py-xs"
+                      className="-mx-sm flex flex-wrap items-center gap-x-md gap-y-xs px-sm py-xs"
                     >
                       {row}
                     </div>
@@ -387,7 +391,7 @@ export function DashboardContent() {
                     key={stage.stage}
                     href={logsHref}
                     className={cn(
-                      "group -mx-sm flex items-center gap-md rounded-md px-sm py-xs transition-colors",
+                      "group -mx-sm flex flex-wrap items-center gap-x-md gap-y-xs rounded-md px-sm py-xs transition-colors",
                       isMaxDrop
                         ? "bg-error-soft hover:bg-error-soft/70"
                         : "hover:bg-surface-subtle",
@@ -442,62 +446,64 @@ export function DashboardContent() {
                 </NextLink>
               </div>
 
-              <div className="flex h-45 justify-center gap-lg sm:flex-1">
-                {data.promptConversion.map((version) => {
-                  const heightPercent =
-                    maxConversionRate > 0
-                      ? (version.conversionRate / maxConversionRate) * 100
-                      : 0;
+              <div className="overflow-x-auto sm:flex-1">
+                <div className="flex h-45 w-full min-w-min justify-center gap-lg">
+                  {data.promptConversion.map((version) => {
+                    const heightPercent =
+                      maxConversionRate > 0
+                        ? (version.conversionRate / maxConversionRate) * 100
+                        : 0;
 
-                  return (
-                    <div
-                      key={version.version}
-                      className="flex w-20 shrink-0 flex-col items-center gap-xs"
-                    >
-                      <span
-                        className={cn(
-                          "font-sans text-caption-12-bold",
-                          version.isActive
-                            ? "text-text-brand"
-                            : "text-text-secondary",
-                        )}
-                      >
-                        {version.conversionRate}%
-                      </span>
-                      <div className="flex w-full flex-1 items-end justify-center">
-                        <div
-                          className={cn(
-                            "w-10 rounded-t-sm transition-all",
-                            version.isActive
-                              ? "bg-action-primary"
-                              : "bg-border-strong",
-                          )}
-                          style={{ height: `${heightPercent}%` }}
-                        />
-                      </div>
-                      <span
-                        className={cn(
-                          "whitespace-nowrap font-sans text-caption-12-regular",
-                          version.isActive
-                            ? "text-text-primary"
-                            : "text-text-tertiary",
-                        )}
+                    return (
+                      <div
+                        key={version.version}
+                        className="flex w-20 shrink-0 flex-col items-center gap-xs"
                       >
                         <span
                           className={cn(
-                            "font-sans",
+                            "font-sans text-caption-12-bold",
                             version.isActive
-                              ? "text-caption-12-bold"
-                              : "text-caption-12-regular",
+                              ? "text-text-brand"
+                              : "text-text-secondary",
                           )}
                         >
-                          {version.version}
-                        </span>{" "}
-                        {version.sessionCount.toLocaleString("ko-KR")} 세션
-                      </span>
-                    </div>
-                  );
-                })}
+                          {version.conversionRate}%
+                        </span>
+                        <div className="flex w-full flex-1 items-end justify-center">
+                          <div
+                            className={cn(
+                              "w-10 rounded-t-sm transition-all",
+                              version.isActive
+                                ? "bg-action-primary"
+                                : "bg-border-strong",
+                            )}
+                            style={{ height: `${heightPercent}%` }}
+                          />
+                        </div>
+                        <span
+                          className={cn(
+                            "whitespace-nowrap font-sans text-caption-12-regular",
+                            version.isActive
+                              ? "text-text-primary"
+                              : "text-text-tertiary",
+                          )}
+                        >
+                          <span
+                            className={cn(
+                              "font-sans",
+                              version.isActive
+                                ? "text-caption-12-bold"
+                                : "text-caption-12-regular",
+                            )}
+                          >
+                            {version.version}
+                          </span>{" "}
+                          {version.sessionCount.toLocaleString("ko-KR")} 세션
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
             </div>
           </section>
