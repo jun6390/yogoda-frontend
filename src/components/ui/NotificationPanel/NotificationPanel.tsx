@@ -8,16 +8,27 @@ import { Bell, Tag, Calendar, MessageCircle, Trash2 } from "lucide-react";
 import type { AppNotification, NotificationType } from "@/lib/api/notification";
 import { cn } from "@/lib/utils";
 
-/** 알림 타입별 아이콘·색상 메타데이터 */
-const NOTIFICATION_META: Record<NotificationType, { icon: ElementType }> = {
+/*
+ * 알림 타입별 아이콘·색상 메타데이터.
+ * 전에는 세 타입 모두 같은 브랜드 핑크 칩이라 목록을 훑어봐도 어떤 알림인지
+ * 구분이 안 됐음 — 타입 성격에 맞는 색을 따로 둬서 한눈에 구분되게 함
+ * (만료 임박 = 경고색, 리마인더 = 정보색, 상담 관련 = 브랜드색)
+ */
+const NOTIFICATION_META: Record<
+  NotificationType,
+  { icon: ElementType; chipClassName: string }
+> = {
   coupon_expiring: {
     icon: Tag,
+    chipClassName: "bg-warning/15 text-warning",
   },
   attendance_reminder: {
     icon: Calendar,
+    chipClassName: "bg-info/15 text-info",
   },
   consultation_incomplete: {
     icon: MessageCircle,
+    chipClassName: "bg-brand-soft text-icon-brand",
   },
 };
 
@@ -259,7 +270,8 @@ function NotificationItem({
         onTouchEnd={handleTouchEnd}
         style={{ transform: `translateX(${offset}px)` }}
         className={cn(
-          "relative flex w-full items-start gap-md px-lg py-md text-left",
+          // 아이콘 앞 여백이 과했던 걸 줄이기 위해 좌우 패딩을 분리함
+          "relative flex w-full items-start gap-md py-md pl-md pr-lg text-left",
           "focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-action-primary",
           isSnapping && !isExiting
             ? "transition-transform duration-200 ease-out"
@@ -274,7 +286,10 @@ function NotificationItem({
         {/* 타입 아이콘 */}
         <span
           aria-hidden="true"
-          className="mt-[1px] flex size-[36px] shrink-0 items-center justify-center rounded-sm bg-brand-soft text-icon-brand"
+          className={cn(
+            "mt-px flex size-9 shrink-0 items-center justify-center rounded-sm",
+            meta.chipClassName,
+          )}
         >
           <Icon size={20} strokeWidth={1.8} />
         </span>

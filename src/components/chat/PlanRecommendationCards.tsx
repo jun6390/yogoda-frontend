@@ -6,6 +6,7 @@ import { useTranslations } from "next-intl";
 import { useQuery } from "@tanstack/react-query";
 
 import { Badge } from "@/components/ui/Badge/Badge";
+import { HighlightedText } from "@/components/ui/HighlightedText/HighlightedText";
 import { NergetPlanBadge } from "@/components/plans/NergetPlanBadge";
 import { Link, useRouter } from "@/i18n/navigation";
 import { cn } from "@/lib/utils";
@@ -35,19 +36,6 @@ function splitSpecs(specs: string): string[] {
     .split("·")
     .map((s) => s.trim())
     .filter(Boolean);
-}
-
-// AI가 "**...**"로 감싸 보내는, 사용자가 원한 조건과 일치하는 구절만 뽑아내기 위한 파싱.
-// 짝수 인덱스는 일반 텍스트, 홀수 인덱스는 강조 대상 텍스트
-interface ReasonSegment {
-  text: string;
-  highlighted: boolean;
-}
-function parseHighlightedReason(reason: string): ReasonSegment[] {
-  return reason
-    .split(/\*\*(.+?)\*\*/g)
-    .map((text, i) => ({ text, highlighted: i % 2 === 1 }))
-    .filter((segment) => segment.text !== "");
 }
 
 /**
@@ -104,7 +92,6 @@ export function PlanRecommendationCards({
           const priceNumber = parsePriceNumber(plan.price);
           const specRows = splitSpecs(plan.specs);
           const ticketNumber = parseTicketNumber(plan.name);
-          const reasonSegments = parseHighlightedReason(plan.savings);
 
           return (
             <div
@@ -182,18 +169,7 @@ export function PlanRecommendationCards({
                     일치하는 구절만 AI가 **굵게** 표시해서 보내주는데, 그 부분만 프라이머리 색으로 강조함 */}
                 <div className="rounded-md bg-surface-subtle px-sm py-xs">
                   <span className="font-sans text-caption-12-medium leading-relaxed text-text-secondary">
-                    {reasonSegments.map((segment, segIdx) =>
-                      segment.highlighted ? (
-                        <span
-                          key={segIdx}
-                          className="font-bold text-action-primary"
-                        >
-                          {segment.text}
-                        </span>
-                      ) : (
-                        <span key={segIdx}>{segment.text}</span>
-                      ),
-                    )}
+                    <HighlightedText text={plan.savings} />
                   </span>
                 </div>
               </div>

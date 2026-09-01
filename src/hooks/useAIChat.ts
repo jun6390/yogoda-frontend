@@ -629,12 +629,18 @@ export function useAIChat({ preselectedPlan }: UseAIChatOptions = {}) {
                   ] satisfies ChatMessage[];
                 }
 
-                const textMsg: ChatMessage = {
-                  id: m.id,
-                  sender: m.role === "user" ? "user" : "ai",
-                  type: "text",
-                  text: m.content,
-                };
+                // 내용이 빈 문자열(또는 공백뿐)이면 빈 말풍선을 만들지 않음.
+                // 스트리밍 중 리크 필터가 응답 전체를 걸러내는 등의 이유로
+                // DB에 빈 문자열로 저장된 메시지가 있을 수 있음
+                const trimmedContent = m.content.trim();
+                const textMsg: ChatMessage | null = trimmedContent
+                  ? {
+                      id: m.id,
+                      sender: m.role === "user" ? "user" : "ai",
+                      type: "text",
+                      text: m.content,
+                    }
+                  : null;
 
                 // 요금제 추천 카드가 저장된 메시지는, 실시간 대화 때와 동일하게
                 // 텍스트 말풍선 뒤에 카드 메시지를 이어붙여 함께 복원함
@@ -645,10 +651,10 @@ export function useAIChat({ preselectedPlan }: UseAIChatOptions = {}) {
                     type: "plans",
                     plans: m.plans,
                   };
-                  return [textMsg, plansMsg];
+                  return textMsg ? [textMsg, plansMsg] : [plansMsg];
                 }
 
-                return [textMsg];
+                return textMsg ? [textMsg] : [];
               }),
             ]);
           }
@@ -660,7 +666,13 @@ export function useAIChat({ preselectedPlan }: UseAIChatOptions = {}) {
         sessionIdRef.current = stored.sessionId;
         setGuestChatCount(stored.guestChatCount);
         if (stored.messages.length > 0) {
-          setMessages(stored.messages);
+          // 빈 문자열 텍스트 메시지(리크 필터가 응답을 통째로 걸러낸 경우 등)는
+          // 복원 시 빈 말풍선으로 보이지 않도록 제외함
+          setMessages(
+            stored.messages.filter(
+              (msg) => msg.type !== "text" || Boolean(msg.text?.trim()),
+            ),
+          );
         }
       }
 

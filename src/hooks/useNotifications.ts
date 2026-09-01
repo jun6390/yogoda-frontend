@@ -13,6 +13,7 @@ import { API_BASE_URL } from "@/lib/api/client";
 import {
   getNotifications,
   readNotification,
+  readAllNotifications,
   deleteNotification,
   NOTIFICATION_LIST_LIMIT,
   type AppNotification,
@@ -146,12 +147,14 @@ export function useNotifications() {
     [notifications],
   );
 
+  /*
+   * 화면에 보이는 알림(최신 10개)만 개별로 읽음 처리하면, 그보다 더 쌓여 있던
+   * 안 읽은 알림은 서버에 그대로 남아 unreadCount가 다시 채워지고 종 아이콘
+   * 배지가 재등장하는 문제가 있었음. 그래서 목록을 순회하는 대신 서버에
+   * "전부 읽음 처리" 한 번만 요청함
+   */
   const markAllAsRead = useCallback(async () => {
-    const unreadIds = notifications
-      .filter((notification) => !notification.readAt)
-      .map((notification) => notification.id);
-
-    if (unreadIds.length === 0) return;
+    if (unreadCount === 0) return;
 
     const readAt = new Date().toISOString();
     setNotifications((prev) =>
@@ -161,11 +164,12 @@ export function useNotifications() {
     );
     setUnreadCount(0);
 
-    const results = await Promise.allSettled(unreadIds.map(readNotification));
-    if (results.some((result) => result.status === "rejected")) {
-      console.error("일부 알림 읽음 처리 실패함");
+    try {
+      await readAllNotifications();
+    } catch (err) {
+      console.error("알림 전체 읽음 처리 실패:", err);
     }
-  }, [notifications]);
+  }, [unreadCount]);
 
   /*
    * 알림을 목록에서 삭제함. 안 읽은 알림이면 unreadCount도 함께 감소시킴.
