@@ -72,6 +72,12 @@ function PlanDetailContent({ code }: PlanDetailContentProps) {
   >(null);
 
   const [isExitModalOpen, setIsExitModalOpen] = useState(false);
+  // 다른 요금제로 가입이 이미 진행 중인 상태에서 이 요금제로 새로 시작하려는 경우,
+  // 전환 확인을 받기 전까지 그 기존 요금제 정보를 잠깐 들고 있는 상태
+  const [pendingSwitchFromPlan, setPendingSwitchFromPlan] = useState<{
+    code: string;
+    name: string;
+  } | null>(null);
 
   const {
     data: plan,
@@ -443,14 +449,13 @@ function PlanDetailContent({ code }: PlanDetailContentProps) {
     router.back();
   };
 
-  /* AI 채팅을 통한 가입 플로우 시작 */
-  const handleAISignup = () => {
-    if (isCurrentPlan) return;
-    if (!accessToken) {
-      router.push("/login");
-      return;
-    }
-    // 이전 가입 플로우 잔여 상태 초기화 (새 가입 시작)
+  /*
+   * 이전 가입 플로우 잔여 상태를 지우고 이 요금제로 가입 플로우를 새로 시작함.
+   * handleAISignup에서 다른 요금제 가입이 진행 중이지 않을 때 바로 호출되거나,
+   * 전환 확인 팝업에서 사용자가 "전환하기"를 눌렀을 때 호출됨
+   */
+  const proceedToAISignup = () => {
+    setPendingSwitchFromPlan(null);
     sessionStorage.removeItem("signupEntryShown");
     sessionStorage.removeItem("signupStep");
     sessionStorage.removeItem("signupQuickReplies");
@@ -477,6 +482,37 @@ function PlanDetailContent({ code }: PlanDetailContentProps) {
     // entry 쿼리 파라미터로 매번 다른 값을 붙여, 직전에 /ai를 방문한 적이 있어
     // 페이지가 재사용되는 경우에도 preselectedPlan을 다시 읽어오도록 강제함
     router.push(`/ai?entry=${createNavigationNonce()}`);
+  };
+
+  /* AI 채팅을 통한 가입 플로우 시작 */
+  const handleAISignup = () => {
+    if (isCurrentPlan) return;
+    if (!accessToken) {
+      router.push("/login");
+      return;
+    }
+
+    // 이미 다른 요금제로 가입이 진행 중인지 확인함. AI 채팅 쪽(useAIChat)의 메모리
+    // 상태는 페이지 재마운트 여부에 따라 믿을 수 없어서, 여기서 sessionStorage를
+    // 직접(잔여 상태를 지우기 전에!) 확인하는 게 유일하게 확실한 시점임
+    try {
+      const existingStep = sessionStorage.getItem("signupStep");
+      const existingPlanRaw = sessionStorage.getItem("preselectedPlan");
+      if (existingStep && existingPlanRaw) {
+        const existingPlan = JSON.parse(existingPlanRaw) as {
+          code: string;
+          name: string;
+        };
+        if (existingPlan.code && existingPlan.code !== plan.code) {
+          setPendingSwitchFromPlan(existingPlan);
+          return;
+        }
+      }
+    } catch {
+      /* noop */
+    }
+
+    proceedToAISignup();
   };
 
   return (
@@ -817,6 +853,53 @@ function PlanDetailContent({ code }: PlanDetailContentProps) {
                 className="h-[52px] rounded-lg bg-action-primary font-sans text-label-14-bold text-white"
               >
                 {t("exitModal.confirm")}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {pendingSwitchFromPlan && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/20 px-lg"
+          onMouseDown={() => setPendingSwitchFromPlan(null)}
+        >
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="switch-plan-title"
+            className="w-full max-w-[320px] rounded-xl bg-surface p-lg shadow-xl"
+            onMouseDown={(event) => event.stopPropagation()}
+          >
+            <h2
+              id="switch-plan-title"
+              className="font-sans text-title-18-bold leading-relaxed text-text-primary"
+            >
+              {t("switchPlanModal.title")}
+            </h2>
+
+            <p className="mt-xs font-sans text-label-14-medium text-text-primary">
+              {t("switchPlanModal.description", {
+                from: pendingSwitchFromPlan.name,
+                to: plan.name,
+              })}
+            </p>
+
+            <div className="mt-xl grid grid-cols-2 gap-sm">
+              <button
+                type="button"
+                onClick={() => setPendingSwitchFromPlan(null)}
+                className="h-[52px] rounded-lg bg-surface-subtle font-sans text-label-14-bold text-text-primary"
+              >
+                {t("switchPlanModal.cancel")}
+              </button>
+
+              <button
+                type="button"
+                onClick={proceedToAISignup}
+                className="h-[52px] rounded-lg bg-action-primary font-sans text-label-14-bold text-white"
+              >
+                {t("switchPlanModal.confirm")}
               </button>
             </div>
           </div>

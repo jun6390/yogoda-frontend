@@ -12,6 +12,8 @@
   --primitive-brand-magenta-light: #f06bb6;
   --primitive-brand-deep: #211524;
   --primitive-brand-pink-50: #fff0f8;
+  --primitive-brand-pink-100: #fceef5;
+  --primitive-navy-800: #4b5563;
 
   --primitive-white: #ffffff;
   --primitive-gray-50: #f8f8fb;
@@ -46,6 +48,7 @@
   --semantic-brand-soft: var(--primitive-brand-pink-50);
   --semantic-ai-soft: var(--primitive-ai-soft);
   --semantic-glow-accent: var(--primitive-brand-pink-50);
+  --semantic-bubble-user: var(--primitive-brand-pink-100);
 
   --semantic-text-on-primary: var(--primitive-white);
   --semantic-text-primary: var(--primitive-gray-900);
@@ -90,6 +93,7 @@
   --semantic-surface: var(--primitive-gray-800);
   --semantic-surface-subtle: var(--primitive-gray-700);
   --semantic-brand-soft: var(--primitive-brand-deep);
+  --semantic-bubble-user: var(--primitive-navy-800);
   --semantic-ai-soft: #2f2438;
   --semantic-glow-accent: #2f3d5c;
 
@@ -147,6 +151,7 @@
   --color-surface: var(--semantic-surface);
   --color-surface-subtle: var(--semantic-surface-subtle);
   --color-brand-soft: var(--semantic-brand-soft);
+  --color-bubble-user: var(--semantic-bubble-user);
   --color-ai-soft: var(--semantic-ai-soft);
   --color-glow-accent: var(--semantic-glow-accent);
 
