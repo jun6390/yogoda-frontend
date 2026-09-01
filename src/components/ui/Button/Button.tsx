@@ -3,7 +3,8 @@ import { useTranslations } from "next-intl";
 
 import { cn } from "@/lib/utils";
 
-type ButtonVariant = "primary" | "secondary" | "text" | "inChat";
+type ButtonVariant =
+  "primary" | "secondary" | "text" | "inChat" | "inChatOutline";
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: ButtonVariant;
@@ -33,6 +34,13 @@ const variantStyles: Record<ButtonVariant, string> = {
    */
   inChat:
     "rounded-md px-lg py-sm text-caption-13-bold bg-brand-soft text-action-primary hover:bg-action-primary/15",
+
+  /*
+   * inChat과 크기는 같지만, 옆에 다른 입력 요소가 있어 배경 톤온톤만으로는
+   * 버튼처럼 안 보이는 자리에 씀 (예: 본인 확인 카드의 "인증번호 전송")
+   */
+  inChatOutline:
+    "rounded-md px-lg py-sm text-caption-13-bold border border-action-primary bg-surface text-action-primary hover:bg-brand-soft",
 };
 
 export function Button({
@@ -62,7 +70,7 @@ export function Button({
          * variant와 분리해서 관리함
          */
         disabled &&
-          "cursor-not-allowed bg-border-default text-text-tertiary hover:bg-border-default",
+          "cursor-not-allowed border-border-default bg-border-default text-text-tertiary hover:bg-border-default",
 
         loading && "cursor-wait opacity-70",
 

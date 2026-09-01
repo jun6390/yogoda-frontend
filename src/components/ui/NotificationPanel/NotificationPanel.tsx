@@ -8,29 +8,34 @@ import { Bell, Tag, Calendar, MessageCircle, Trash2 } from "lucide-react";
 import type { AppNotification, NotificationType } from "@/lib/api/notification";
 import { cn } from "@/lib/utils";
 
-/** 알림 타입별 아이콘·색상 메타데이터 */
-const NOTIFICATION_META: Record<NotificationType, { icon: ElementType }> = {
+// 타입별로 성격에 맞는 색을 따로 둬서 목록에서 한눈에 구분되게 함
+const NOTIFICATION_META: Record<
+  NotificationType,
+  { icon: ElementType; chipClassName: string }
+> = {
   coupon_expiring: {
     icon: Tag,
+    chipClassName: "bg-warning/15 text-warning",
   },
   attendance_reminder: {
     icon: Calendar,
+    chipClassName: "bg-info/15 text-info",
   },
   consultation_incomplete: {
     icon: MessageCircle,
+    chipClassName: "bg-brand-soft text-icon-brand",
   },
 };
 
-/** 삭제 버튼이 노출되는 너비 (px) */
 const REVEAL_WIDTH = 76;
 
 interface NotificationPanelProps {
   notifications: AppNotification[];
   onClose: () => void;
-  /** 읽음 처리(서버 반영)까지 끝난 뒤에 페이지 이동을 해야 하므로 Promise를 반환받음 */
+  /** 읽음 처리(서버 반영)까지 끝난 뒤 이동해야 해서 Promise를 반환받음 */
   onNotificationClick: (notification: AppNotification) => Promise<void>;
   onMarkAllAsRead: () => Promise<void>;
-  /** 스와이프 삭제 시 호출됨. 미전달 시 삭제 기능 비활성화 */
+  /** 미전달 시 삭제 기능 비활성화 */
   onNotificationDelete?: (notification: AppNotification) => Promise<void>;
 }
 
@@ -79,7 +84,6 @@ export function NotificationPanel({
           "rounded-xl border border-border-default bg-surface shadow-lg",
         )}
       >
-        {/* 헤더 */}
         <div className="flex h-[52px] shrink-0 items-center justify-between border-b border-border-default px-lg">
           <div className="flex items-center gap-sm">
             <strong className="font-sans text-label-14-bold text-text-primary">
@@ -93,7 +97,10 @@ export function NotificationPanel({
           </div>
           <button
             type="button"
-            disabled={unreadCount === 0 || isMarkingAll}
+            // unreadCount는 낙관적으로 먼저 0으로 갱신되는 클라이언트 값이라,
+            // 실제로는 서버에 안 읽은 알림이 남아있어도(예: 이전 요청 실패)
+            // 0이면 버튼이 막혀서 다시 시도할 방법이 없었음. 진행 중일 때만 막음
+            disabled={isMarkingAll}
             onClick={() => void handleMarkAllAsRead()}
             className="font-sans text-caption-12-bold text-text-brand disabled:cursor-default disabled:text-text-tertiary"
           >
@@ -103,7 +110,6 @@ export function NotificationPanel({
           </button>
         </div>
 
-        {/* 알림 목록 or 빈 상태 */}
         {notifications.length === 0 ? (
           <NotificationEmptyState label={notificationT("empty")} />
         ) : (
@@ -145,7 +151,6 @@ function NotificationItem({
   const Icon = meta.icon;
   const isUnread = !notification.readAt;
 
-  // 스와이프 상태
   const [offset, setOffset] = useState(0);
   const [isSnapping, setIsSnapping] = useState(false);
   const [isExiting, setIsExiting] = useState(false);
@@ -234,7 +239,7 @@ function NotificationItem({
         isExiting ? "max-h-0 opacity-0" : "max-h-[120px] opacity-100",
       )}
     >
-      {/* 삭제 버튼 (뒤쪽 레이어) */}
+      {/* 뒤쪽 레이어: 삭제 버튼. 앞쪽 콘텐츠가 스와이프로 밀리면 드러남 */}
       {onDelete && (
         <button
           type="button"
@@ -250,7 +255,6 @@ function NotificationItem({
         </button>
       )}
 
-      {/* 알림 콘텐츠 (앞쪽 레이어, 스와이프로 밀림) */}
       <button
         type="button"
         onClick={handleContentClick}
@@ -259,7 +263,8 @@ function NotificationItem({
         onTouchEnd={handleTouchEnd}
         style={{ transform: `translateX(${offset}px)` }}
         className={cn(
-          "relative flex w-full items-start gap-md px-lg py-md text-left",
+          // 아이콘 앞 여백만 줄이기 위해 좌우 패딩을 분리함
+          "relative flex w-full items-start gap-md py-md pl-md pr-lg text-left",
           "focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-action-primary",
           isSnapping && !isExiting
             ? "transition-transform duration-200 ease-out"
@@ -271,10 +276,12 @@ function NotificationItem({
             : "bg-surface hover:bg-surface-subtle",
         )}
       >
-        {/* 타입 아이콘 */}
         <span
           aria-hidden="true"
-          className="mt-[1px] flex size-[36px] shrink-0 items-center justify-center rounded-sm bg-brand-soft text-icon-brand"
+          className={cn(
+            "mt-px flex size-9 shrink-0 items-center justify-center rounded-sm",
+            meta.chipClassName,
+          )}
         >
           <Icon size={20} strokeWidth={1.8} />
         </span>
@@ -289,7 +296,7 @@ function NotificationItem({
             >
               {notification.title}
             </p>
-            {/* 안 읽음 표시 점. 헤더 벨 아이콘의 뱃지와 같은 의미의 UI라 크기/색을 맞춤 */}
+            {/* 헤더 벨 아이콘 뱃지와 같은 의미라 크기/색을 맞춤 */}
             {isUnread && (
               <span
                 aria-hidden="true"

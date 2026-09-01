@@ -13,6 +13,7 @@ import { API_BASE_URL } from "@/lib/api/client";
 import {
   getNotifications,
   readNotification,
+  readAllNotifications,
   deleteNotification,
   NOTIFICATION_LIST_LIMIT,
   type AppNotification,
@@ -30,11 +31,8 @@ function subscribeToAuthHydration(onStoreChange: () => void) {
   };
 }
 
-/*
- * accessToken은 zustand persist로 localStorage에서 비동기 복원(hydration)되므로,
- * 새로고침 직후 첫 렌더의 로그인 여부만 보고 소켓 연결을 시도하면 accessToken이
- * 아직 없어 인증에 실패함. hydration 완료 여부를 별도로 구독해서 대기함
- */
+// accessToken은 zustand persist로 비동기 복원되므로, 복원 전 첫 렌더 기준으로
+// 소켓을 연결하면 인증에 실패함. hydration 완료 여부를 별도로 구독해서 대기함
 function useAuthHydrated() {
   return useSyncExternalStore(
     subscribeToAuthHydration,
@@ -55,12 +53,8 @@ export function useNotifications() {
   const isLoggedIn = !!accessToken;
   const isAuthHydrated = useAuthHydrated();
 
-  /*
-   * 로그아웃 상태에서 이전 로그인 세션의 알림이 잠깐이라도 보이면 안 되므로,
-   * 실제 데이터는 내부 state에만 담아두고 훅이 반환하는 값은 아래에서
-   * isLoggedIn 여부에 따라 파생시킴 (effect 안에서 로그아웃 시점에 별도로
-   * setState를 호출해 초기화할 필요가 없어짐)
-   */
+  // 로그아웃 순간 이전 세션의 알림이 잠깐이라도 보이면 안 되므로, 실제 데이터는
+  // 내부 state에만 두고 반환값은 isLoggedIn에 따라 파생시킴
   const [rawNotifications, setNotifications] = useState<AppNotification[]>([]);
   const [rawUnreadCount, setUnreadCount] = useState(0);
   const notifications = useMemo(
@@ -69,7 +63,6 @@ export function useNotifications() {
   );
   const unreadCount = isLoggedIn ? rawUnreadCount : 0;
 
-  // 로그인 상태가 확정되면 최초 알림 목록/안 읽은 개수를 REST로 불러옴
   useEffect(() => {
     if (!isAuthHydrated || !isLoggedIn) return;
 
@@ -90,12 +83,11 @@ export function useNotifications() {
     };
   }, [isAuthHydrated, isLoggedIn]);
 
-  // 로그인 상태인 동안 `/notifications` 네임스페이스에 영구 연결해 실시간 알림을 수신함
   useEffect(() => {
     if (!isAuthHydrated || !isLoggedIn) return;
 
-    // socket.io는 REST(fetch)와 달리 빈 문자열로는 연결할 수 없어, client.ts와
-    // 같은 API_BASE_URL이 비어 있을 때만 로컬 개발 서버 주소로 대체함
+    // socket.io는 빈 문자열로 연결할 수 없어, API_BASE_URL이 비어 있을 때만
+    // 로컬 개발 서버 주소로 대체함
     const apiBase = API_BASE_URL || "http://localhost:8000";
 
     const socket: Socket = io(`${apiBase}/notifications`, {
@@ -103,8 +95,7 @@ export function useNotifications() {
     });
 
     socket.on("notification", (data: AppNotification) => {
-      // 서버의 목록 조회도 최근 10개까지만 주므로, 실시간으로 쌓일 때도 같은
-      // 개수를 넘지 않게 잘라서 REST로 새로고침했을 때와 동일한 상태를 유지함
+      // REST 목록 조회도 최근 10개까지만 주는 것과 동일하게 맞춤
       setNotifications((prev) =>
         [data, ...prev].slice(0, NOTIFICATION_LIST_LIMIT),
       );
@@ -116,12 +107,8 @@ export function useNotifications() {
     };
   }, [isAuthHydrated, isLoggedIn, accessToken]);
 
-  /*
-   * 읽음 처리 요청이 서버에 반영되는 걸 호출부(알림 클릭 핸들러)가 기다릴 수 있도록
-   * Promise를 반환함. 화면(안 읽은 개수/점 표시)은 요청 완료를 기다리지 않고 먼저
-   * 갱신하되, 알림을 탭했을 때의 페이지 이동만큼은 이 Promise가 끝난 뒤 이뤄지게 해서
-   * "이동으로 컴포넌트가 언마운트되며 PATCH 요청이 씹히는" 경쟁 상태를 막음
-   */
+  // Promise를 반환해서, 호출부가 페이지 이동을 이 요청이 끝난 뒤로 미룰 수 있게 함
+  // (먼저 이동해버리면 언마운트로 PATCH 요청이 씹히는 경쟁 상태가 생김)
   const markAsRead = useCallback(
     async (notificationId: string) => {
       // 이미 읽은 알림이면 안 읽은 개수를 또 깎지 않도록, 현재 목록에서 먼저 확인함
@@ -146,13 +133,10 @@ export function useNotifications() {
     [notifications],
   );
 
+  // 화면에 보이는 최신 10개만 개별로 읽음 처리하면 그 뒤에 쌓인 알림은 서버에
+  // 안 읽음으로 남아 배지가 재등장하므로, 목록을 순회하지 않고 서버에 전체
+  // 읽음 처리를 한 번만 요청함
   const markAllAsRead = useCallback(async () => {
-    const unreadIds = notifications
-      .filter((notification) => !notification.readAt)
-      .map((notification) => notification.id);
-
-    if (unreadIds.length === 0) return;
-
     const readAt = new Date().toISOString();
     setNotifications((prev) =>
       prev.map((notification) =>
@@ -161,16 +145,13 @@ export function useNotifications() {
     );
     setUnreadCount(0);
 
-    const results = await Promise.allSettled(unreadIds.map(readNotification));
-    if (results.some((result) => result.status === "rejected")) {
-      console.error("일부 알림 읽음 처리 실패함");
+    try {
+      await readAllNotifications();
+    } catch (err) {
+      console.error("알림 전체 읽음 처리 실패:", err);
     }
-  }, [notifications]);
+  }, []);
 
-  /*
-   * 알림을 목록에서 삭제함. 안 읽은 알림이면 unreadCount도 함께 감소시킴.
-   * Optimistic update 방식으로 화면을 먼저 갱신하고 서버 요청을 보냄
-   */
   const dismissNotification = useCallback(
     async (notificationId: string) => {
       const target = notifications.find((n) => n.id === notificationId);

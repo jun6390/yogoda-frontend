@@ -40,6 +40,16 @@ export async function readNotification(notificationId: string): Promise<void> {
 }
 
 /**
+ * 안 읽은 알림을 전부 읽음 처리합니다. 화면에 보이는 최근 10개뿐 아니라,
+ * 그 전에 쌓인 안 읽은 알림까지 서버에서 한 번에 처리합니다.
+ */
+export async function readAllNotifications(): Promise<void> {
+  await apiFetch<{ message: string }>("/api/notifications/read-all", {
+    method: "PATCH",
+  });
+}
+
+/**
  * 알림 하나를 삭제합니다.
  */
 export async function deleteNotification(
