@@ -207,7 +207,7 @@ export function PromptCompareChat({
           ariaLabel="왼쪽 비교 버전"
           onChange={setLeftValue}
           className="flex-1"
-          triggerClassName="min-h-[40px] rounded-md"
+          triggerClassName="min-h-10 rounded-md"
         />
         <Select
           value={rightValue}
@@ -215,7 +215,7 @@ export function PromptCompareChat({
           ariaLabel="오른쪽 비교 버전"
           onChange={setRightValue}
           className="flex-1"
-          triggerClassName="min-h-[40px] rounded-md"
+          triggerClassName="min-h-10 rounded-md"
         />
       </div>
 

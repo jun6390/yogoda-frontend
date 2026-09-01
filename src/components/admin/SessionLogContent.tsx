@@ -87,9 +87,9 @@ function toListParams(filters: FilterState): SessionListParams {
 }
 
 const filterInputClassName = cn(
-  "h-[40px] rounded-md border border-border-default bg-background px-md",
+  "h-9 rounded-md border border-border-default bg-background px-md",
   "font-sans text-body-14-regular text-text-primary",
-  "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-action-primary",
+  "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-border-strong",
 );
 
 export function SessionLogContent() {
@@ -164,9 +164,9 @@ export function SessionLogContent() {
         이탈이 발생한 실제 대화를 읽고 프롬프트 개선 지점을 찾으세요
       </p>
 
-      <section className="mt-2xl flex flex-wrap items-end gap-md rounded-lg border border-border-default bg-surface p-2xl">
-        <label className="flex flex-col gap-xs">
-          <span className="font-sans text-caption-12-bold text-text-tertiary">
+      <section className="mt-2xl flex flex-wrap items-end gap-sm rounded-lg border border-border-default bg-surface p-lg">
+        <label className="flex flex-col gap-sm">
+          <span className="font-sans text-micro-11-bold text-text-tertiary">
             기간
           </span>
           <DateRangePicker
@@ -178,8 +178,8 @@ export function SessionLogContent() {
           />
         </label>
 
-        <label className="flex flex-col gap-xs">
-          <span className="font-sans text-caption-12-bold text-text-tertiary">
+        <label className="flex flex-col gap-sm">
+          <span className="font-sans text-micro-11-bold text-text-tertiary">
             상태
           </span>
           <Select
@@ -189,13 +189,17 @@ export function SessionLogContent() {
             onChange={(status) =>
               setDraftFilters((prev) => ({ ...prev, status }))
             }
-            className="w-[140px]"
-            triggerClassName="min-h-[40px] rounded-md"
+            className="w-35"
+            triggerClassName="min-h-9 rounded-md"
+            openTriggerClassName="border-border-strong"
+            menuClassName="flex flex-col gap-xs"
+            optionClassName="min-h-9 rounded-md px-md text-caption-13-regular"
+            selectedOptionClassName="bg-surface-subtle text-text-primary"
           />
         </label>
 
-        <label className="flex flex-col gap-xs">
-          <span className="font-sans text-caption-12-bold text-text-tertiary">
+        <label className="flex flex-col gap-sm">
+          <span className="font-sans text-micro-11-bold text-text-tertiary">
             이탈 단계
           </span>
           <Select
@@ -205,13 +209,17 @@ export function SessionLogContent() {
             onChange={(dropStage) =>
               setDraftFilters((prev) => ({ ...prev, dropStage }))
             }
-            className="w-[160px]"
-            triggerClassName="min-h-[40px] rounded-md"
+            className="w-40"
+            triggerClassName="min-h-9 rounded-md"
+            openTriggerClassName="border-border-strong"
+            menuClassName="flex flex-col gap-xs"
+            optionClassName="min-h-9 rounded-md px-md text-caption-13-regular"
+            selectedOptionClassName="bg-surface-subtle text-text-primary"
           />
         </label>
 
-        <label className="flex flex-col gap-xs">
-          <span className="font-sans text-caption-12-bold text-text-tertiary">
+        <label className="flex flex-col gap-sm">
+          <span className="font-sans text-micro-11-bold text-text-tertiary">
             프롬프트 버전
           </span>
           <div className="relative">
@@ -235,7 +243,7 @@ export function SessionLogContent() {
                 type="button"
                 aria-label="버전 올리기"
                 onClick={() => handleVersionStep(1)}
-                className="flex h-[16px] w-[20px] items-center justify-center text-text-tertiary hover:text-text-primary"
+                className="flex h-4 w-5 items-center justify-center text-text-tertiary hover:text-text-primary"
               >
                 <ChevronUp aria-hidden="true" size={12} />
               </button>
@@ -243,7 +251,7 @@ export function SessionLogContent() {
                 type="button"
                 aria-label="버전 내리기"
                 onClick={() => handleVersionStep(-1)}
-                className="flex h-[16px] w-[20px] items-center justify-center text-text-tertiary hover:text-text-primary"
+                className="flex h-4 w-5 items-center justify-center text-text-tertiary hover:text-text-primary"
               >
                 <ChevronDown aria-hidden="true" size={12} />
               </button>
@@ -253,14 +261,14 @@ export function SessionLogContent() {
 
         <div className="flex gap-sm">
           <Button
-            className="h-[40px] rounded-md px-lg py-0 text-label-14-bold"
+            className="h-9 rounded-md px-lg py-0 text-label-14-bold"
             onClick={handleApplyFilters}
           >
             필터 적용
           </Button>
           <Button
             variant="secondary"
-            className="h-[40px] rounded-md px-lg py-0 text-label-14-bold"
+            className="h-9 rounded-md px-lg py-0 text-label-14-bold"
             onClick={handleResetFilters}
           >
             초기화
@@ -269,7 +277,7 @@ export function SessionLogContent() {
       </section>
 
       <div className="mt-2xl flex flex-col gap-2xl md:flex-row">
-        <section className="flex h-[400px] w-full shrink-0 flex-col rounded-lg border border-border-default bg-surface p-2xl md:h-[600px] md:w-[360px]">
+        <section className="flex h-100 w-full shrink-0 flex-col rounded-lg border border-border-default bg-surface p-2xl md:h-150 md:w-90">
           <h2 className="font-sans text-title-18-bold text-text-primary">
             세션 목록
             {listData && (
@@ -304,7 +312,7 @@ export function SessionLogContent() {
             )}
 
             {listData && listData.sessions.length > 0 && (
-              <ul className="flex flex-col gap-xs">
+              <ul className="flex flex-col gap-sm">
                 {listData.sessions.map((session) => {
                   const isSelected = session.sessionId === selectedSessionId;
 
@@ -314,14 +322,14 @@ export function SessionLogContent() {
                         type="button"
                         onClick={() => setSelectedSessionId(session.sessionId)}
                         className={cn(
-                          "w-full rounded-md border px-md py-sm text-left transition-colors",
+                          "w-full rounded-md border p-lg text-left transition-colors",
                           isSelected
-                            ? "border-action-primary bg-brand-soft"
+                            ? "border-border-strong bg-surface-subtle"
                             : "border-border-default hover:bg-surface-subtle",
                         )}
                       >
                         <div className="flex items-center justify-between gap-sm">
-                          <span className="truncate font-sans text-label-14-bold text-text-primary">
+                          <span className="truncate font-sans text-caption-12-bold text-text-primary">
                             {session.userName}
                           </span>
                           <Badge
@@ -335,13 +343,13 @@ export function SessionLogContent() {
                           </Badge>
                         </div>
 
-                        <p className="mt-xs font-sans text-caption-12-regular text-text-tertiary">
+                        <p className="mt-xs font-sans text-micro-11-regular text-text-tertiary">
                           {formatDateTime(session.createdAt)} ·{" "}
                           {session.promptVersion}
                         </p>
 
                         {session.dropStageLabel && (
-                          <p className="mt-xs font-sans text-caption-12-regular text-error">
+                          <p className="mt-xs font-sans text-micro-11-regular text-error">
                             {session.dropStageLabel}에서 이탈
                           </p>
                         )}
@@ -354,7 +362,7 @@ export function SessionLogContent() {
           </div>
         </section>
 
-        <section className="flex h-[500px] flex-col rounded-lg border border-border-default bg-surface p-2xl md:h-[600px] md:flex-1">
+        <section className="flex h-125 flex-col rounded-lg border border-border-default bg-surface p-2xl md:h-150 md:flex-1">
           {!selectedSessionId && (
             <p className="font-sans text-body-14-regular text-text-secondary">
               왼쪽 목록에서 세션을 선택하면 대화 내용을 볼 수 있어요.
@@ -403,14 +411,14 @@ export function SessionLogContent() {
                 </Badge>
               </header>
 
-              <div className="mt-md flex flex-1 flex-col gap-md overflow-y-auto">
+              <div className="mt-md flex min-h-0 flex-1 flex-col gap-md overflow-y-auto">
                 {detail.messages
                   .filter((message) => message.content.trim() !== "")
                   .map((message) => (
                     <div
                       key={message.messageId}
                       className={cn(
-                        "flex flex-col gap-xs",
+                        "mx-auto flex w-full max-w-160 flex-col gap-xs",
                         message.sender === "user" ? "items-end" : "items-start",
                       )}
                     >
@@ -421,7 +429,14 @@ export function SessionLogContent() {
                           <ChatMarkdown>{message.content}</ChatMarkdown>
                         </AIChatBubble>
                       )}
-                      <span className="font-sans text-caption-12-regular text-text-tertiary">
+                      <span
+                        className={cn(
+                          "font-sans text-caption-12-regular text-text-tertiary",
+                          // AIChatBubble은 아바타(32px)+gap만큼 말풍선이 안쪽에서 시작해서,
+                          // 그 만큼 들여쓰지 않으면 시간이 말풍선이 아니라 아바타 밑에 정렬됨
+                          message.sender === "ai" && "ml-10",
+                        )}
+                      >
                         {formatDateTime(message.createdAt)}
                       </span>
                     </div>

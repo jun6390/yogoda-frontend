@@ -24,7 +24,7 @@ export function PeriodTabs({ value, onChange }: PeriodTabsProps) {
             type="button"
             onClick={() => onChange(option.value)}
             className={cn(
-              "h-[36px] rounded-full px-lg font-sans transition-colors",
+              "h-9 rounded-full px-lg font-sans transition-colors",
               isSelected
                 ? "bg-surface text-label-14-bold text-text-primary shadow-sm"
                 : "text-label-14-medium text-text-tertiary",

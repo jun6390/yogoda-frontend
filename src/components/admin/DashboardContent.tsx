@@ -356,7 +356,7 @@ export function DashboardContent() {
                       )}
                     </div>
 
-                    <span className="order-3 ml-auto shrink-0 text-right font-sans text-micro-11-regular text-text-tertiary sm:order-4 sm:ml-0 sm:w-[72px]">
+                    <span className="order-3 ml-auto shrink-0 text-right font-sans text-micro-11-regular text-text-tertiary sm:order-4 sm:ml-0 sm:w-18">
                       진입 {stage.entryRate}%
                     </span>
 

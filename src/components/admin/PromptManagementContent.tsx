@@ -233,7 +233,7 @@ export function PromptManagementContent() {
                     <div className="flex shrink-0 items-center gap-sm">
                       <Button
                         variant="secondary"
-                        className="h-[40px] rounded-md px-lg py-0 text-label-14-bold"
+                        className="h-10 rounded-md px-lg py-0 text-label-14-bold"
                         disabled={!hasChanges || deployMutation.isPending}
                         onClick={handleReset}
                       >
@@ -242,7 +242,7 @@ export function PromptManagementContent() {
 
                       <Button
                         variant="primary"
-                        className="h-[40px] rounded-md px-lg py-0 text-label-14-bold"
+                        className="h-10 rounded-md px-lg py-0 text-label-14-bold"
                         loading={deployMutation.isPending}
                         loadingLabel="배포하는 중..."
                         disabled={!canDeploy}

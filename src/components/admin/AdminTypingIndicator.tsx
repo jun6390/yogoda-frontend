@@ -9,7 +9,7 @@ interface AdminTypingIndicatorProps {
  */
 export function AdminTypingIndicator({ message }: AdminTypingIndicatorProps) {
   return (
-    <div className="flex items-center rounded-[12px] rounded-tl-[4px] border border-border-default bg-surface px-lg py-md shadow-sm">
+    <div className="flex items-center rounded-md rounded-tl-[4px] border border-border-default bg-surface px-lg py-md shadow-sm">
       <span className="font-sans text-caption-13-medium text-text-secondary">
         {message.split("").map((char, index) => (
           <span
