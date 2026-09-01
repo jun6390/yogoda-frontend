@@ -82,6 +82,9 @@ export default function AIConsultationPage() {
     isSignupFlow,
     isSignupComplete,
     sendMessageSilent,
+    pendingPlanSwitch,
+    confirmPlanSwitch,
+    cancelPlanSwitch,
   } = useAIChat({ preselectedPlan });
 
   const [inputText, setInputText] = useState("");
@@ -489,6 +492,28 @@ export default function AIConsultationPage() {
             onClose={() => setShowEndChatModal(false)}
             onPrimaryClick={handleEndChatConfirm}
             onSecondaryClick={() => setShowEndChatModal(false)}
+          />
+        </div>
+      )}
+
+      {/* 가입 플로우 진행 중 다른 요금제로 전환 확인 팝업 */}
+      {pendingPlanSwitch && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-lg"
+          onMouseDown={cancelPlanSwitch}
+        >
+          <Modal
+            onMouseDown={(e) => e.stopPropagation()}
+            heading={t("planSwitchModal.heading")}
+            description={t("planSwitchModal.description", {
+              from: pendingPlanSwitch.from.name,
+              to: pendingPlanSwitch.to.name,
+            })}
+            primaryLabel={t("planSwitchModal.primaryLabel")}
+            secondaryLabel={t("planSwitchModal.secondaryLabel")}
+            onClose={cancelPlanSwitch}
+            onPrimaryClick={confirmPlanSwitch}
+            onSecondaryClick={cancelPlanSwitch}
           />
         </div>
       )}

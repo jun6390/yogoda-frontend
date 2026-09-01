@@ -1132,6 +1132,12 @@
       "primaryLabel": "End chat",
       "secondaryLabel": "Cancel"
     },
+    "planSwitchModal": {
+      "heading": "Switch to a different plan?",
+      "description": "You're in the middle of signing up for {from}.\nStop that and start signing up for {to} instead?",
+      "primaryLabel": "Switch plan",
+      "secondaryLabel": "Keep current"
+    },
     "voiceInput": {
       "start": "Start voice input",
       "stop": "Stop voice input"

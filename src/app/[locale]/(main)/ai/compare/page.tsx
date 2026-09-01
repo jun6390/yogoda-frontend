@@ -187,44 +187,38 @@ export default function PlanComparePage() {
           </div>
 
           {/* 항목별 비교 테이블 */}
-          <div className="mt-xl overflow-hidden rounded-xl border border-border-default bg-surface">
+          <div className="relative mt-xl overflow-hidden rounded-xl border border-border-default bg-surface">
             <div className="grid grid-cols-[72px_1fr_1fr] border-b-2 border-border-default bg-surface-subtle px-md py-sm">
               <span />
-              <span className="font-sans text-caption-12-bold text-text-secondary">
+              <span className="text-center font-sans text-caption-12-bold text-text-secondary">
                 {currentPlan?.planName ?? t("myPlan")}
               </span>
-              <span className="font-sans text-caption-12-bold text-text-secondary">
+              <span className="text-center font-sans text-caption-12-bold text-action-primary">
                 {selectedPlan.name}
               </span>
             </div>
 
             {comparison.rows.map((row: PlanComparisonRow, i: number) => {
               const isLast = i === comparison.rows.length - 1;
-              const currentWins = row.winner === "current";
+              // 선택한 요금제가 더 좋을 때만 강조함 (기존 요금제가 더 좋아도 별도 강조 없음)
               const selectedWins = row.winner === "selected";
 
               return (
                 <div
                   key={`${row.label}-${i}`}
-                  className={`grid grid-cols-[72px_1fr_1fr] items-start gap-sm px-md py-md ${!isLast ? "border-b border-border-default" : ""}`}
+                  className={`grid grid-cols-[72px_1fr_1fr] items-center gap-sm px-md py-md ${!isLast ? "border-b border-border-default" : ""}`}
                 >
-                  <span className="pt-[2px] font-sans text-caption-11-regular leading-snug text-text-tertiary">
+                  <span className="text-center font-sans text-micro-11-regular leading-snug text-text-tertiary">
                     {row.label}
                   </span>
 
-                  <div>
-                    <span
-                      className={`font-sans text-caption-13-medium leading-snug break-keep ${
-                        currentWins
-                          ? "text-action-primary font-bold"
-                          : "text-text-secondary"
-                      }`}
-                    >
+                  <div className="text-center">
+                    <span className="font-sans text-caption-13-medium leading-snug break-keep text-text-secondary">
                       {row.current}
                     </span>
                   </div>
 
-                  <div>
+                  <div className="text-center">
                     <span
                       className={`font-sans text-caption-13-medium leading-snug break-keep ${
                         selectedWins
@@ -238,6 +232,16 @@ export default function PlanComparePage() {
                 </div>
               );
             })}
+
+            {/* 선택한 요금제 열 강조 외곽선. 행마다 마진으로 짜맞추면 어긋나기 쉬워서,
+                테이블 전체를 감싸는 절대위치 박스 하나로 맨 위에 한 번에 그림.
+                위아래·오른쪽에 살짝 여백을 둬서 4모서리를 전부 둥글게 통일하고,
+                은은한 빛 번짐(glow) 효과도 추가함.
+                72px 라벨 열 다음, 남은 폭을 1fr씩 반으로 나눈 뒤쪽 절반이 이 열의 위치임 */}
+            <div
+              className="pointer-events-none absolute inset-y-0.5 right-1 rounded-lg border-2 border-action-primary shadow-[0_0_10px_2px_rgba(224,20,133,0.35)]"
+              style={{ left: "calc(72px + (100% - 72px) / 2 + 4px)" }}
+            />
           </div>
 
           <p className="mt-lg text-center font-sans text-micro-11-regular text-text-tertiary">

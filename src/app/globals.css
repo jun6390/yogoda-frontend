@@ -100,3 +100,21 @@ button:disabled {
     opacity: 0.35;
   }
 }
+
+/* "채팅으로 돌아가기" 버튼이 언제든 누를 수 있음을 알리기 위해 통통 튀는 효과용 keyframes.
+   부드러운 사인파가 아니라, 쉬었다가 두 번 튀어오르고 다시 쉬는 "통!! 통!!" 리듬을 냄 */
+@keyframes ctaBounce {
+  0%,
+  20%,
+  50%,
+  80%,
+  100% {
+    transform: translateY(0);
+  }
+  40% {
+    transform: translateY(-10px);
+  }
+  60% {
+    transform: translateY(-5px);
+  }
+}

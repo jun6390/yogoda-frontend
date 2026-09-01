@@ -1131,6 +1131,12 @@
       "primaryLabel": "채팅 끝내기",
       "secondaryLabel": "취소"
     },
+    "planSwitchModal": {
+      "heading": "다른 요금제로 전환할까요?",
+      "description": "{from} 요금제 가입이 진행 중이에요.\n지금 중단하고 {to} 요금제로\n새로 가입을 진행할까요?",
+      "primaryLabel": "전환하기",
+      "secondaryLabel": "기존대로 계속하기"
+    },
     "voiceInput": {
       "start": "음성으로 입력하기",
       "stop": "음성 입력 중지하기"
