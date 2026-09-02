@@ -458,6 +458,7 @@ export function useAIChat({ preselectedPlan }: UseAIChatOptions = {}) {
           code: data.planCode,
           name: data.planName,
           monthlyFee: 0,
+          recommendedByAI: false,
         };
         preselectedPlanRef.current = undefined;
         // 재가입 시 같은 요금제라도 인삿말이 다시 나오도록 초기화
@@ -830,6 +831,9 @@ export function useAIChat({ preselectedPlan }: UseAIChatOptions = {}) {
         extra.preselectedPlanCode = preselectedPlanRef.current.code;
         extra.signupCollectedData = signupCollectedData;
         extra.currentSignupStep = currentSignupStepRef.current;
+        // 가입 전환율 집계에서 "AI 추천 → 가입"만 구분해서 잡기 위해, 가입
+        // 플로우가 진행되는 매 턴마다 백엔드가 이 값을 확인하므로 계속 실어 보냄
+        extra.recommendedByAI = preselectedPlanRef.current.recommendedByAI;
       }
 
       // 30초 안에 done이 안 오면 에러 처리
@@ -883,6 +887,7 @@ export function useAIChat({ preselectedPlan }: UseAIChatOptions = {}) {
         extra.preselectedPlanCode = preselectedPlanRef.current.code;
         extra.signupCollectedData = signupCollectedData;
         extra.currentSignupStep = currentSignupStepRef.current;
+        extra.recommendedByAI = preselectedPlanRef.current.recommendedByAI;
       }
       // 30초 안에 done이 안 오면 에러 처리
       clearResponseTimeout();
