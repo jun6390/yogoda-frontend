@@ -26,11 +26,18 @@ export interface DashboardFunnelStage {
   count: number;
   entryRate: number;
   dropRate: number | null;
+  // 바로 직전 동일 길이 구간의 dropRate. "이탈 단계 배너"가 maxDropStage(베이스라인
+  // 대비 가장 나빠진 단계)를 설명할 때만 쓰고, 퍼널 막대그래프 자체는 안 씀
+  baselineDropRate: number | null;
+  // baselineDropRate 계산에 쓰인 표본 수. 너무 작으면(예: 5 미만) 그 단계가
+  // maxDropStage로 뽑혀도 신뢰하기 어려우므로 프론트에서 배너 노출 여부 판단에 씀
+  baselineCount: number;
 }
 
 export interface DashboardFunnel {
   totalDropRate: number;
-  // 조회 기간에 데이터가 전혀 없으면(전부 0건) null로 내려옴
+  // 조회 기간에 데이터가 전혀 없거나, 베이스라인보다 나빠진 단계가 하나도
+  // 없으면 null로 내려옴
   maxDropStage: FunnelStage | null;
   stages: DashboardFunnelStage[];
 }

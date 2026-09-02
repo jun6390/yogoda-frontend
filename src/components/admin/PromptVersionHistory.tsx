@@ -57,6 +57,46 @@ function getPageNumbers(
   return pages;
 }
 
+function VersionTableSkeleton() {
+  return (
+    <div className="overflow-x-auto">
+      <table className="w-full min-w-160 border-collapse text-left">
+        <tbody>
+          {Array.from({ length: 5 }).map((_, index) => (
+            <tr key={index} className="border-b border-border-default">
+              <td className="whitespace-nowrap px-sm py-md">
+                <div className="h-4 w-14 animate-pulse rounded-full bg-surface-subtle" />
+              </td>
+              <td className="whitespace-nowrap px-sm py-md">
+                <div className="h-4 w-32 animate-pulse rounded-full bg-surface-subtle" />
+              </td>
+              <td className="px-sm py-md">
+                <div className="h-4 w-full max-w-80 animate-pulse rounded-full bg-surface-subtle" />
+              </td>
+              <td className="px-sm py-md">
+                <div className="ml-auto h-4 w-16 animate-pulse rounded-full bg-surface-subtle" />
+              </td>
+              <td className="px-sm py-md">
+                <div className="ml-auto h-4 w-20 animate-pulse rounded-full bg-surface-subtle" />
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+function VersionDetailSkeleton() {
+  return (
+    <div className="mt-lg flex flex-1 flex-col gap-md">
+      <div className="h-3 w-40 animate-pulse rounded-full bg-surface-subtle" />
+      <div className="h-4 w-3/5 animate-pulse rounded-full bg-surface-subtle" />
+      <div className="h-40 w-full animate-pulse rounded-md bg-surface-subtle" />
+    </div>
+  );
+}
+
 export function PromptVersionHistory() {
   const queryClient = useQueryClient();
   const [pendingRollback, setPendingRollback] =
@@ -123,11 +163,7 @@ export function PromptVersionHistory() {
       </div>
 
       <div className="mt-lg">
-        {isPending && (
-          <p className="font-sans text-body-14-regular text-text-secondary">
-            불러오는 중이에요...
-          </p>
-        )}
+        {isPending && <VersionTableSkeleton />}
 
         {isError && (
           <ErrorState
@@ -352,11 +388,7 @@ export function PromptVersionHistory() {
               </button>
             </div>
 
-            {isDetailPending && (
-              <p className="mt-lg font-sans text-body-14-regular text-text-secondary">
-                불러오는 중이에요...
-              </p>
-            )}
+            {isDetailPending && <VersionDetailSkeleton />}
 
             {isDetailError && (
               <p className="mt-lg font-sans text-caption-12-regular text-error">

@@ -18,6 +18,54 @@ function formatChange(value: number) {
   return `${sign} ${Math.abs(value).toFixed(1)}%p`;
 }
 
+function StatCardSkeleton() {
+  return (
+    <div className="flex-1 rounded-lg border border-border-default bg-surface p-2xl">
+      <div className="h-4 w-24 animate-pulse rounded-full bg-surface-subtle" />
+      <div className="mt-sm h-7 w-20 animate-pulse rounded-full bg-surface-subtle" />
+      <div className="mt-xs h-3 w-32 animate-pulse rounded-full bg-surface-subtle" />
+    </div>
+  );
+}
+
+function UiAnalysisSkeleton() {
+  return (
+    <>
+      <div className="mt-2xl flex flex-col gap-2xl sm:flex-row">
+        <StatCardSkeleton />
+        <StatCardSkeleton />
+      </div>
+
+      <section className="mt-2xl rounded-lg border border-border-default bg-surface p-2xl">
+        <div className="h-5 w-32 animate-pulse rounded-full bg-surface-subtle" />
+
+        <div className="mt-lg overflow-x-auto">
+          <table className="w-full min-w-140 border-collapse text-left">
+            <tbody>
+              {Array.from({ length: 4 }).map((_, index) => (
+                <tr key={index} className="border-b border-border-default">
+                  <td className="px-sm py-md">
+                    <div className="h-4 w-28 animate-pulse rounded-full bg-surface-subtle" />
+                  </td>
+                  <td className="px-sm py-md">
+                    <div className="ml-auto h-4 w-14 animate-pulse rounded-full bg-surface-subtle" />
+                  </td>
+                  <td className="px-sm py-md">
+                    <div className="ml-auto h-4 w-14 animate-pulse rounded-full bg-surface-subtle" />
+                  </td>
+                  <td className="w-45 px-sm py-md">
+                    <div className="ml-auto h-4 w-16 animate-pulse rounded-full bg-surface-subtle" />
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </>
+  );
+}
+
 export function UiAnalysisContent() {
   const [period, setPeriod] = useState<AdminPeriod>("today");
 
@@ -44,11 +92,7 @@ export function UiAnalysisContent() {
         <PeriodTabs value={period} onChange={setPeriod} />
       </div>
 
-      {isPending && (
-        <p className="mt-2xl font-sans text-body-14-regular text-text-secondary">
-          불러오는 중이에요...
-        </p>
-      )}
+      {isPending && <UiAnalysisSkeleton />}
 
       {isError && (
         <ErrorState
