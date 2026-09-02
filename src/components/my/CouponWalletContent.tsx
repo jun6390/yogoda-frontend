@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useSyncExternalStore } from "react";
+import Image from "next/image";
+import { useEffect, useState, useSyncExternalStore } from "react";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { CheckCircle2, Clock3, X } from "lucide-react";
@@ -15,7 +16,7 @@ import {
 } from "@/components/ui/BrandLogo/BrandLogo";
 import { EmptyState } from "@/components/ui/EmptyState/EmptyState";
 import { ErrorState } from "@/components/ui/ErrorState/ErrorState";
-import { Modal } from "@/components/ui/Modal/Modal";
+import { FloatingToast } from "@/components/ui/Toast/Toast";
 import { Link } from "@/i18n/navigation";
 import { consumeMyCoupon, getMyCoupons } from "@/lib/api/coupon";
 import { cn } from "@/lib/utils";
@@ -41,7 +42,7 @@ export function CouponWalletContent() {
   const queryClient = useQueryClient();
   const [filter, setFilter] = useState<CouponFilter>("available");
   const [selectedCoupon, setSelectedCoupon] = useState<Coupon | null>(null);
-  const [confirmingUse, setConfirmingUse] = useState(false);
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
   const isLoggedIn = hydrated && Boolean(accessToken);
 
   const couponQuery = useQuery({
@@ -54,12 +55,19 @@ export function CouponWalletContent() {
   const useCouponMutation = useMutation({
     mutationFn: (couponId: string) => consumeMyCoupon(couponId),
     onSuccess: async () => {
-      setConfirmingUse(false);
       setSelectedCoupon(null);
+      setToastMessage(t("useComplete"));
       await queryClient.invalidateQueries({ queryKey: ["coupons", "me"] });
       setFilter("used");
     },
+    onError: () => setToastMessage(t("useFailed")),
   });
+
+  useEffect(() => {
+    if (!toastMessage) return;
+    const timer = window.setTimeout(() => setToastMessage(null), 2500);
+    return () => window.clearTimeout(timer);
+  }, [toastMessage]);
 
   const coupons = couponQuery.data?.coupons.filter((coupon) => {
     if (filter === "expiring") {
@@ -67,14 +75,6 @@ export function CouponWalletContent() {
     }
     return coupon.status === filter;
   });
-  const selectedCouponBrand = selectedCoupon
-    ? (resolveBrandLogoName(
-        selectedCoupon.brand,
-        selectedCoupon.partner,
-        selectedCoupon.title,
-      ) ?? "U+")
-    : null;
-
   return (
     <div className="min-h-full bg-background pb-3xl">
       <MySubpageHeader title={t("title")} backLabel={t("back")} />
@@ -107,20 +107,35 @@ export function CouponWalletContent() {
           />
         ) : (
           <>
-            <section className="rounded-lg border border-border-default bg-surface p-lg shadow-sm">
-              <p className="font-sans text-caption-13-regular text-text-secondary">
-                {t("availableCoupons")}
-              </p>
-              <strong className="mt-xs block font-sans text-title-24-bold text-text-primary">
-                {t("couponCount", {
-                  count: couponQuery.data?.summary.available ?? 0,
-                })}
-              </strong>
-              <p className="mt-sm font-sans text-caption-12-regular text-text-secondary">
-                {t("expiringCount", {
-                  count: couponQuery.data?.summary.expiring ?? 0,
-                })}
-              </p>
+            <section className="relative min-h-[144px] overflow-hidden rounded-lg bg-[#d9e2f1] p-lg shadow-sm">
+              <div className="relative z-10 max-w-[58%]">
+                <p className="font-sans text-caption-13-medium text-text-on-cool-surface">
+                  {t("availableCoupons")}
+                </p>
+                <strong className="mt-xs block font-sans text-title-24-bold text-text-strong-on-cool-surface">
+                  {t("couponCount", {
+                    count: couponQuery.data?.summary.available ?? 0,
+                  })}
+                </strong>
+                <p className="mt-sm font-sans text-caption-12-regular text-text-on-cool-surface">
+                  {t("expiringCount", {
+                    count: couponQuery.data?.summary.expiring ?? 0,
+                  })}
+                </p>
+              </div>
+
+              <div
+                aria-hidden="true"
+                className="absolute top-0 right-sm flex h-full w-[48%] items-center justify-end"
+              >
+                <Image
+                  src="/yogoda-banners/coupon-character-transparent.png"
+                  alt=""
+                  width={700}
+                  height={379}
+                  className="h-auto w-full object-contain"
+                />
+              </div>
             </section>
 
             <div
@@ -174,35 +189,13 @@ export function CouponWalletContent() {
           coupon={selectedCoupon}
           locale={locale}
           onClose={() => setSelectedCoupon(null)}
-          onUse={() => setConfirmingUse(true)}
+          isUsing={useCouponMutation.isPending}
+          onUse={() => useCouponMutation.mutate(selectedCoupon.id)}
         />
       )}
 
-      {confirmingUse && selectedCoupon && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/40 px-lg">
-          <Modal
-            icon={
-              selectedCouponBrand ? (
-                <BrandLogo
-                  brand={selectedCouponBrand}
-                  className="size-[32px] rounded-full"
-                />
-              ) : null
-            }
-            heading={t("useConfirmTitle")}
-            description={
-              useCouponMutation.isError
-                ? `${t("useConfirmDescription")}\n${useCouponMutation.error.message}`
-                : t("useConfirmDescription")
-            }
-            primaryLabel={t("confirmUse")}
-            secondaryLabel={t("cancel")}
-            primaryLoading={useCouponMutation.isPending}
-            onClose={() => setConfirmingUse(false)}
-            onPrimaryClick={() => useCouponMutation.mutate(selectedCoupon.id)}
-            onSecondaryClick={() => setConfirmingUse(false)}
-          />
-        </div>
+      {toastMessage && (
+        <FloatingToast message={toastMessage} actionLabel={null} />
       )}
     </div>
   );
@@ -271,11 +264,13 @@ function CouponStatusLabel({ coupon }: { coupon: Coupon }) {
 function CouponDetail({
   coupon,
   locale,
+  isUsing,
   onClose,
   onUse,
 }: {
   coupon: Coupon;
   locale: string;
+  isUsing: boolean;
   onClose: () => void;
   onUse: () => void;
 }) {
@@ -285,12 +280,16 @@ function CouponDetail({
     resolveBrandLogoName(coupon.brand, coupon.partner, coupon.title) ?? "U+";
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 sm:items-center sm:p-xl">
+    <div
+      className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 sm:items-center sm:p-xl"
+      onMouseDown={onClose}
+    >
       <section
         role="dialog"
         aria-modal="true"
         aria-labelledby="coupon-detail-title"
         className="max-h-[88dvh] w-full max-w-mobile overflow-y-auto rounded-t-xl bg-background p-page sm:rounded-xl"
+        onMouseDown={(event) => event.stopPropagation()}
       >
         <div className="flex items-start justify-between gap-lg">
           <div className="flex min-w-0 items-start gap-md">
@@ -352,7 +351,11 @@ function CouponDetail({
         </dl>
 
         {canUse ? (
-          <Button className="mt-xl h-[52px] w-full" onClick={onUse}>
+          <Button
+            className="mt-xl h-[52px] w-full"
+            loading={isUsing}
+            onClick={onUse}
+          >
             {t("useCoupon")}
           </Button>
         ) : (

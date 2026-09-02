@@ -338,7 +338,7 @@ export function IdentityVerificationCard({
         toastMessage &&
         createPortal(
           // CSS 애니메이션(등장)과 인라인 transform(드래그)이 한 엘리먼트에서 충돌해 둘로 나눔
-          <div className="fixed top-4 left-1/2 z-70 motion-safe:animate-toast-drop-in">
+          <div className="fixed top-[calc(env(safe-area-inset-top)+var(--spacing-lg))] left-1/2 z-[100] motion-safe:animate-toast-drop-in">
             <div
               onTouchStart={handleToastTouchStart}
               onTouchMove={handleToastTouchMove}

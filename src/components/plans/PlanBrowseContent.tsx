@@ -6,6 +6,7 @@ import { Search } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 
 import { Spinner } from "@/components/ui/Spinner/Spinner";
+import { Button } from "@/components/ui/Button/Button";
 import { ErrorState } from "@/components/ui/ErrorState/ErrorState";
 import { Chip } from "@/components/ui/Chip/Chip";
 import { Input } from "@/components/ui/Input/Input";
@@ -18,6 +19,7 @@ import type { Plan } from "@/types/plan";
 
 type PlanCategory = "popular" | "all" | "unlimited";
 type PlanSort = "default" | "fit" | "priceHigh" | "priceLow";
+const PLANS_PER_PAGE = 6;
 
 const averageUsageMb =
   (usageReport.history.reduce((sum, item) => sum + item.amount, 0) /
@@ -42,6 +44,7 @@ export function PlanBrowseContent() {
   const [activeCategory, setActiveCategory] = useState<PlanCategory>("popular");
   const [activeSort, setActiveSort] = useState<PlanSort>("default");
   const [keyword, setKeyword] = useState("");
+  const [visibleCount, setVisibleCount] = useState(PLANS_PER_PAGE);
   const deferredKeyword = useDeferredValue(keyword);
 
   const {
@@ -184,7 +187,10 @@ export function PlanBrowseContent() {
             <Chip
               key={filter.value}
               selected={activeCategory === filter.value}
-              onClick={() => setActiveCategory(filter.value)}
+              onClick={() => {
+                setActiveCategory(filter.value);
+                setVisibleCount(PLANS_PER_PAGE);
+              }}
               className="h-[36px] shrink-0 px-[14px] text-caption-13-bold"
             >
               {filter.label}
@@ -195,7 +201,10 @@ export function PlanBrowseContent() {
         <Select
           value={activeSort}
           options={sortOptions}
-          onChange={setActiveSort}
+          onChange={(value) => {
+            setActiveSort(value);
+            setVisibleCount(PLANS_PER_PAGE);
+          }}
           ariaLabel={t("sortLabel")}
           className="w-[140px] shrink-0"
           triggerClassName="h-[36px] min-h-[36px] rounded-full bg-surface text-text-secondary"
@@ -212,7 +221,10 @@ export function PlanBrowseContent() {
         <Input
           type="search"
           value={keyword}
-          onChange={(event) => setKeyword(event.target.value)}
+          onChange={(event) => {
+            setKeyword(event.target.value);
+            setVisibleCount(PLANS_PER_PAGE);
+          }}
           placeholder={t("searchPlaceholder")}
           aria-label={t("searchLabel")}
           className="pl-[40px]"
@@ -225,32 +237,50 @@ export function PlanBrowseContent() {
             {t("searchEmpty")}
           </p>
         ) : (
-          filteredPlans.map((plan) => (
-            <PlanRow
-              key={plan.code}
-              name={plan.name}
-              planNumber={plan.code.replace("nerget-", "")}
-              price={t("monthlyPrice", {
-                amount: formatNumber(plan.monthlyFee),
-              })}
-              description={plan.data.display}
-              subDescription={
-                plan.data.sharingDisplay
-                  ? `${plan.data.sharingDisplay} · ${plan.voice}`
-                  : plan.voice
-              }
-              benefits={plan.perks}
-              href={`/plans/${plan.code}`}
-              promotionBadge={plan.promotion.badge}
-              currentPlanBadge={
-                currentPlan?.planCode === plan.code
-                  ? t("currentPlanBadge")
-                  : undefined
-              }
-              effectiveMonthlyFee={plan.promotion.effectiveMonthlyFee}
-              maxMonthlyBenefit={plan.promotion.maxMonthlyBenefit}
-            />
-          ))
+          <>
+            {filteredPlans.slice(0, visibleCount).map((plan) => (
+              <PlanRow
+                key={plan.code}
+                name={plan.name}
+                planNumber={plan.code.replace("nerget-", "")}
+                price={t("monthlyPrice", {
+                  amount: formatNumber(plan.monthlyFee),
+                })}
+                description={plan.data.display}
+                subDescription={
+                  plan.data.sharingDisplay
+                    ? `${plan.data.sharingDisplay} · ${plan.voice}`
+                    : plan.voice
+                }
+                benefits={plan.perks}
+                href={`/plans/${plan.code}`}
+                promotionBadge={
+                  plan.promotion.badge ??
+                  (plan.promotion.effectiveMonthlyFee == null
+                    ? t("standardPriceBadge")
+                    : undefined)
+                }
+                currentPlanBadge={
+                  currentPlan?.planCode === plan.code
+                    ? t("currentPlanBadge")
+                    : undefined
+                }
+                effectiveMonthlyFee={plan.promotion.effectiveMonthlyFee}
+                maxMonthlyBenefit={plan.promotion.maxMonthlyBenefit}
+              />
+            ))}
+            {visibleCount < filteredPlans.length && (
+              <Button
+                variant="secondary"
+                className="h-[44px] w-full py-0 text-label-14-bold"
+                onClick={() =>
+                  setVisibleCount((count) => count + PLANS_PER_PAGE)
+                }
+              >
+                {t("loadMore")}
+              </Button>
+            )}
+          </>
         )}
       </div>
     </>

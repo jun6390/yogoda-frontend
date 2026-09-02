@@ -104,11 +104,15 @@ export function MyContent() {
 
   const displayName = user?.name || t("defaultUserName");
   const planPrice = planDetailQuery.data?.monthlyFee ?? currentPlan?.monthlyFee;
-  const membershipTier = planDetailQuery.data?.membershipTier
-    ? t("membershipTier", { tier: planDetailQuery.data.membershipTier })
-    : currentPlan
+  const membershipTier = !currentPlan
+    ? t("membershipUnavailable")
+    : planDetailQuery.isPending
       ? t("membershipPending")
-      : t("membershipUnavailable");
+      : planDetailQuery.isError
+        ? t("membershipCheckRequired")
+        : planDetailQuery.data?.membershipTier
+          ? t("membershipTier", { tier: planDetailQuery.data.membershipTier })
+          : t("membershipStandard");
   const selectedBenefitCount = currentPlan
     ? Object.values(currentPlan.selectedOptions).reduce(
         (total, options) => total + options.length,

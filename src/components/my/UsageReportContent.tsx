@@ -4,7 +4,7 @@ import type { ReactNode } from "react";
 import { useSyncExternalStore } from "react";
 
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { Activity, ChevronRight, Database, Sparkles } from "lucide-react";
+import { Activity, Bot, ChevronRight, Database } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 
 import { MySubpageHeader } from "@/components/my/MySubpageHeader";
@@ -230,7 +230,7 @@ export function UsageReportContent() {
             onClick={() => recommendationMutation.mutate()}
             className="flex h-[52px] w-full items-center justify-center gap-sm rounded-lg bg-action-primary font-sans text-title-16-bold text-text-on-primary disabled:opacity-60"
           >
-            <Sparkles aria-hidden="true" size={18} />
+            <Bot aria-hidden="true" size={18} />
             {recommendationMutation.isPending
               ? t("analyzingRecommendation")
               : t("analyzeRecommendation")}
@@ -314,7 +314,7 @@ function RecommendationCard({
     <section className="rounded-lg border border-action-primary bg-surface p-lg shadow-sm">
       <div className="flex items-center justify-between gap-md">
         <span className="inline-flex items-center gap-xs font-sans text-caption-13-bold text-text-brand">
-          <Sparkles aria-hidden="true" size={16} />
+          <Bot aria-hidden="true" size={16} />
           {recommendation.analysisSource === "ai"
             ? t("aiRecommendation")
             : t("ruleRecommendation")}
