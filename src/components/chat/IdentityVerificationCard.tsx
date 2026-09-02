@@ -16,6 +16,11 @@ function digitsOnly(value: string) {
   return value.replace(/\D/g, "");
 }
 
+// 완성형 한글 음절(가~힣)과 영문만 남김. 자모 낱자·숫자·기호 등은 제거함
+function nameCharsOnly(value: string) {
+  return value.replace(/[^가-힣a-zA-Z]/g, "");
+}
+
 // 010-1234-5678
 function formatPhone(digits: string) {
   if (digits.length <= 3) return digits;
@@ -39,6 +44,9 @@ export function IdentityVerificationCard({
 }: IdentityVerificationCardProps) {
   const [open, setOpen] = useState(false);
   const [name, setName] = useState("");
+  // 한글 조합 중(IME composing)엔 필터링하면 조합이 끊기므로, 조합이 끝난
+  // 뒤에만 한글 정자 필터를 적용함
+  const [isNameComposing, setIsNameComposing] = useState(false);
   const [birth, setBirth] = useState("");
   const [phone, setPhone] = useState("");
   const [sentCode, setSentCode] = useState<string | null>(null);
@@ -217,7 +225,18 @@ export function IdentityVerificationCard({
                 </label>
                 <Input
                   value={name}
-                  onChange={(e) => setName(e.target.value)}
+                  onChange={(e) =>
+                    setName(
+                      isNameComposing
+                        ? e.target.value
+                        : nameCharsOnly(e.target.value),
+                    )
+                  }
+                  onCompositionStart={() => setIsNameComposing(true)}
+                  onCompositionEnd={(e) => {
+                    setIsNameComposing(false);
+                    setName(nameCharsOnly(e.currentTarget.value));
+                  }}
                   onKeyDown={(e) => {
                     if (e.key !== "Enter") return;
                     e.preventDefault();
@@ -266,7 +285,7 @@ export function IdentityVerificationCard({
                     className="flex-1"
                   />
                   <Button
-                    variant="primary"
+                    variant="inChatOutline"
                     className="h-13 shrink-0 whitespace-nowrap"
                     disabled={!canSendCode}
                     onClick={handleSendCode}
@@ -324,6 +343,7 @@ export function IdentityVerificationCard({
           </div>
 
           <Button
+            variant="secondary"
             className="h-13 w-full"
             disabled={!isCodeValid || !sentCode}
             onClick={handleVerify}
@@ -338,7 +358,7 @@ export function IdentityVerificationCard({
         toastMessage &&
         createPortal(
           // CSS 애니메이션(등장)과 인라인 transform(드래그)이 한 엘리먼트에서 충돌해 둘로 나눔
-          <div className="fixed top-4 left-1/2 z-70 motion-safe:animate-toast-drop-in">
+          <div className="fixed top-[calc(env(safe-area-inset-top)+var(--spacing-lg))] left-1/2 z-[100] motion-safe:animate-toast-drop-in">
             <div
               onTouchStart={handleToastTouchStart}
               onTouchMove={handleToastTouchMove}

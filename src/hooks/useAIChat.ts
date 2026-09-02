@@ -34,7 +34,7 @@ const WELCOME_MESSAGE: ChatMessage = {
   id: "welcome",
   sender: "ai",
   type: "text",
-  text: "안녕하세요! 사용자님에게 딱 맞는 베스트 요금제를 추천해 드릴게요. 평소 데이터 사용량이나 선호하시는 혜택(OTT 등)에 대해 편하게 말씀해 주세요!",
+  text: "안녕하세요! 사용자님께 딱 맞는 요금제를 찾아드릴게요 :) 먼저 평소 데이터를 얼마나 쓰시는지 알려주시겠어요?",
 };
 
 function createSignupEntryMessage(

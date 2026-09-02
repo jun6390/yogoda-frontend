@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useMemo, useState, useSyncExternalStore } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
@@ -34,6 +35,33 @@ import type {
 } from "@/types/subscription";
 
 const subscribe = () => () => {};
+
+const subscriptionLogos = {
+  netflix: {
+    src: "/brand-logos/netflix-app.png",
+    className: "size-full object-cover",
+  },
+  tving: {
+    src: "/brand-logos/tving-app.png",
+    className: "size-full object-cover",
+  },
+};
+
+function resolveSubscriptionLogo(subscription: UserSubscription) {
+  const identity = `${subscription.serviceCode} ${subscription.serviceName}`
+    .trim()
+    .toLowerCase();
+
+  if (identity.includes("netflix") || identity.includes("넷플릭스")) {
+    return subscriptionLogos.netflix;
+  }
+
+  if (identity.includes("tving") || identity.includes("티빙")) {
+    return subscriptionLogos.tving;
+  }
+
+  return null;
+}
 
 const serviceCatalog: Array<
   SubscriptionInput & { monthlyFee: number; category: SubscriptionCategory }
@@ -352,7 +380,10 @@ export function SubscriptionManagementContent() {
       </div>
 
       {cancelTarget && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/40 px-lg">
+        <div
+          className="fixed inset-0 z-[60] flex items-center justify-center bg-black/40 px-lg"
+          onMouseDown={() => setCancelTarget(null)}
+        >
           <Modal
             heading={t("cancelTitle", { name: cancelTarget.serviceName })}
             description={t("cancelDescription")}
@@ -393,11 +424,27 @@ function SubscriptionCard({
         : subscription.category === "delivery"
           ? PackageCheck
           : ShoppingBag;
+  const logo = resolveSubscriptionLogo(subscription);
 
   return (
     <article className="flex items-start gap-md rounded-lg border border-border-default bg-surface p-lg shadow-sm">
-      <span className="flex size-[40px] shrink-0 items-center justify-center rounded-sm bg-brand-soft text-icon-brand">
-        <Icon aria-hidden="true" size={20} />
+      <span
+        className={cn(
+          "flex size-[40px] shrink-0 items-center justify-center overflow-hidden rounded-sm",
+          logo ? "bg-white" : "bg-brand-soft text-icon-brand",
+        )}
+      >
+        {logo ? (
+          <Image
+            src={logo.src}
+            alt=""
+            width={40}
+            height={40}
+            className={logo.className}
+          />
+        ) : (
+          <Icon aria-hidden="true" size={20} />
+        )}
       </span>
       <div className="min-w-0 flex-1">
         <div className="flex items-start justify-between gap-md">

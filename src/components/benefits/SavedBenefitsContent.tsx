@@ -14,7 +14,7 @@ import { EmptyState } from "@/components/ui/EmptyState/EmptyState";
 import { ErrorState } from "@/components/ui/ErrorState/ErrorState";
 import { Modal } from "@/components/ui/Modal/Modal";
 import { PageIntro } from "@/components/ui/PageIntro/PageIntro";
-import { Toast } from "@/components/ui/Toast/Toast";
+import { FloatingToast } from "@/components/ui/Toast/Toast";
 import { getSavedBenefits, setBenefitSaved } from "@/lib/api/benefit";
 import type { Benefit } from "@/types/benefit";
 
@@ -100,7 +100,10 @@ export function SavedBenefitsContent() {
         )}
       </div>
       {pendingRemoval && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/40 px-lg">
+        <div
+          className="fixed inset-0 z-[60] flex items-center justify-center bg-black/40 px-lg"
+          onMouseDown={() => setPendingRemoval(null)}
+        >
           <Modal
             icon={
               <Trash2
@@ -123,11 +126,7 @@ export function SavedBenefitsContent() {
         </div>
       )}
       {showRemovedToast && (
-        <Toast
-          message={t("removedToast")}
-          actionLabel={null}
-          className="fixed bottom-[88px] left-1/2 z-[70] -translate-x-1/2"
-        />
+        <FloatingToast message={t("removedToast")} actionLabel={null} />
       )}
     </div>
   );

@@ -43,22 +43,45 @@ export function Sheet({
     () => false,
   );
   const [visible, setVisible] = useState(false);
+  // 시트가 실제로 "열린 위치"에 있는지. open과 분리해두는 이유는 아래 참고
+  const [entered, setEntered] = useState(false);
   const [dragY, setDragY] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
   const startYRef = useRef<number | null>(null);
-  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const closeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  /*
+   * open이 true가 된 순간 바로 "열린 위치" 클래스로 그리면, 트랜지션이 재생될
+   * '이전 프레임'이 없어서(마운트되자마자 이미 목표 위치) 슬라이드업 애니메이션이
+   * 재생되지 않음. 그래서 먼저 "닫힌 위치"로 한 번 그린 뒤, 브라우저가 그 프레임을
+   * 실제로 페인트한 다음 프레임에 entered를 켜서 열린 위치로 전환함 — 그래야
+   * 트랜지션이 두 프레임 사이의 실제 변화로 인식되어 재생됨. rAF를 두 번 중첩한
+   * 건, 한 번만 쓰면 같은 페인트에 묶여버릴 수 있어서 그 사이에 실제로 한 번
+   * 페인트가 끝났음을 보장하기 위함(이 두 단계 마운트 패턴에서 흔히 쓰는 방식)
+   */
   useEffect(() => {
-    if (timerRef.current) clearTimeout(timerRef.current);
-    if (open) {
+    if (closeTimerRef.current) clearTimeout(closeTimerRef.current);
+
+    if (!open) {
       // eslint-disable-next-line react-hooks/set-state-in-effect
-      setVisible(true);
-      setDragY(0);
-    } else {
-      timerRef.current = setTimeout(() => setVisible(false), 300);
+      setEntered(false);
+      closeTimerRef.current = setTimeout(() => setVisible(false), 300);
+      return () => {
+        if (closeTimerRef.current) clearTimeout(closeTimerRef.current);
+      };
     }
+
+    setVisible(true);
+    setDragY(0);
+
+    let raf2 = 0;
+    const raf1 = requestAnimationFrame(() => {
+      raf2 = requestAnimationFrame(() => setEntered(true));
+    });
+
     return () => {
-      if (timerRef.current) clearTimeout(timerRef.current);
+      cancelAnimationFrame(raf1);
+      cancelAnimationFrame(raf2);
     };
   }, [open]);
 
@@ -126,24 +149,25 @@ export function Sheet({
       <div
         className={cn(
           "absolute inset-0 bg-black/50 transition-opacity duration-300",
-          open ? "opacity-100" : "opacity-0",
+          entered ? "opacity-100" : "opacity-0",
         )}
         onClick={onClose}
         aria-hidden="true"
       />
 
-      {/* 시트 본체 */}
+      {/* 시트 본체. 드래그 중엔 손가락을 그대로 따라가야 해서 인라인 transform +
+          트랜지션 없음. 드래그 중이 아닐 땐 인라인 스타일을 아예 안 줘서, 클래스의
+          translate-y-0/full + transition-transform이 열림·닫힘·스프링백을 전부 처리함
+          (인라인 style이 항상 클래스보다 우선하므로 드래그 중엔 자연히 클래스가 무시됨) */}
       <div
         role="dialog"
         aria-modal="true"
         aria-label={ariaLabel ?? title}
-        style={{
-          transform: `translateY(${dragY}px)`,
-          transition: isDragging ? "none" : "transform 0.3s ease-out",
-        }}
+        style={isDragging ? { transform: `translateY(${dragY}px)` } : undefined}
         className={cn(
           "relative z-10 w-full max-w-[446px] rounded-t-2xl bg-surface shadow-xl",
-          !isDragging && (open ? "translate-y-0" : "translate-y-full"),
+          !isDragging && "transition-transform duration-300 ease-out",
+          !isDragging && (entered ? "translate-y-0" : "translate-y-full"),
           className,
         )}
       >

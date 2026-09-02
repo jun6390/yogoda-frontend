@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Heart, X } from "lucide-react";
+import { X } from "lucide-react";
 import { useTranslations } from "next-intl";
 
 import { BenefitsSubNav } from "./BenefitsSubNav";
@@ -12,9 +12,10 @@ import {
 } from "@/components/ui/BrandLogo/BrandLogo";
 import { EmptyState } from "@/components/ui/EmptyState/EmptyState";
 import { ErrorState } from "@/components/ui/ErrorState/ErrorState";
+import { FavoriteIcon } from "@/components/ui/FavoriteIcon/FavoriteIcon";
 import { PageIntro } from "@/components/ui/PageIntro/PageIntro";
 import { RewardCalendar } from "@/components/ui/RewardCalendar/RewardCalendar";
-import { Toast } from "@/components/ui/Toast/Toast";
+import { FloatingToast } from "@/components/ui/Toast/Toast";
 import { getBenefitCalendar, setBenefitSaved } from "@/lib/api/benefit";
 import { cn } from "@/lib/utils";
 import type { BenefitCalendarEvent } from "@/types/benefit";
@@ -165,10 +166,7 @@ export function BenefitCalendarContent() {
                               : "text-action-secondary",
                           )}
                         >
-                          <Heart
-                            size={19}
-                            fill={event.saved ? "currentColor" : "none"}
-                          />
+                          <FavoriteIcon selected={event.saved} />
                         </button>
                       </div>
                       <button
@@ -207,11 +205,7 @@ export function BenefitCalendarContent() {
         />
       )}
       {toastMessage && (
-        <Toast
-          message={toastMessage}
-          actionLabel={null}
-          className="fixed bottom-[88px] left-1/2 z-[70] -translate-x-1/2"
-        />
+        <FloatingToast message={toastMessage} actionLabel={null} />
       )}
     </div>
   );
@@ -230,12 +224,16 @@ function CalendarEventModal({
 }) {
   const t = useTranslations("BenefitCalendar");
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-lg">
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-lg"
+      onMouseDown={onClose}
+    >
       <section
         role="dialog"
         aria-modal="true"
         aria-labelledby="calendar-event-title"
         className="w-full max-w-mobile rounded-xl bg-surface p-2xl shadow-lg"
+        onMouseDown={(event) => event.stopPropagation()}
       >
         <div className="flex items-start justify-between gap-lg">
           <div>
@@ -282,7 +280,7 @@ function CalendarEventModal({
                   event.saved ? "text-action-primary" : "text-action-secondary",
                 )}
               >
-                <Heart size={20} fill={event.saved ? "currentColor" : "none"} />
+                <FavoriteIcon selected={event.saved} />
               </button>
             </div>
           ))}

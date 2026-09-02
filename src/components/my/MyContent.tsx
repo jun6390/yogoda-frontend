@@ -104,11 +104,15 @@ export function MyContent() {
 
   const displayName = user?.name || t("defaultUserName");
   const planPrice = planDetailQuery.data?.monthlyFee ?? currentPlan?.monthlyFee;
-  const membershipTier = planDetailQuery.data?.membershipTier
-    ? t("membershipTier", { tier: planDetailQuery.data.membershipTier })
-    : currentPlan
+  const membershipTier = !currentPlan
+    ? t("membershipUnavailable")
+    : planDetailQuery.isPending
       ? t("membershipPending")
-      : t("membershipUnavailable");
+      : planDetailQuery.isError
+        ? t("membershipCheckRequired")
+        : planDetailQuery.data?.membershipTier
+          ? t("membershipTier", { tier: planDetailQuery.data.membershipTier })
+          : t("membershipStandard");
   const selectedBenefitCount = currentPlan
     ? Object.values(currentPlan.selectedOptions).reduce(
         (total, options) => total + options.length,
@@ -185,7 +189,7 @@ export function MyContent() {
             className="relative block min-h-[156px] overflow-hidden rounded-lg border border-border-default bg-[#fcdee2] shadow-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-action-primary"
           >
             <Image
-              src="/yogoda-banners/savings-character-scene-v3.webp"
+              src="/yogoda-characters/savings-character-scene-v3.webp"
               alt=""
               width={382}
               height={540}

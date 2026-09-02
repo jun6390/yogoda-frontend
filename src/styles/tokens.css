@@ -56,6 +56,8 @@
   --semantic-text-tertiary: var(--primitive-gray-400);
   --semantic-text-inverse: var(--primitive-white);
   --semantic-text-brand: var(--primitive-brand-magenta);
+  --semantic-text-on-cool-surface: #536781;
+  --semantic-text-strong-on-cool-surface: #172033;
 
   --semantic-border: var(--primitive-gray-200);
   --semantic-border-strong: var(--primitive-gray-300);
@@ -63,8 +65,9 @@
   --semantic-action-primary: var(--primitive-brand-magenta);
   --semantic-action-primary-hover: var(--primitive-brand-magenta-dark);
   --semantic-action-secondary: var(--primitive-brand-magenta-light);
-  --semantic-toast-background: var(--primitive-brand-deep);
-  --semantic-toast-action-text: var(--primitive-brand-magenta-light);
+  --semantic-toast-background: var(--primitive-brand-magenta-light);
+  --semantic-toast-foreground: var(--primitive-white);
+  --semantic-toast-action-text: var(--primitive-white);
 
   --semantic-success: var(--primitive-success);
   --semantic-success-soft: var(--primitive-success-soft);
@@ -103,6 +106,8 @@
   --semantic-text-tertiary: var(--primitive-gray-400);
   --semantic-text-inverse: var(--primitive-gray-900);
   --semantic-text-brand: var(--primitive-brand-magenta-light);
+  --semantic-text-on-cool-surface: #536781;
+  --semantic-text-strong-on-cool-surface: #172033;
 
   --semantic-border: var(--primitive-gray-700);
   --semantic-border-strong: var(--primitive-gray-600);
@@ -110,8 +115,9 @@
   --semantic-action-primary: var(--primitive-brand-magenta);
   --semantic-action-primary-hover: var(--primitive-brand-magenta-dark);
   --semantic-action-secondary: var(--primitive-brand-magenta-light);
-  --semantic-toast-background: var(--primitive-brand-deep);
-  --semantic-toast-action-text: var(--primitive-brand-magenta-light);
+  --semantic-toast-background: var(--primitive-brand-magenta-light);
+  --semantic-toast-foreground: var(--primitive-white);
+  --semantic-toast-action-text: var(--primitive-white);
 
   --semantic-success: var(--primitive-success);
   --semantic-success-soft: var(--primitive-success-soft);
@@ -160,6 +166,10 @@
   --color-text-tertiary: var(--semantic-text-tertiary);
   --color-text-inverse: var(--semantic-text-inverse);
   --color-text-brand: var(--semantic-text-brand);
+  --color-text-on-cool-surface: var(--semantic-text-on-cool-surface);
+  --color-text-strong-on-cool-surface: var(
+    --semantic-text-strong-on-cool-surface
+  );
 
   --color-border-default: var(--semantic-border);
   --color-border-strong: var(--semantic-border-strong);
@@ -168,6 +178,7 @@
   --color-action-primary-hover: var(--semantic-action-primary-hover);
   --color-action-secondary: var(--semantic-action-secondary);
   --color-toast-background: var(--semantic-toast-background);
+  --color-toast-foreground: var(--semantic-toast-foreground);
   --color-toast-action-text: var(--semantic-toast-action-text);
 
   --color-success: var(--semantic-success);
@@ -232,6 +243,7 @@
   --shadow-lg: 0 14px 32px -6px rgb(18 20 31 / 16%);
 
   --animate-toast-drop-in: toastDropIn 0.3s ease-out;
+  --animate-toast-lifecycle: toastLifecycle 2.5s ease-in-out both;
 
   /* 인증번호 등 자릿수를 눈으로 구분해야 하는 코드 입력란 전용 자간 */
   --tracking-code: 4px;

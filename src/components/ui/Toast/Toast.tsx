@@ -1,7 +1,9 @@
-import type { HTMLAttributes, ReactNode } from "react";
-import { useTranslations } from "next-intl";
+"use client";
 
-import { FigmaImage } from "../FigmaImage/FigmaImage";
+import type { HTMLAttributes, ReactNode } from "react";
+import { createPortal } from "react-dom";
+import { CheckCircle2 } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import { cn } from "@/lib/utils";
 
@@ -9,8 +11,6 @@ interface ToastProps extends HTMLAttributes<HTMLDivElement> {
   message: ReactNode;
   actionLabel?: ReactNode;
 }
-
-const checkCircleIcon = "/figma-assets/icon-check-circle.svg";
 
 export function Toast({
   message,
@@ -32,23 +32,36 @@ export function Toast({
       {...props}
     >
       <span className="flex min-w-0 items-center gap-sm">
-        <FigmaImage
-          alt=""
-          src={checkCircleIcon}
-          className="size-[18px] shrink-0"
+        <CheckCircle2
+          aria-hidden="true"
+          size={18}
+          className="shrink-0 text-toast-foreground"
         />
-        <span className="truncate font-sans text-caption-13-bold text-text-on-primary">
+        <span className="truncate font-sans text-caption-13-bold text-toast-foreground">
           {message}
         </span>
       </span>
       {resolvedActionLabel ? (
         <button
           type="button"
-          className="shrink-0 rounded-sm bg-white/10 px-md py-sm font-sans text-caption-12-bold text-toast-action-text"
+          className="shrink-0 rounded-sm bg-white/30 px-md py-sm font-sans text-caption-12-bold text-toast-action-text"
         >
           {resolvedActionLabel}
         </button>
       ) : null}
     </div>
+  );
+}
+
+export function FloatingToast(props: ToastProps) {
+  return createPortal(
+    <Toast
+      {...props}
+      className={cn(
+        "fixed top-[calc(env(safe-area-inset-top)+var(--spacing-lg))] left-1/2 z-[100] max-w-[calc(100%-32px)] -translate-x-1/2 motion-safe:animate-toast-lifecycle",
+        props.className,
+      )}
+    />,
+    document.body,
   );
 }

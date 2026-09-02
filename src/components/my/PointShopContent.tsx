@@ -3,7 +3,7 @@
 import { useEffect, useState, useSyncExternalStore } from "react";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Coins, Ticket } from "lucide-react";
+import { CircleStar, Ticket } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 
 import { MySubpageHeader } from "@/components/my/MySubpageHeader";
@@ -14,7 +14,7 @@ import {
 import { EmptyState } from "@/components/ui/EmptyState/EmptyState";
 import { ErrorState } from "@/components/ui/ErrorState/ErrorState";
 import { Modal } from "@/components/ui/Modal/Modal";
-import { Toast } from "@/components/ui/Toast/Toast";
+import { FloatingToast } from "@/components/ui/Toast/Toast";
 import { Link } from "@/i18n/navigation";
 import { exchangePointProduct, getPointProducts } from "@/lib/api/reward";
 import { useAuthStore } from "@/stores/useAuthStore";
@@ -139,7 +139,7 @@ export function PointShopContent() {
                 </p>
               </div>
               <span className="flex size-[48px] items-center justify-center rounded-full bg-surface text-icon-brand shadow-sm">
-                <Coins aria-hidden="true" size={24} />
+                <CircleStar aria-hidden="true" size={24} strokeWidth={2} />
               </span>
             </section>
 
@@ -178,7 +178,10 @@ export function PointShopContent() {
       </div>
 
       {selected && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/40 px-lg">
+        <div
+          className="fixed inset-0 z-[60] flex items-center justify-center bg-black/40 px-lg"
+          onMouseDown={closeExchangeModal}
+        >
           <Modal
             icon={<Ticket aria-hidden="true" size={20} />}
             heading={t("confirmTitle")}
@@ -208,11 +211,7 @@ export function PointShopContent() {
       )}
 
       {toastMessage && (
-        <Toast
-          message={toastMessage}
-          actionLabel={null}
-          className="fixed bottom-[calc(var(--bottom-nav-height)+var(--spacing-lg))] left-1/2 z-[70] max-w-[calc(100%-32px)] -translate-x-1/2"
-        />
+        <FloatingToast message={toastMessage} actionLabel={null} />
       )}
     </div>
   );
