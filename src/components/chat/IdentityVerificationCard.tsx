@@ -285,7 +285,7 @@ export function IdentityVerificationCard({
                     className="flex-1"
                   />
                   <Button
-                    variant="inChatOutline"
+                    variant="text"
                     className="h-13 shrink-0 whitespace-nowrap"
                     disabled={!canSendCode}
                     onClick={handleSendCode}
@@ -296,20 +296,9 @@ export function IdentityVerificationCard({
               </div>
 
               <div className="flex flex-col gap-xs">
-                <div className="flex items-center justify-between">
-                  <label className="font-sans text-caption-12-medium text-text-secondary">
-                    인증번호 6자리
-                  </label>
-                  {sentCode && (
-                    <button
-                      type="button"
-                      onClick={handleSendCode}
-                      className="font-sans text-micro-11-regular text-action-primary"
-                    >
-                      인증번호 다시 전송
-                    </button>
-                  )}
-                </div>
+                <label className="font-sans text-caption-12-medium text-text-secondary">
+                  인증번호 6자리
+                </label>
                 <Input
                   value={inputCode}
                   onChange={(e) => {
@@ -343,7 +332,7 @@ export function IdentityVerificationCard({
           </div>
 
           <Button
-            variant="secondary"
+            variant="primary"
             className="h-13 w-full"
             disabled={!isCodeValid || !sentCode}
             onClick={handleVerify}

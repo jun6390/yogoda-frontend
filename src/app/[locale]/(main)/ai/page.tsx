@@ -570,32 +570,53 @@ export default function AIConsultationPage() {
   );
 }
 
+// AI 말풍선 스켈레톤 한 개. lineWidths로 줄 수와 각 줄의 너비를 다르게 줘서
+// 실제 대화처럼 길이가 들쭉날쭉해 보이게 함
+function AIBubbleSkeleton({ lineWidths }: { lineWidths: string[] }) {
+  return (
+    <div className="flex w-full items-start gap-sm">
+      <div className="mt-[2px] size-[32px] shrink-0 animate-pulse rounded-full bg-surface-subtle" />
+      <div className="flex w-[85%] flex-col gap-xs rounded-[12px] rounded-tl-[4px] border border-border-default bg-surface px-lg py-md shadow-sm">
+        {lineWidths.map((width, i) => (
+          <div
+            key={i}
+            className={`h-[14px] animate-pulse rounded-full bg-surface-subtle ${width}`}
+          />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// 유저 말풍선 스켈레톤 한 개
+function UserBubbleSkeleton({
+  height,
+  width,
+}: {
+  height: string;
+  width: string;
+}) {
+  return (
+    <div className="flex w-full justify-end">
+      <div
+        className={`animate-pulse rounded-[12px] rounded-tr-[4px] bg-action-primary/20 ${height} ${width}`}
+      />
+    </div>
+  );
+}
+
 function ChatHistorySkeleton() {
   return (
     <>
-      {/* AI 말풍선 스켈레톤 */}
-      <div className="flex w-full items-start gap-sm">
-        <div className="mt-[2px] size-[32px] shrink-0 animate-pulse rounded-full bg-surface-subtle" />
-        <div className="flex w-[85%] flex-col gap-xs rounded-[12px] rounded-tl-[4px] border border-border-default bg-surface px-lg py-md shadow-sm">
-          <div className="h-[14px] w-full animate-pulse rounded-full bg-surface-subtle" />
-          <div className="h-[14px] w-4/5 animate-pulse rounded-full bg-surface-subtle" />
-          <div className="h-[14px] w-3/5 animate-pulse rounded-full bg-surface-subtle" />
-        </div>
-      </div>
-
-      {/* 유저 말풍선 스켈레톤 */}
-      <div className="flex w-full justify-end">
-        <div className="h-[42px] w-[80%] animate-pulse rounded-[12px] rounded-tr-[4px] bg-action-primary/20" />
-      </div>
-
-      {/* AI 말풍선 스켈레톤 */}
-      <div className="flex w-full items-start gap-sm">
-        <div className="mt-[2px] size-[32px] shrink-0 animate-pulse rounded-full bg-surface-subtle" />
-        <div className="flex w-[85%] flex-col gap-xs rounded-[12px] rounded-tl-[4px] border border-border-default bg-surface px-lg py-md shadow-sm">
-          <div className="h-[14px] w-full animate-pulse rounded-full bg-surface-subtle" />
-          <div className="h-[14px] w-4/5 animate-pulse rounded-full bg-surface-subtle" />
-        </div>
-      </div>
+      <AIBubbleSkeleton lineWidths={["w-full", "w-4/5", "w-3/5"]} />
+      <UserBubbleSkeleton height="h-[42px]" width="w-[80%]" />
+      <AIBubbleSkeleton lineWidths={["w-full", "w-full", "w-4/5", "w-2/5"]} />
+      <UserBubbleSkeleton height="h-[68px]" width="w-[65%]" />
+      <AIBubbleSkeleton lineWidths={["w-full", "w-3/5"]} />
+      <UserBubbleSkeleton height="h-[42px]" width="w-[45%]" />
+      <AIBubbleSkeleton
+        lineWidths={["w-full", "w-full", "w-full", "w-4/5", "w-1/2"]}
+      />
     </>
   );
 }

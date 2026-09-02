@@ -34,7 +34,7 @@ const WELCOME_MESSAGE: ChatMessage = {
   id: "welcome",
   sender: "ai",
   type: "text",
-  text: "안녕하세요! 사용자님께 딱 맞는 요금제를 찾아드릴게요 :) 먼저 평소 데이터를 얼마나 쓰시는지 알려주시겠어요?",
+  text: "안녕하세요! 요고다 AI 요금제 상담원이에요 :) 딱 맞는 요금제 추천부터 혜택 안내까지, 궁금하신 걸 편하게 물어봐 주세요.",
 };
 
 function createSignupEntryMessage(
