@@ -16,7 +16,7 @@ import { getDashboard } from "@/lib/api/admin/dashboard";
 import { ADMIN_DASHBOARD_QUERY_KEYS } from "@/lib/admin/queryKeys";
 import { ApiError } from "@/lib/api/client";
 import { cn } from "@/lib/utils";
-import type { DashboardPeriod } from "@/types/dashboard";
+import type { DashboardPeriod, FunnelStage } from "@/types/dashboard";
 
 function formatChange(value: number) {
   const sign = value >= 0 ? "▲" : "▼";
@@ -196,6 +196,12 @@ export function DashboardContent() {
   // 배너를 닫으면 그 이탈 단계에 한해서만 숨기고, 데이터가 바뀌어 최다 이탈 단계가
   // 달라지면(기간 변경 등) 다시 보여줌
   const [dismissedStage, setDismissedStage] = useState<string | null>(null);
+
+  // 퍼널 표에서 "AI 채팅 로그 바로가기"는 원래 마우스오버해야 보이는데, 가장
+  // 궁금해할 "가입 완료" 단계는 기본값으로 미리 호버된 것처럼 보여줌. 다른
+  // 단계에 실제로 마우스를 올리면 그쪽으로 넘어가고, 벗어나면 다시 기본값으로 돌아옴
+  const [hoveredStage, setHoveredStage] =
+    useState<FunnelStage>("signup_completed");
 
   // maxDropStage는 "이번 기간 dropRate가 베이스라인(직전 동일 길이 구간) 대비
   // 가장 나빠진 단계"를 서버가 계산해서 내려줌 (아무 단계도 안 나빠졌으면 null).
@@ -395,14 +401,28 @@ export function DashboardContent() {
                 </p>
               </div>
               <span className="shrink-0 font-sans text-caption-12-regular text-text-tertiary">
-                전체 이탈률{" "}
+                상담 {data.kpi.consultationCount.toLocaleString("ko-KR")}건 중{" "}
+                {data.kpi.signupCount.toLocaleString("ko-KR")}건 가입 완료
+                (이탈률{" "}
                 <strong className="font-sans text-caption-12-bold text-error">
                   {data.funnel.totalDropRate}%
                 </strong>
+                )
               </span>
             </div>
 
-            <div className="mt-lg flex flex-col gap-xs">
+            <div className="mt-lg hidden items-center gap-x-md px-sm sm:flex">
+              <span className="w-43 shrink-0" />
+              <span className="flex-1" />
+              <span className="w-18 shrink-0 text-right font-sans text-micro-11-regular text-text-tertiary">
+                진입률
+              </span>
+              <span className="w-16 shrink-0 text-right font-sans text-micro-11-regular text-text-tertiary">
+                이탈률
+              </span>
+            </div>
+
+            <div className="mt-xs flex flex-col gap-xs">
               {funnelStages.map((stage, index) => {
                 const widthPercent = stage.entryRate;
                 const isMaxDrop = stage.stage === absoluteMaxDropStage;
@@ -426,22 +446,15 @@ export function DashboardContent() {
 
                 const row = (
                   <>
-                    <span className="order-1 shrink-0 whitespace-nowrap font-sans text-label-14-bold text-text-primary sm:w-23">
-                      {stage.label}
-                    </span>
-
-                    <span
-                      className={cn(
-                        "order-2 flex shrink-0 items-center sm:w-20",
-                        !isMaxDrop && "invisible",
+                    <span className="order-1 flex shrink-0 items-center gap-sm whitespace-nowrap sm:w-43">
+                      <span className="font-sans text-label-14-bold text-text-primary">
+                        {stage.label}
+                      </span>
+                      {isMaxDrop && (
+                        <Badge variant="error" className="shrink-0">
+                          최다 이탈
+                        </Badge>
                       )}
-                    >
-                      <Badge
-                        variant="error"
-                        className="shrink-0 bg-error text-text-on-primary"
-                      >
-                        최다 이탈
-                      </Badge>
                     </span>
 
                     <div className="relative order-5 h-9 w-full overflow-hidden rounded-md bg-border-default sm:order-3 sm:w-auto sm:flex-1">
@@ -454,7 +467,7 @@ export function DashboardContent() {
                           className={cn(
                             "flex h-full items-center gap-xs overflow-hidden rounded-md px-md transition-all",
                             isLastStage
-                              ? "bg-action-primary"
+                              ? "bg-text-secondary"
                               : "bg-border-strong",
                           )}
                           style={{ width: `${Math.max(widthPercent, 20)}%` }}
@@ -473,19 +486,26 @@ export function DashboardContent() {
                       )}
 
                       {logsHref && (
-                        <span className="absolute right-xs top-1/2 -translate-y-1/2 whitespace-nowrap rounded-full border-2 border-surface bg-surface px-md py-xs font-sans text-micro-11-bold text-text-brand opacity-0 shadow-sm transition-opacity group-hover:opacity-100">
+                        <span
+                          className={cn(
+                            "absolute right-xs top-1/2 -translate-y-1/2 whitespace-nowrap rounded-full bg-text-primary px-md py-xs font-sans text-micro-11-bold text-text-on-primary shadow-sm transition-opacity",
+                            stage.stage === hoveredStage
+                              ? "opacity-100"
+                              : "opacity-0",
+                          )}
+                        >
                           AI 채팅 로그 바로가기 →
                         </span>
                       )}
                     </div>
 
-                    <span className="order-3 ml-auto shrink-0 text-right font-sans text-micro-11-regular text-text-tertiary sm:order-4 sm:ml-0 sm:w-18">
-                      진입 {stage.entryRate}%
+                    <span className="order-3 ml-auto shrink-0 text-right font-sans text-label-14-bold text-text-primary sm:order-4 sm:ml-0 sm:w-18">
+                      {stage.entryRate}%
                     </span>
 
                     <span
                       className={cn(
-                        "order-4 shrink-0 text-right font-sans text-label-14-bold sm:order-5 sm:w-16",
+                        "order-4 shrink-0 text-right font-sans text-caption-12-regular sm:order-5 sm:w-16",
                         stage.dropRate === null
                           ? "text-text-tertiary"
                           : "text-error",
@@ -502,7 +522,12 @@ export function DashboardContent() {
                   return (
                     <div
                       key={stage.stage}
-                      className="-mx-sm flex flex-wrap items-center gap-x-md gap-y-xs px-sm py-xs"
+                      className={cn(
+                        "-mx-sm flex flex-wrap items-center gap-x-md gap-y-xs rounded-md px-sm py-xs transition-colors",
+                        stage.stage === hoveredStage && "bg-surface-subtle",
+                      )}
+                      onMouseEnter={() => setHoveredStage(stage.stage)}
+                      onMouseLeave={() => setHoveredStage("signup_completed")}
                     >
                       {row}
                     </div>
@@ -514,11 +539,11 @@ export function DashboardContent() {
                     key={stage.stage}
                     href={logsHref}
                     className={cn(
-                      "group -mx-sm flex flex-wrap items-center gap-x-md gap-y-xs rounded-md px-sm py-xs transition-colors",
-                      isMaxDrop
-                        ? "bg-error-soft hover:bg-error-soft/70"
-                        : "hover:bg-surface-subtle",
+                      "-mx-sm flex flex-wrap items-center gap-x-md gap-y-xs rounded-md px-sm py-xs transition-colors",
+                      stage.stage === hoveredStage && "bg-surface-subtle",
                     )}
+                    onMouseEnter={() => setHoveredStage(stage.stage)}
+                    onMouseLeave={() => setHoveredStage("signup_completed")}
                   >
                     {row}
                   </NextLink>
