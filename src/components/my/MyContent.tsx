@@ -185,7 +185,7 @@ export function MyContent() {
             className="relative block min-h-[156px] overflow-hidden rounded-lg border border-border-default bg-[#fcdee2] shadow-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-action-primary"
           >
             <Image
-              src="/yogoda-banners/savings-character-scene-v3.webp"
+              src="/yogoda-characters/savings-character-scene-v3.webp"
               alt=""
               width={382}
               height={540}
