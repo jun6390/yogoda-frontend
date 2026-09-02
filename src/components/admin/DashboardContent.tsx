@@ -87,6 +87,59 @@ function KpiCard({
   );
 }
 
+function KpiCardSkeleton() {
+  return (
+    <div className="flex-1 rounded-lg border border-border-default bg-surface p-2xl">
+      <div className="flex items-center justify-between">
+        <div className="h-4 w-20 animate-pulse rounded-full bg-surface-subtle" />
+        <div className="h-4 w-14 animate-pulse rounded-full bg-surface-subtle" />
+      </div>
+      <div className="mt-sm h-7 w-28 animate-pulse rounded-full bg-surface-subtle" />
+      <div className="mt-xs h-3 w-24 animate-pulse rounded-full bg-surface-subtle" />
+    </div>
+  );
+}
+
+function DashboardSkeleton() {
+  return (
+    <div className="mt-2xl">
+      <div className="flex flex-col gap-2xl sm:flex-row">
+        <KpiCardSkeleton />
+        <KpiCardSkeleton />
+        <KpiCardSkeleton />
+      </div>
+
+      <section className="mt-2xl rounded-lg border border-border-default bg-surface p-2xl">
+        <div className="h-5 w-40 animate-pulse rounded-full bg-surface-subtle" />
+        <div className="mt-xs h-3 w-56 animate-pulse rounded-full bg-surface-subtle" />
+
+        <div className="mt-lg flex flex-col gap-xs">
+          {Array.from({ length: 5 }).map((_, index) => (
+            <div
+              key={index}
+              className="h-9 w-full animate-pulse rounded-md bg-surface-subtle"
+            />
+          ))}
+        </div>
+      </section>
+
+      <section className="mt-2xl rounded-lg border border-border-default bg-surface p-2xl">
+        <div className="h-5 w-48 animate-pulse rounded-full bg-surface-subtle" />
+
+        <div className="mt-lg flex h-45 items-end justify-center gap-lg">
+          {[45, 70, 55, 85].map((heightPercent, index) => (
+            <div
+              key={index}
+              className="w-20 animate-pulse rounded-t-sm bg-surface-subtle"
+              style={{ height: `${heightPercent}%` }}
+            />
+          ))}
+        </div>
+      </section>
+    </div>
+  );
+}
+
 export function DashboardContent() {
   const [period, setPeriod] = useState<DashboardPeriod>("today");
 
@@ -174,11 +227,7 @@ export function DashboardContent() {
         <PeriodTabs value={period} onChange={setPeriod} />
       </div>
 
-      {isPending && (
-        <p className="mt-2xl font-sans text-body-14-regular text-text-secondary">
-          불러오는 중이에요...
-        </p>
-      )}
+      {isPending && <DashboardSkeleton />}
 
       {isError && (
         <ErrorState
