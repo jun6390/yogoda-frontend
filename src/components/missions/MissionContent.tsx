@@ -25,7 +25,7 @@ import { Button } from "@/components/ui/Button/Button";
 import { EmptyState } from "@/components/ui/EmptyState/EmptyState";
 import { ErrorState } from "@/components/ui/ErrorState/ErrorState";
 import { PageIntro } from "@/components/ui/PageIntro/PageIntro";
-import { Toast } from "@/components/ui/Toast/Toast";
+import { FloatingToast } from "@/components/ui/Toast/Toast";
 import {
   claimMissionReward,
   getMyMissions,
@@ -107,7 +107,7 @@ export function MissionContent({ view = "active" }: { view?: MissionView }) {
           />
         ) : (
           <>
-            <section className="relative min-h-[152px] overflow-hidden rounded-lg border border-action-secondary/30 bg-brand-soft px-lg py-xl shadow-sm">
+            <section className="relative min-h-[152px] overflow-hidden rounded-lg border border-action-secondary/30 bg-[#f4edfb] px-lg py-xl shadow-sm">
               <div className="relative z-[1] max-w-[58%]">
                 <p className="font-sans text-caption-12-regular text-text-secondary">
                   {t("progressSummary")}
@@ -125,7 +125,7 @@ export function MissionContent({ view = "active" }: { view?: MissionView }) {
                 width={168}
                 height={168}
                 loading="eager"
-                className="pointer-events-none absolute -bottom-sm -right-xs size-[156px] object-contain [mask-image:linear-gradient(to_right,transparent_0%,black_12%)]"
+                className="pointer-events-none absolute -bottom-sm -right-xs size-[156px] object-contain"
               />
             </section>
 
@@ -179,10 +179,9 @@ export function MissionContent({ view = "active" }: { view?: MissionView }) {
         />
       )}
       {claimedPoints !== null && (
-        <Toast
+        <FloatingToast
           message={t("pointsClaimedToast", { points: claimedPoints })}
           actionLabel={null}
-          className="fixed bottom-[calc(var(--bottom-nav-height)+var(--spacing-lg))] left-1/2 z-[60] max-w-[calc(100%-32px)] -translate-x-1/2"
         />
       )}
     </div>
@@ -239,12 +238,16 @@ function MissionDetail({
   });
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 sm:items-center sm:p-xl">
+    <div
+      className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 sm:items-center sm:p-xl"
+      onMouseDown={onClose}
+    >
       <section
         role="dialog"
         aria-modal="true"
         aria-labelledby="mission-title"
         className="w-full max-w-mobile rounded-t-xl bg-background p-page sm:rounded-xl"
+        onMouseDown={(event) => event.stopPropagation()}
       >
         <div className="flex items-start justify-between gap-lg">
           <span className="flex size-[48px] items-center justify-center rounded-lg bg-brand-soft text-icon-brand">

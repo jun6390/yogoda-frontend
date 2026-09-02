@@ -384,7 +384,8 @@
     "empty": "No nearby benefits are available.",
     "emptyDescription": "Try another location or check again later.",
     "mapError": "Unable to load the map.",
-    "mapErrorDescription": "Check the map API settings and registered service URL."
+    "mapErrorDescription": "Check the map API settings and registered service URL.",
+    "loadMore": "Show more nearby benefits"
   },
   "SavedBenefits": {
     "title": "Saved benefits",
@@ -473,7 +474,7 @@
     "defaultUserName": "User",
     "greeting": "Hello, {name}",
     "benefitNotice": "{name}, you still have benefits waiting for you.",
-    "currentPlan": "Current plan",
+    "currentPlan": "Current plan in use",
     "monthlyPrice": "KRW {amount} / mo",
     "pricePending": "Checking price",
     "detailPending": "Checking",
@@ -493,6 +494,8 @@
     "myMembership": "My membership",
     "membershipTier": "{tier} tier",
     "membershipPending": "Checking tier",
+    "membershipStandard": "Standard tier",
+    "membershipCheckRequired": "Check tier",
     "membershipUnavailable": "Available after joining",
     "couponWallet": "Coupons",
     "viewCoupons": "View coupons",
@@ -594,6 +597,7 @@
     "locationApplied": "Showing your current location",
     "locationError": "Location is unavailable. Check your browser permissions.",
     "resultCount": "{count} direct stores",
+    "loadMore": "Show more stores",
     "views": {
       "map": "Map",
       "list": "List"
@@ -680,10 +684,8 @@
     "validUntil": "Valid until",
     "usageDate": "Used at",
     "useCoupon": "Use coupon",
-    "useConfirmTitle": "Use this coupon?",
-    "useConfirmDescription": "This cannot be undone. Continue only after a store employee confirms it.",
-    "confirmUse": "Mark as used",
-    "cancel": "Cancel"
+    "useComplete": "Coupon marked as used.",
+    "useFailed": "Could not use the coupon. Please try again."
   },
   "UsageReport": {
     "title": "Usage report",
@@ -797,7 +799,7 @@
     "title": "Active benefits",
     "back": "Back to MY",
     "currentPlan": "Current plan",
-    "selectedCount": "{count} selected",
+    "selectedCount": "{count} benefits selected",
     "selectedTitle": "Your selected benefits",
     "includedTitle": "Included benefits",
     "emptySelected": "No selected benefits",
@@ -909,7 +911,8 @@
     "viewAll": "View all",
     "membershipTitle": "Membership",
     "membershipGrade": "VIP membership",
-    "membershipGradeUnknown": "Checking tier",
+    "membershipGradeUnknown": "Check tier",
+    "membershipGradeStandard": "Standard membership",
     "membershipDescription": "Review selected and included benefits",
     "membershipAction": "View benefits",
     "noPlanMembershipGrade": "Membership pending",
@@ -939,7 +942,9 @@
     "loading": "Loading plans.",
     "error": "Unable to load plans.",
     "monthlyPrice": "{amount} KRW/month",
+    "standardPriceBadge": "Standard price",
     "currentPlanBadge": "Current",
+    "loadMore": "Show more plans",
     "retry": "Try again",
     "errorDescription": "Please try again in a moment."
   },

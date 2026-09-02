@@ -16,6 +16,7 @@ import { useTranslations } from "next-intl";
 import { MySubpageHeader } from "./MySubpageHeader";
 
 import { EmptyState } from "@/components/ui/EmptyState/EmptyState";
+import { Button } from "@/components/ui/Button/Button";
 import { ErrorState } from "@/components/ui/ErrorState/ErrorState";
 import { Input } from "@/components/ui/Input/Input";
 import { NaverMap } from "@/components/ui/NaverMap/NaverMap";
@@ -33,6 +34,7 @@ const services: Array<"all" | StoreService> = [
   "support",
   "data_transfer",
 ];
+const STORES_PER_PAGE = 6;
 
 interface Coordinates {
   latitude: number;
@@ -48,7 +50,9 @@ export function StoreListContent() {
   const [locationError, setLocationError] = useState(false);
   const [view, setView] = useState<"map" | "list">("map");
   const [selectedStoreCode, setSelectedStoreCode] = useState<string>();
+  const [visibleCount, setVisibleCount] = useState(STORES_PER_PAGE);
   const deferredKeyword = useDeferredValue(keyword.trim());
+
   const storesQuery = useQuery({
     queryKey: ["stores", deferredKeyword, region, service, coordinates],
     queryFn: () =>
@@ -94,6 +98,7 @@ export function StoreListContent() {
     navigator.geolocation.getCurrentPosition(
       ({ coords }) => {
         setSelectedStoreCode(undefined);
+        setVisibleCount(STORES_PER_PAGE);
         setCoordinates({
           latitude: coords.latitude,
           longitude: coords.longitude,
@@ -115,7 +120,23 @@ export function StoreListContent() {
         <p className="mt-xs font-sans text-body-14-regular text-text-secondary">
           {t("description")}
         </p>
-        <div className="relative mt-lg">
+      </section>
+
+      <section className="space-y-md px-page py-xl">
+        <Select
+          icon={<Headset size={18} />}
+          ariaLabel={t("serviceFilterLabel")}
+          value={service}
+          onChange={(value) => {
+            setService(value as "all" | StoreService);
+            setVisibleCount(STORES_PER_PAGE);
+          }}
+          options={services.map((item) => ({
+            value: item,
+            label: t(`services.${item}`),
+          }))}
+        />
+        <div className="relative">
           <Search
             aria-hidden="true"
             className="absolute left-md top-1/2 z-[1] -translate-y-1/2 text-icon-secondary"
@@ -123,23 +144,15 @@ export function StoreListContent() {
           />
           <Input
             value={keyword}
-            onChange={(event) => setKeyword(event.target.value)}
+            onChange={(event) => {
+              setKeyword(event.target.value);
+              setVisibleCount(STORES_PER_PAGE);
+            }}
             placeholder={t("searchPlaceholder")}
             aria-label={t("searchLabel")}
             className="pl-[40px]"
           />
         </div>
-      </section>
-
-      <section className="space-y-md px-page py-xl">
-        <button
-          type="button"
-          onClick={requestLocation}
-          className="flex min-h-touch w-full items-center gap-sm rounded-lg border border-border-default bg-surface px-lg font-sans text-label-14-bold text-text-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-action-primary"
-        >
-          <LocateFixed className="text-icon-brand" size={18} />
-          {coordinates ? t("locationApplied") : t("nearbySort")}
-        </button>
         {locationError && (
           <p className="font-sans text-caption-12-regular text-error">
             {t("locationError")}
@@ -167,30 +180,21 @@ export function StoreListContent() {
             );
           })}
         </div>
-        <div className={cn("grid gap-sm", showRegionFilter && "grid-cols-2")}>
-          {showRegionFilter && (
-            <Select
-              icon={<MapPin size={18} />}
-              ariaLabel={t("regionFilterLabel")}
-              value={region}
-              onChange={setRegion}
-              options={[
-                { value: "", label: t("allRegions") },
-                ...regions.map((item) => ({ value: item, label: item })),
-              ]}
-            />
-          )}
+        {showRegionFilter && (
           <Select
-            icon={<Headset size={18} />}
-            ariaLabel={t("serviceFilterLabel")}
-            value={service}
-            onChange={(value) => setService(value as "all" | StoreService)}
-            options={services.map((item) => ({
-              value: item,
-              label: t(`services.${item}`),
-            }))}
+            icon={<MapPin size={18} />}
+            ariaLabel={t("regionFilterLabel")}
+            value={region}
+            onChange={(value) => {
+              setRegion(value);
+              setVisibleCount(STORES_PER_PAGE);
+            }}
+            options={[
+              { value: "", label: t("allRegions") },
+              ...regions.map((item) => ({ value: item, label: item })),
+            ]}
           />
-        </div>
+        )}
 
         {storesQuery.isPending ? (
           view === "map" ? (
@@ -222,6 +226,18 @@ export function StoreListContent() {
               errorTitle={t("mapError")}
               errorDescription={t("mapErrorDescription")}
             />
+            <button
+              type="button"
+              aria-label={coordinates ? t("locationApplied") : t("nearbySort")}
+              title={coordinates ? t("locationApplied") : t("nearbySort")}
+              onClick={requestLocation}
+              className={cn(
+                "absolute right-md z-[210] flex size-touch items-center justify-center rounded-full border border-border-default bg-surface text-icon-brand shadow-md focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-action-primary",
+                selectedStore ? "bottom-[108px]" : "bottom-md",
+              )}
+            >
+              <LocateFixed aria-hidden="true" size={20} />
+            </button>
             {selectedStore && (
               <Link
                 href={`/my/stores/${selectedStore.code}`}
@@ -250,7 +266,7 @@ export function StoreListContent() {
             <p className="font-sans text-caption-12-regular text-text-secondary">
               {t("resultCount", { count: stores.length })}
             </p>
-            {stores.map((store) => (
+            {stores.slice(0, visibleCount).map((store) => (
               <Link
                 key={store.code}
                 href={`/my/stores/${store.code}`}
@@ -284,6 +300,17 @@ export function StoreListContent() {
                 />
               </Link>
             ))}
+            {visibleCount < stores.length && (
+              <Button
+                variant="secondary"
+                className="h-[44px] w-full py-0 text-label-14-bold"
+                onClick={() =>
+                  setVisibleCount((count) => count + STORES_PER_PAGE)
+                }
+              >
+                {t("loadMore")}
+              </Button>
+            )}
           </div>
         )}
       </section>

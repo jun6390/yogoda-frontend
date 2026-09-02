@@ -45,6 +45,8 @@ export function PlanRow({
 
   const formatNumber = (value: number) =>
     new Intl.NumberFormat(locale).format(value);
+  const hasEffectivePrice =
+    effectiveMonthlyFee !== null && effectiveMonthlyFee !== undefined;
 
   const mainContent = (
     <div className="px-lg pb-md pt-lg">
@@ -66,22 +68,28 @@ export function PlanRow({
             </div>
           )}
 
-          {effectiveMonthlyFee !== null &&
-            effectiveMonthlyFee !== undefined && (
-              <p className="font-sans text-caption-13-medium text-text-primary">
-                <span className="font-sans text-label-14-bold text-action-primary">
-                  {t("effectivePrice")}{" "}
-                </span>
+          {hasEffectivePrice && (
+            <p className="font-sans text-caption-13-medium text-text-primary">
+              <span className="font-sans text-label-14-bold text-action-primary">
+                {t("effectivePrice")}{" "}
+              </span>
 
-                <strong className="font-sans text-label-14-bold text-text-primary">
-                  {formatNumber(effectiveMonthlyFee)}
-                </strong>
+              <strong className="font-sans text-label-14-bold text-text-primary">
+                {formatNumber(effectiveMonthlyFee)}
+              </strong>
 
-                {t("perMonth")}
-              </p>
+              {t("perMonth")}
+            </p>
+          )}
+
+          <p
+            className={cn(
+              "font-sans text-text-primary",
+              hasEffectivePrice
+                ? "mt-xs text-micro-11-regular line-through"
+                : "text-label-14-bold",
             )}
-
-          <p className="mt-xs font-sans text-micro-11-regular text-text-primary line-through">
+          >
             {price}
           </p>
         </div>

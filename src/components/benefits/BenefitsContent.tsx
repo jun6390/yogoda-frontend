@@ -3,7 +3,7 @@
 import { useEffect, useState, useSyncExternalStore } from "react";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Check, ChevronRight, Heart, MapPin, X } from "lucide-react";
+import { Check, ChevronRight, MapPin, X } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 
@@ -13,10 +13,11 @@ import {
   resolveBrandLogoName,
 } from "@/components/ui/BrandLogo/BrandLogo";
 import { Button } from "@/components/ui/Button/Button";
-import { Toast } from "@/components/ui/Toast/Toast";
+import { FloatingToast } from "@/components/ui/Toast/Toast";
 import { BenefitsSubNav } from "./BenefitsSubNav";
 import { EmptyState } from "@/components/ui/EmptyState/EmptyState";
 import { ErrorState } from "@/components/ui/ErrorState/ErrorState";
+import { FavoriteIcon } from "@/components/ui/FavoriteIcon/FavoriteIcon";
 import { PageIntro } from "@/components/ui/PageIntro/PageIntro";
 import { getBenefits, setBenefitSaved } from "@/lib/api/benefit";
 import { cn } from "@/lib/utils";
@@ -228,11 +229,7 @@ export function BenefitsContent() {
         />
       )}
       {toastMessage && (
-        <Toast
-          message={toastMessage}
-          actionLabel={null}
-          className="fixed bottom-[88px] left-1/2 z-[70] -translate-x-1/2"
-        />
+        <FloatingToast message={toastMessage} actionLabel={null} />
       )}
     </div>
   );
@@ -259,12 +256,16 @@ function BenefitDetail({
   });
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 sm:items-center sm:p-xl">
+    <div
+      className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 sm:items-center sm:p-xl"
+      onMouseDown={onClose}
+    >
       <section
         role="dialog"
         aria-modal="true"
         aria-labelledby="benefit-title"
         className="w-full max-w-mobile rounded-t-xl bg-background p-page sm:rounded-xl"
+        onMouseDown={(event) => event.stopPropagation()}
       >
         <div className="flex items-start justify-between gap-lg">
           <BrandLogo
@@ -323,11 +324,7 @@ function BenefitDetail({
           loading={saveMutation.isPending}
           onClick={() => saveMutation.mutate()}
         >
-          <Heart
-            aria-hidden="true"
-            size={18}
-            fill={benefit.saved ? "currentColor" : "none"}
-          />
+          <FavoriteIcon selected={benefit.saved} />
           {benefit.saved ? t("removeSaved") : t("save")}
         </Button>
       </section>

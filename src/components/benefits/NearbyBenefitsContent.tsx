@@ -4,7 +4,6 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   ChevronRight,
-  Heart,
   List,
   LocateFixed,
   Map,
@@ -15,13 +14,17 @@ import { useTranslations } from "next-intl";
 
 import { BenefitsSubNav } from "./BenefitsSubNav";
 import { BrandLogo } from "@/components/ui/BrandLogo/BrandLogo";
+import { Button } from "@/components/ui/Button/Button";
 import { EmptyState } from "@/components/ui/EmptyState/EmptyState";
 import { ErrorState } from "@/components/ui/ErrorState/ErrorState";
+import { FavoriteIcon } from "@/components/ui/FavoriteIcon/FavoriteIcon";
 import { NaverMap } from "@/components/ui/NaverMap/NaverMap";
 import { PageIntro } from "@/components/ui/PageIntro/PageIntro";
-import { Toast } from "@/components/ui/Toast/Toast";
+import { FloatingToast } from "@/components/ui/Toast/Toast";
 import { getNearbyBenefits, setBenefitSaved } from "@/lib/api/benefit";
 import { cn } from "@/lib/utils";
+
+const LOCATIONS_PER_PAGE = 6;
 
 export function NearbyBenefitsContent() {
   const t = useTranslations("NearbyBenefits");
@@ -46,6 +49,7 @@ export function NearbyBenefitsContent() {
     "all" | "food" | "culture" | "shopping"
   >("all");
   const [detailOpen, setDetailOpen] = useState(false);
+  const [visibleCount, setVisibleCount] = useState(LOCATIONS_PER_PAGE);
   const query = useQuery({
     queryKey: ["nearby-benefits", userLocation],
     queryFn: () => getNearbyBenefits(userLocation),
@@ -95,6 +99,7 @@ export function NearbyBenefitsContent() {
           longitude: coords.longitude,
         };
         setUserLocation(nextLocation);
+        setVisibleCount(LOCATIONS_PER_PAGE);
         setMapCenter(nextLocation);
         setSearchedMapCenter(nextLocation);
       },
@@ -118,6 +123,7 @@ export function NearbyBenefitsContent() {
   const searchCurrentMapArea = () => {
     if (!mapCenter) return;
     setSelectedId(undefined);
+    setVisibleCount(LOCATIONS_PER_PAGE);
     setUserLocation(mapCenter);
     setSearchedMapCenter(mapCenter);
   };
@@ -128,16 +134,8 @@ export function NearbyBenefitsContent() {
       <PageIntro title={t("title")} description={t("description")} />
 
       <section className="space-y-md px-page py-xl">
-        <button
-          type="button"
-          onClick={requestLocation}
-          className="flex min-h-touch w-full items-center gap-sm rounded-lg border border-border-default bg-surface px-lg font-sans text-label-14-bold text-text-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-action-primary"
-        >
-          <LocateFixed className="text-icon-brand" size={18} />
-          {userLocation ? t("locationApplied") : t("useLocation")}
-        </button>
         {locationError && (
-          <p className="mt-sm font-sans text-caption-12-regular text-error">
+          <p className="font-sans text-caption-12-regular text-error">
             {t("locationError")}
           </p>
         )}
@@ -150,6 +148,7 @@ export function NearbyBenefitsContent() {
               onClick={() => {
                 setCategory(item);
                 setSelectedId(undefined);
+                setVisibleCount(LOCATIONS_PER_PAGE);
               }}
               className={cn(
                 "h-[36px] shrink-0 rounded-full border px-lg font-sans text-caption-13-bold transition-colors",
@@ -229,6 +228,20 @@ export function NearbyBenefitsContent() {
               errorTitle={t("mapError")}
               errorDescription={t("mapErrorDescription")}
             />
+            <button
+              type="button"
+              aria-label={
+                userLocation ? t("locationApplied") : t("useLocation")
+              }
+              title={userLocation ? t("locationApplied") : t("useLocation")}
+              onClick={requestLocation}
+              className={cn(
+                "absolute right-md z-[210] flex size-touch items-center justify-center rounded-full border border-border-default bg-surface text-icon-brand shadow-md focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-action-primary",
+                selected ? "bottom-[148px]" : "bottom-md",
+              )}
+            >
+              <LocateFixed aria-hidden="true" size={20} />
+            </button>
             {hasMovedMap && (
               <button
                 type="button"
@@ -284,10 +297,7 @@ export function NearbyBenefitsContent() {
                       : "text-action-secondary",
                   )}
                 >
-                  <Heart
-                    size={20}
-                    fill={selected.benefit.saved ? "currentColor" : "none"}
-                  />
+                  <FavoriteIcon selected={selected.benefit.saved} />
                 </button>
               </article>
             )}
@@ -295,7 +305,7 @@ export function NearbyBenefitsContent() {
         </section>
       ) : (
         <section className="space-y-lg px-page py-lg">
-          {filteredLocations.map((location) => (
+          {filteredLocations.slice(0, visibleCount).map((location) => (
             <button
               key={location.id}
               type="button"
@@ -320,6 +330,17 @@ export function NearbyBenefitsContent() {
               <ChevronRight className="text-icon-secondary" size={18} />
             </button>
           ))}
+          {visibleCount < filteredLocations.length && (
+            <Button
+              variant="secondary"
+              className="h-[44px] w-full py-0 text-label-14-bold"
+              onClick={() =>
+                setVisibleCount((count) => count + LOCATIONS_PER_PAGE)
+              }
+            >
+              {t("loadMore")}
+            </Button>
+          )}
         </section>
       )}
       {detailOpen && selected && (
@@ -377,11 +398,7 @@ export function NearbyBenefitsContent() {
         </div>
       )}
       {toastMessage && (
-        <Toast
-          message={toastMessage}
-          actionLabel={null}
-          className="fixed bottom-[88px] left-1/2 z-[70] -translate-x-1/2"
-        />
+        <FloatingToast message={toastMessage} actionLabel={null} />
       )}
     </div>
   );

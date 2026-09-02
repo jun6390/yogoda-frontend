@@ -32,6 +32,7 @@ export function Modal({
   onPrimaryClick,
   onSecondaryClick,
   className,
+  onMouseDown,
   ...props
 }: ModalProps) {
   const common = useTranslations("Common");
@@ -49,6 +50,10 @@ export function Modal({
         "relative flex w-[calc(100vw-40px)] max-w-[350px] flex-col items-center rounded-xl bg-surface p-2xl text-center shadow-md",
         className,
       )}
+      onMouseDown={(event) => {
+        event.stopPropagation();
+        onMouseDown?.(event);
+      }}
       {...props}
     >
       <button

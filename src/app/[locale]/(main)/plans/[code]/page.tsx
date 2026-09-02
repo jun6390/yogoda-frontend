@@ -560,9 +560,23 @@ function PlanDetailContent({ code }: PlanDetailContentProps) {
                 </p>
               )}
 
-              <p className="mt-xs font-sans text-micro-11-regular text-text-primary line-through">
+              <p
+                className={
+                  plan.promotion.effectiveMonthlyFee !== null
+                    ? "mt-xs font-sans text-micro-11-regular text-text-primary line-through"
+                    : "font-sans text-title-20-bold text-text-primary"
+                }
+              >
                 {formatNumber(plan.monthlyFee)}
-                {t("wonPerMonth")}
+                <span
+                  className={
+                    plan.promotion.effectiveMonthlyFee === null
+                      ? "ml-xs font-sans text-caption-13-medium"
+                      : undefined
+                  }
+                >
+                  {t("wonPerMonth")}
+                </span>
               </p>
             </div>
 
@@ -716,6 +730,10 @@ function PlanDetailContent({ code }: PlanDetailContentProps) {
                         title={getStepTitle(step)}
                         instruction={getStepInstruction(step) ?? undefined}
                         selectedCodes={selectedBenefits[step.code] ?? []}
+                        disabled={
+                          isCurrentPlan ||
+                          (Boolean(accessToken) && isCurrentPlanPending)
+                        }
                         onSelect={(optionCode) =>
                           handleSelectOption(step, optionCode)
                         }
@@ -920,6 +938,7 @@ interface ChoiceStepProps {
   title: string;
   instruction?: string;
   selectedCodes: string[];
+  disabled: boolean;
   onSelect: (optionCode: string) => void;
   formatNumber: (value: number) => string;
   monthlyValueLabel: (amount: string) => string;
@@ -930,6 +949,7 @@ function ChoiceStep({
   title,
   instruction,
   selectedCodes,
+  disabled,
   onSelect,
   formatNumber,
   monthlyValueLabel,
@@ -967,7 +987,7 @@ function ChoiceStep({
             <button
               key={option.code}
               type="button"
-              disabled={selectionLimitReached}
+              disabled={disabled || selectionLimitReached}
               aria-pressed={isSelected}
               onClick={() => onSelect(option.code)}
               className={`min-h-[104px] rounded-lg border-2 p-md text-left transition-colors ${
@@ -975,7 +995,11 @@ function ChoiceStep({
                   ? "border-action-primary bg-surface"
                   : "border-border-default bg-surface"
               } ${
-                selectionLimitReached ? "cursor-not-allowed opacity-40" : ""
+                disabled
+                  ? "cursor-default"
+                  : selectionLimitReached
+                    ? "cursor-not-allowed opacity-40"
+                    : ""
               }`}
             >
               <BenefitOptionContent

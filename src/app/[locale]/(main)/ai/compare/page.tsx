@@ -2,13 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import {
-  ArrowLeft,
-  Sparkles,
-  TrendingDown,
-  TrendingUp,
-  Minus,
-} from "lucide-react";
+import { ArrowLeft, Bot, TrendingDown, TrendingUp, Minus } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { useSearchParams } from "next/navigation";
 
@@ -192,7 +186,7 @@ export default function PlanComparePage() {
 
             <div className="pl-lg">
               <span className="inline-flex items-center gap-0.75 rounded-full bg-action-primary/10 px-sm py-xs font-sans text-micro-11-bold text-action-primary">
-                <Sparkles size={10} aria-hidden="true" />
+                <Bot size={12} aria-hidden="true" />
                 {t("aiBadge")}
               </span>
               <p className="mt-sm font-sans text-label-14-bold leading-snug text-text-primary">

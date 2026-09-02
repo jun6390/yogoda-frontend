@@ -31,7 +31,7 @@ export function CurrentPlanSummaryCard({
   return (
     <Link
       href={href}
-      className="relative flex min-h-[226px] flex-col gap-lg rounded-lg border border-border-default bg-surface p-lg shadow-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-action-primary"
+      className="relative flex min-h-[210px] flex-col gap-lg rounded-lg border border-border-default bg-surface p-lg shadow-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-action-primary"
     >
       <ChevronRight
         aria-hidden="true"
