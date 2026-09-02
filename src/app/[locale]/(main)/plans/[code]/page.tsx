@@ -16,7 +16,7 @@ import {
   Users,
 } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
-import { useParams } from "next/navigation";
+import { useParams, useSearchParams } from "next/navigation";
 
 import { PageContainer } from "@/components/layout/PageContainer";
 import { ErrorState } from "@/components/ui/ErrorState/ErrorState";
@@ -52,6 +52,7 @@ interface PlanDetailContentProps {
 
 function PlanDetailContent({ code }: PlanDetailContentProps) {
   const router = useRouter();
+  const searchParams = useSearchParams();
 
   const t = useTranslations("PlanDetail");
   const locale = useLocale();
@@ -467,6 +468,9 @@ function PlanDetailContent({ code }: PlanDetailContentProps) {
         code: plan.code,
         name: plan.name,
         monthlyFee: plan.monthlyFee,
+        // 추천 카드(PlanRecommendationCards)를 통해 들어온 경우에만 쿼리에 붙는 값.
+        // 가입 전환율 집계에서 "AI 추천 → 가입"만 구분해서 잡기 위해 필요함
+        recommendedByAI: searchParams.get("recommended") === "true",
       }),
     );
     // 사용자가 선택한 혜택 타이틀을 AI 인삿말 생성에 활용
