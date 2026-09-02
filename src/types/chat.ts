@@ -38,6 +38,9 @@ export interface PreselectedPlan {
   code: string;
   name: string;
   monthlyFee: number;
+  // AI 추천 카드를 통해 들어왔는지 여부. 가입 전환율 집계에서
+  // "AI 추천 → 가입"과 "혼자 탐색 → 가입"을 구분하는 데 씀
+  recommendedByAI: boolean;
 }
 
 // 채팅 화면에 표시되는 메시지 한 건

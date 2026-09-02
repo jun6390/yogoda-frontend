@@ -120,13 +120,13 @@ export function PlanRecommendationCards({
               tabIndex={0}
               onClick={() => {
                 trackUiEvent("plan_detail", "click");
-                router.push(`/plans/${plan.code}?from=chat`);
+                router.push(`/plans/${plan.code}?from=chat&recommended=true`);
               }}
               onKeyDown={(e) => {
                 if (e.key !== "Enter" && e.key !== " ") return;
                 e.preventDefault();
                 trackUiEvent("plan_detail", "click");
-                router.push(`/plans/${plan.code}?from=chat`);
+                router.push(`/plans/${plan.code}?from=chat&recommended=true`);
               }}
               className="flex flex-col rounded-2xl bg-surface border border-border-default shadow-sm w-62.5 shrink-0 snap-start overflow-hidden cursor-pointer transition-transform active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-action-primary"
             >
