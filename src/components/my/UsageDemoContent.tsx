@@ -21,7 +21,7 @@ export function UsageDemoContent() {
     onSuccess: async (_, scenario) => {
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: ["my-usage-report"] }),
-        queryClient.invalidateQueries({ queryKey: ["my-subscriptions"] }),
+        queryClient.invalidateQueries({ queryKey: ["subscriptions", "me"] }),
       ]);
       setToastMessage(
         scenario === "usage-drop"
