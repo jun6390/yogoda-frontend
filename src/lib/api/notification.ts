@@ -8,7 +8,8 @@ export type NotificationType =
 
 export interface AppNotification {
   id: string;
-  type: NotificationType;
+  // 배포 버전 차이 또는 레거시 DB 값이 와도 목록 전체가 깨지지 않게 허용한다.
+  type: NotificationType | (string & {});
   title: string;
   body: string;
   link: string | null;
