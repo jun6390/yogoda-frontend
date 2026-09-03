@@ -10,8 +10,14 @@ import { playwright } from "@vitest/browser-playwright";
 const dirname = path.dirname(fileURLToPath(import.meta.url));
 
 export default defineConfig({
+  define: {
+    "process.env.NEXT_PUBLIC_API_BASE_URL": JSON.stringify(
+      "http://127.0.0.1:8100",
+    ),
+  },
   optimizeDeps: {
     include: [
+      "@tanstack/react-query",
       "socket.io-client",
       "zustand",
       "zustand/middleware",

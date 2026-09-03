@@ -62,8 +62,9 @@ The deployed instance is explicitly approved as a demonstration environment. Lik
 ## Not Yet Verified Or Resolved
 
 - Live LLM recommendation quality, complete conversational signup and external OAuth/identity/payment integrations are not covered by these E2E tests.
-- Direct REST plan join/change routes still need a server-owned confirmation contract. This higher-impact change is deferred at the user's request; chat stage validation alone does not secure those separate endpoints.
-- Access tokens still persist in localStorage. Moving to memory/HttpOnly-backed sessions needs coordinated login, refresh and hydration changes.
+- Direct REST plan join/change endpoints now return authenticated HTTP 410 (`SIGNUP_FLOW_REQUIRED`). Enrollment uses the existing server-owned chat confirmation flow. This retires the alternate REST path; it does not implement a new REST confirmation ticket. The legacy confirmation page redirects to plan detail.
+- Access tokens now remain in memory. Refresh uses the existing HttpOnly cookie and returns the server-verified user profile; the old localStorage `auth` entry is removed on initialization. The readable routing cookie is not proof of authentication. Network restoration failures expose retry rather than silently logging out.
 - Prompt draft/deploy/restore paths are tested against the temporary database; other admin mutations, live map SDK behavior and all application-page mobile/desktop visual states are not exhaustively tested. Storybook accessibility covers registered stories, not every page state or a full WCAG audit.
-- The REST confirmation contract and token-storage migration remain explicitly deferred by the user. Neither should be reported as resolved security work.
+- Deploy the backend refresh-response extension before the frontend migration. Older frontends tolerate the added profile, but the new frontend requires it. Verify OAuth, refresh-cookie behavior and chat reconnect on the actual deployment after both releases. Cross-site cookie blocking can still prevent session restoration; in-memory storage does not eliminate active XSS or revoke already issued access tokens instantly.
+- At the user's latest request, the Naver background is #007F39 (hover #006B30), retaining white text. Default contrast is 5.13:1, meeting the 4.5:1 requirement. No accessibility rule is disabled.
 - Lighthouse covers only the public login and onboarding routes in a local production build, not production load behavior, authenticated screens or a comprehensive penetration test.

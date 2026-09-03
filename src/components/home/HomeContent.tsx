@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useSyncExternalStore } from "react";
+import { useEffect } from "react";
+import { useAuthHydrated } from "@/hooks/useAuthHydrated";
 import type { LucideIcon } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import {
@@ -42,29 +43,6 @@ interface TodoItem {
   title: string;
   description: string;
   icon: LucideIcon;
-}
-
-function subscribeToAuthHydration(onStoreChange: () => void) {
-  const unsubscribeHydrate = useAuthStore.persist.onHydrate(onStoreChange);
-  const unsubscribeFinishHydration =
-    useAuthStore.persist.onFinishHydration(onStoreChange);
-
-  return () => {
-    unsubscribeHydrate();
-    unsubscribeFinishHydration();
-  };
-}
-
-function useAuthHydrated() {
-  /*
-   * zustand persist hydration 상태는 React state가 아니므로
-   * useSyncExternalStore로 구독해서 토큰 복원 전 로그인 페이지로 튀는 문제를 막음
-   */
-  return useSyncExternalStore(
-    subscribeToAuthHydration,
-    () => useAuthStore.persist.hasHydrated(),
-    () => false,
-  );
 }
 
 function getDaysUntilExpiration(expiresAt: string) {

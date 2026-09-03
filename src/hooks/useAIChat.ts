@@ -330,7 +330,6 @@ export function useAIChat({
     socket.on(
       "session_created",
       (data: { sessionId: string; promptVersion: string }) => {
-        console.log("[AI 채팅] 적용된 프롬프트 버전:", data.promptVersion);
         sessionIdRef.current = data.sessionId;
         if (!isLoggedInRef.current) {
           useChatHistoryStore.getState().setSessionId(data.sessionId);
@@ -575,10 +574,11 @@ export function useAIChat({
     // 개발 모드 등에서 이 effect가 중복 실행되더라도 복원(getLatestChatSession)은
     // 딱 한 번만 일어나야 함. 두 번째 호출이 늦게 응답하면, 그사이 추가된 메시지
     // (가입 인삿말 등)를 덮어써버리는 문제가 있었음
-    if (initStartedRef.current) return;
-    initStartedRef.current = true;
+    let cancelled = false;
 
     async function init() {
+      if (cancelled || initStartedRef.current) return;
+      initStartedRef.current = true;
       setIsRestoringHistory(true);
 
       // init() 실행 시점에 preselectedPlanRef.current는 아직 null일 수 있으므로
@@ -598,6 +598,7 @@ export function useAIChat({
         try {
           const { session, messages: dbMessages } =
             await getLatestChatSession();
+          if (cancelled) return;
 
           // 가입 플로우도 기존 상담의 연장이므로 최초 진입과 재진입 모두 같은
           // DB 세션을 복원하고, 선택한 요금제 안내를 그 뒤에 이어 붙입니다.
@@ -624,6 +625,7 @@ export function useAIChat({
             ]);
           }
         } catch (err) {
+          if (cancelled) return;
           console.error("채팅 내역 조회 실패:", err);
         }
       } else {
@@ -682,7 +684,11 @@ export function useAIChat({
       openSocket();
     }
 
-    void init();
+    void Promise.resolve().then(init);
+    return () => {
+      cancelled = true;
+      initStartedRef.current = false;
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps -- 복원 및 소켓 연결은 hydration 완료 후 한 번만 실행하면 되므로 isLoggedIn, openSocket 변경 시 재실행은 의도적으로 제외함
   }, [isAuthHydrated]);
 
@@ -704,6 +710,7 @@ export function useAIChat({
       clearResponseTimeout();
       senderRef.current?.cancel();
       socketRef.current?.disconnect();
+      socketRef.current = null;
       typewriter.stopAll();
     };
   }, [typewriter, clearResponseTimeout]);

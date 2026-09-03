@@ -4,6 +4,28 @@ Date: 2026-09-04. Both repositories: `fix/critical-bugfixes`, uncommitted workin
 
 ## Application Checks
 
+### Security Migration Follow-up (2026-09-04)
+
+This section supersedes the earlier baseline below for changed behavior.
+
+- FE unit/browser tests: 53 passed. BE unit tests: 14 passed. BE temporary-database integration tests: 18 passed.
+- E2E: 22/23 passed in the full run; the remaining test incorrectly expected a redirect where the existing coupon UI shows a login-required state. After correcting that assertion, all 3 authentication E2E tests passed. These results cover 23 scenarios across runs, not a single all-green full run.
+- An earlier admin test failed while source formatting triggered development reloads; both admin tests passed in the isolated rerun and subsequent full run.
+- FE production build, FE/BE ESLint, FE TypeScript and BE TypeScript with unused checks passed. Swagger remains 59/59 documented operations.
+- Access tokens are memory-only; legacy localStorage auth is removed. Refresh restores a server-verified profile using the existing HttpOnly cookie. Concurrent refresh deduplication, delayed response after logout, restoration retry, reload and expired sessions are tested.
+- Direct REST join/change is retired with HTTP 410, not replaced by a new confirmation-ticket protocol. Existing server-owned chat confirmation remains the enrollment path. Legacy confirmation URLs redirect to plan detail.
+- Deploy BE first, then FE. The new FE requires the added refresh profile. No commit, push or deployment was performed by this verification.
+- Isolated read burst: 25 concurrent notification requests, all successful; p95 431 ms, maximum 432 ms in one local run. This is a smoke test, not deployment capacity or a load-test guarantee.
+- The deployed splash, onboarding and login pages rendered without captured console warnings/errors. User reported Naver login, but the connected Codex browser remained unauthenticated; authenticated deployed behavior was not verified.
+- Earlier Storybook/Lighthouse accessibility figures predate the user-requested white Naver text. They must not be presented as current all-pass accessibility results.
+- Initial social-login Storybook run: Naver failed `color-contrast` (white on #03c75a, 2.25:1). Following user approval, the button background changed to #007F39 (hover #006B30), retaining white text. Default contrast is 5.13:1. The targeted rerun passed all three provider stories; no accessibility rule was disabled. The full theme/locale matrix was not rerun.
+
+### Earlier Baseline
+
+Latest color decision: the user requested accessible contrast again. Background #007F39 and hover #006B30 are restored with white text (default contrast 5.13:1). The intervening original-green version failed contrast; the current version uses the darker palette again.
+
+Console cleanup follow-up: `/favicon.ico` redirects to the existing SVG and returns HTTP 200 on localhost:3000. Guest splash no longer performs a duplicate session refresh; signup result queries require authentication; default query retries exclude 401/403. Chat restoration ignores responses after unmount and avoids opening a late socket. FE unit/browser tests: 53 passed; focused auth/favicon/guest E2E: 5 passed; changed-file ESLint passed. The screenshot's anonymous `VM startTime` error was not attributed or reproduced, and WebSocket warnings during development navigation are not proven absent by these tests.
+
 | Check                                                    | Result                  |
 | -------------------------------------------------------- | ----------------------- |
 | FE unit and browser component tests                      | 47 passed               |
@@ -66,4 +88,4 @@ Both final runs warned that the host CPU was slower than expected. Performance s
 
 ## Explicit Limits
 
-The REST signup/change confirmation contract and token-storage migration remain deferred by the user. Live OAuth, external map/LLM integrations, complete conversational signup, all administrator mutations, exhaustive page visual states, load testing and a full security penetration test are not established by this record. See `README.md` in this directory for test setup and security limitations.
+The previously deferred security work is addressed by REST enrollment retirement and in-memory access tokens, as detailed above. Live OAuth, external map/LLM integrations, complete conversational signup, all administrator mutations, exhaustive page visual states, production load testing and a full security penetration test are not established by this record. In-memory tokens do not eliminate active XSS; the readable cookie is only a routing hint. See `README.md` in this directory for setup and limitations.

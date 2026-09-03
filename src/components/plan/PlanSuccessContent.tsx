@@ -9,6 +9,7 @@ import { Spinner } from "@/components/ui/Spinner/Spinner";
 import { ErrorState } from "@/components/ui/ErrorState/ErrorState";
 import { getCurrentPlan, getPlanByCode } from "@/lib/api/plan";
 import { useAuthStore } from "@/stores/useAuthStore";
+import { useRouter } from "@/i18n/navigation";
 
 interface PlanSuccessContentProps {
   /** 하단 버튼 슬롯 — page/chat 각각 다른 버튼을 주입 */
@@ -26,8 +27,11 @@ export function PlanSuccessContent({
   variant = "page",
 }: PlanSuccessContentProps) {
   const t = useTranslations("PlanSuccess");
+  const authText = useTranslations("MyCoupons");
+  const router = useRouter();
   const locale = useLocale();
   const userName = useAuthStore((state) => state.user?.name);
+  const accessToken = useAuthStore((state) => state.accessToken);
 
   const {
     data: currentPlan,
@@ -37,6 +41,8 @@ export function PlanSuccessContent({
   } = useQuery({
     queryKey: ["plans", "me", "current"],
     queryFn: getCurrentPlan,
+    enabled: Boolean(accessToken),
+    retry: false,
     staleTime: 0,
     refetchOnMount: "always",
   });
@@ -51,6 +57,16 @@ export function PlanSuccessContent({
 
   const formatNumber = (value: number) =>
     new Intl.NumberFormat(locale).format(value);
+
+  if (!accessToken) {
+    return (
+      <ErrorState
+        title={authText("loginRequired")}
+        retryLabel={authText("login")}
+        onRetry={() => router.push("/login")}
+      />
+    );
+  }
 
   if (isPending) {
     return (

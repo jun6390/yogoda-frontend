@@ -30,11 +30,5 @@ export async function login(context, request, options = {}) {
       path: "/",
     },
   ]);
-  await context.addInitScript(({ accessToken, user }) => {
-    localStorage.setItem(
-      "auth",
-      JSON.stringify({ state: { accessToken, user }, version: 0 }),
-    );
-  }, fixture);
   return { Authorization: "Bearer " + fixture.accessToken };
 }

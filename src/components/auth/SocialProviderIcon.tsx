@@ -7,7 +7,7 @@ export const socialProviderButtonStyles: Record<SocialProvider, string> = {
   google:
     "border-[#dadce0] bg-[#ffffff] text-[#191919] hover:border-[#dadce0] hover:bg-[#f8f9fa]",
   naver:
-    "border-transparent bg-[#03C75A] text-[#191919] hover:border-transparent hover:bg-[#02b350]",
+    "border-transparent bg-[#007F39] text-[#ffffff] hover:border-transparent hover:bg-[#006B30]",
   kakao:
     "border-transparent bg-[#FEE500] text-[#191919] hover:border-transparent hover:bg-[#f5da00]",
 };

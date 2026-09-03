@@ -11,6 +11,11 @@ const nextConfig: NextConfig = {
   },
   devIndicators: false,
   poweredByHeader: false,
+  async redirects() {
+    return [
+      { source: "/favicon.ico", destination: "/icon.svg", permanent: false },
+    ];
+  },
   async headers() {
     return [
       {

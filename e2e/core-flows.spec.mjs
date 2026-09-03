@@ -8,6 +8,16 @@ test("an idle notification socket renews its expired access token", async ({
 }) => {
   test.setTimeout(80000);
   const headers = await login(context, request, { shortLivedToken: true });
+  let initialRefresh = true;
+  await page.route(api + "/api/auth/refresh", async (route) => {
+    const response = await route.fetch();
+    const data = await response.json();
+    if (initialRefresh) {
+      data.accessToken = headers.Authorization.slice(7);
+      initialRefresh = false;
+    }
+    await route.fulfill({ response, json: data });
+  });
   await page.goto("/ko/my/coupons");
   await expect(page.getByText("Test coupon", { exact: true })).toBeVisible();
   const response = await page.waitForResponse(
@@ -17,13 +27,10 @@ test("an idle notification socket renews its expired access token", async ({
     { timeout: 65000 },
   );
   expect(response.ok()).toBeTruthy();
-  await expect
-    .poll(() =>
-      page.evaluate(
-        () => JSON.parse(localStorage.getItem("auth")).state.accessToken,
-      ),
-    )
-    .not.toBe(headers.Authorization.slice(7));
+  expect((await response.json()).accessToken).not.toBe(
+    headers.Authorization.slice(7),
+  );
+  expect(await page.evaluate(() => localStorage.getItem("auth"))).toBeNull();
   await page.getByRole("button", { name: "알림", exact: true }).click();
   await expect(
     page.getByText("Test notification", { exact: true }),
