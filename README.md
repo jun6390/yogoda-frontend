@@ -16,7 +16,7 @@
 
 ## Development Period
 
-2026.07.14 ~ 2026.09.03
+2026.08.14 ~ 2026.09.03
 
 ---
 
@@ -88,8 +88,8 @@
   <tr>
     <th width="120px">AI</th>
     <td>
-      <img src="https://img.shields.io/badge/Ollama-000000?style=for-the-badge&logo=ollama&logoColor=white"/>
-      <img src="https://img.shields.io/badge/Local%20LLM-4B5563?style=for-the-badge"/>
+      <img src="https://img.shields.io/badge/Gemini-8E75B2?style=for-the-badge&logo=googlegemini&logoColor=white"/>
+      <img src="https://img.shields.io/badge/Interactions%20API-4285F4?style=for-the-badge&logo=google&logoColor=white"/>
     </td>
   </tr>
   <tr>
@@ -147,7 +147,8 @@
 ### AI 챗봇 상담
 
 - 자연어 기반 요금제 관련 질의응답
-- 대화 내용을 기반으로 요금제 안내 및 추천
+- 설문 결과, 이전 대화, 현재 요금제를 기반으로 요금제 안내 및 추천
+- 실시간 스트리밍 응답, 대화 중단 및 비회원 상담 이어가기
 
 ### 요금제 탐색 및 비교
 
@@ -157,7 +158,14 @@
 
 ### 요금제 가입
 
-- 가입 정보 입력 → 확인 → 완료까지의 가입 흐름 시뮬레이션
+- 사기 예방 안내 → 약관 동의 → 본인 확인 → 혜택 선택 → 결제 수단 선택 → 완료까지의 가입 흐름 시뮬레이션
+
+### 혜택 및 MY
+
+- 혜택 일정, 내 주변 지도, 찜 및 직영 매장 탐색
+- 출석, 미션, 포인트 상품 및 쿠폰 사용
+- 구독 서비스 관리와 월별 사용 패턴 기반 AI 요금제 재추천
+- 새 추천, 출석, 쿠폰 및 미완료 상담 실시간 알림
 
 ---
 
@@ -179,10 +187,10 @@
 - 프롬프트 버전별 트래픽 분배 및 전환율 비교
 - 데이터 기반으로 우수 버전 채택
 
-### 실시간 고객 상담
+### 상담 세션 및 UI 분석
 
-- 관리자와 고객 간 실시간 채팅 (Socket.io 기반)
-- AI 채팅과 별도로 운영되는 수동 상담 채널
+- 상담 세션과 메시지 로그 조회
+- 요금제 상세, 비교, 가입 버튼 등 주요 UI의 조회·클릭 데이터 분석
 
 ---
 
@@ -193,7 +201,70 @@
 </div>
 
 - Next.js 클라이언트는 HTTPS REST API를 통해 인증, 사용자, 요금제 및 혜택 데이터를 조회합니다.
-- 실시간 AI 상담과 관리자 상담은 Socket.io를 통해 메시지를 송수신합니다.
-- Express 서버는 Ollama 기반 로컬 LLM과 통신하여 상담 응답과 요금제 추천을 생성합니다.
+- 실시간 AI 상담과 사용자 알림은 Socket.io를 통해 메시지를 송수신합니다.
+- Express 서버는 Gemini Interactions API와 통신하여 상담 응답, 페르소나 분석 및 요금제 추천을 생성합니다.
 - 사용자, 요금제, 혜택 및 상담 내역은 MongoDB Atlas에 저장하고 Mongoose로 관리합니다.
 - 소셜 로그인은 OAuth 2.0 기반으로 카카오, 네이버, 구글 인증을 지원합니다.
+
+---
+
+## Getting Started
+
+### Requirements
+
+- Node.js 22 이상
+- npm
+- 실행 중인 [Yogoda Backend](https://github.com/ureca-yogoda/yogoda-backend)
+- OAuth 앱 Client ID와 Naver Maps Client ID
+
+### Installation
+
+```bash
+npm install
+copy .env.example .env.local
+npm run dev
+```
+
+macOS 또는 Linux에서는 `cp .env.example .env.local`을 사용합니다. 개발 서버는 기본적으로 [http://localhost:3000](http://localhost:3000)에서 실행됩니다.
+
+### Environment Variables
+
+| 변수                           | 설명                                |
+| ------------------------------ | ----------------------------------- |
+| `NEXT_PUBLIC_API_BASE_URL`     | Backend API 및 Socket.IO 주소       |
+| `NEXT_PUBLIC_KAKAO_CLIENT_ID`  | 카카오 OAuth Client ID              |
+| `NEXT_PUBLIC_NAVER_CLIENT_ID`  | 네이버 OAuth Client ID              |
+| `NEXT_PUBLIC_GOOGLE_CLIENT_ID` | Google OAuth Client ID              |
+| `NEXT_PUBLIC_NAVER_MAP_KEY_ID` | Naver Maps JavaScript API Client ID |
+
+OAuth 콜백 URI는 `http://localhost:3000/auth/{provider}/callback` 형식으로 등록합니다. `provider`는 `kakao`, `naver`, `google` 중 하나입니다.
+
+### Scripts
+
+| 명령                      | 설명                           |
+| ------------------------- | ------------------------------ |
+| `npm run dev`             | 개발 서버 실행                 |
+| `npm run build`           | 프로덕션 빌드                  |
+| `npm run start`           | 프로덕션 서버 실행             |
+| `npm run lint`            | ESLint와 UI 일관성 감사 실행   |
+| `npm run format:check`    | Prettier 포맷 검사             |
+| `npm run storybook`       | Storybook을 6006 포트에서 실행 |
+| `npm run build-storybook` | 정적 Storybook 빌드            |
+
+---
+
+## Project Structure
+
+```text
+src/
+├─ app/          # App Router 페이지, 로케일 및 레이아웃
+├─ components/   # 도메인 컴포넌트와 공통 UI
+├─ data/         # 화면 구성용 정적 데이터
+├─ hooks/        # API, 소켓 및 화면 상태 훅
+├─ i18n/         # next-intl 라우팅 설정
+├─ lib/          # API 클라이언트와 외부 서비스 연동
+├─ providers/    # 전역 Context Provider
+├─ stores/       # Zustand 상태 저장소
+├─ styles/       # 디자인 토큰과 전역 스타일
+└─ types/        # 공통 TypeScript 타입
+```
