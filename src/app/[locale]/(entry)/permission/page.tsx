@@ -55,7 +55,7 @@ export default function PermissionPage() {
             type="button"
             onClick={() => router.back()}
             aria-label={t("back")}
-            className="flex size-[24px] items-center justify-center text-icon-default focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-action-primary"
+            className="-m-[10px] flex size-touch items-center justify-center text-icon-default focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-action-primary"
           >
             <ChevronLeft aria-hidden="true" size={24} strokeWidth={2} />
           </button>
@@ -116,7 +116,7 @@ export default function PermissionPage() {
         <button
           type="button"
           onClick={handleSkip}
-          className="font-sans text-label-14-medium text-text-secondary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-action-primary"
+          className="min-h-touch px-md font-sans text-label-14-medium text-text-secondary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-action-primary"
         >
           {t("skipAction")}
         </button>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useSyncExternalStore } from "react";
+import { useEffect, useState } from "react";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
@@ -32,19 +32,11 @@ import {
   joinMission,
 } from "@/lib/api/mission";
 import { cn } from "@/lib/utils";
+import { useHydrated } from "@/hooks/useHydrated";
 import { useAuthStore } from "@/stores/useAuthStore";
 import type { Mission, MissionStatus } from "@/types/mission";
 
-const subscribe = () => () => {};
 type MissionView = "active" | "done";
-
-function useHydrated() {
-  return useSyncExternalStore(
-    subscribe,
-    () => true,
-    () => false,
-  );
-}
 
 export function MissionContent({ view = "active" }: { view?: MissionView }) {
   const t = useTranslations("Missions");
@@ -164,7 +156,7 @@ export function MissionContent({ view = "active" }: { view?: MissionView }) {
               <EmptyState
                 heading={t(`empty.${view}.title`)}
                 description={t(`empty.${view}.description`)}
-                className="w-full rounded-lg bg-surface"
+                className="w-full"
               />
             )}
           </>

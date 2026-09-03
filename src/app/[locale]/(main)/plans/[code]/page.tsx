@@ -460,7 +460,6 @@ function PlanDetailContent({ code }: PlanDetailContentProps) {
     sessionStorage.removeItem("signupEntryShown");
     sessionStorage.removeItem("signupStep");
     sessionStorage.removeItem("signupQuickReplies");
-    sessionStorage.removeItem("signupCollectedData");
     sessionStorage.removeItem("signupKickoffSent");
     sessionStorage.setItem(
       "preselectedPlan",
@@ -482,6 +481,19 @@ function PlanDetailContent({ code }: PlanDetailContentProps) {
       );
     } else {
       sessionStorage.removeItem("preselectedPlanBenefits");
+    }
+    // 상세 페이지에서 이미 고른 선택형 혜택을 가입 플로우에 그대로 넘겨서,
+    // AI가 select_benefits 단계에서 같은 걸 또 묻지 않게 함
+    const nonEmptySelectedBenefits = Object.fromEntries(
+      Object.entries(selectedBenefits).filter(([, codes]) => codes.length > 0),
+    );
+    if (Object.keys(nonEmptySelectedBenefits).length > 0) {
+      sessionStorage.setItem(
+        "signupCollectedData",
+        JSON.stringify({ selectedBenefits: nonEmptySelectedBenefits }),
+      );
+    } else {
+      sessionStorage.removeItem("signupCollectedData");
     }
     // entry 쿼리 파라미터로 매번 다른 값을 붙여, 직전에 /ai를 방문한 적이 있어
     // 페이지가 재사용되는 경우에도 preselectedPlan을 다시 읽어오도록 강제함
@@ -874,7 +886,7 @@ function PlanDetailContent({ code }: PlanDetailContentProps) {
               <button
                 type="button"
                 onClick={handleConfirmExit}
-                className="h-[52px] rounded-lg bg-action-primary font-sans text-label-14-bold text-white"
+                className="h-[52px] rounded-lg bg-action-primary font-sans text-label-14-bold text-text-on-primary"
               >
                 {t("exitModal.confirm")}
               </button>
@@ -921,7 +933,7 @@ function PlanDetailContent({ code }: PlanDetailContentProps) {
               <button
                 type="button"
                 onClick={proceedToAISignup}
-                className="h-[52px] rounded-lg bg-action-primary font-sans text-label-14-bold text-white"
+                className="h-[52px] rounded-lg bg-action-primary font-sans text-label-14-bold text-text-on-primary"
               >
                 {t("switchPlanModal.confirm")}
               </button>

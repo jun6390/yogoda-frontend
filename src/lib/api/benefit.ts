@@ -27,10 +27,6 @@ export function getBenefits(category: BenefitFilter = "all") {
   return apiFetch<BenefitListResponse>(`/api/benefits?category=${category}`);
 }
 
-export function getBenefit(code: string) {
-  return apiFetch<Benefit>(`/api/benefits/${encodeURIComponent(code)}`);
-}
-
 export function getSavedBenefits() {
   return apiFetch<{ benefits: Benefit[] }>("/api/benefits/saved/me");
 }

@@ -1,7 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { useEffect, useState, useSyncExternalStore } from "react";
+import { useEffect, useState } from "react";
 
 import { useMutation } from "@tanstack/react-query";
 import { Bell, MapPin, Moon, Sun, X } from "lucide-react";
@@ -16,6 +16,7 @@ import { NotificationPanel } from "@/components/ui/NotificationPanel/Notificatio
 import { Switch } from "@/components/ui/Switch/Switch";
 import { FloatingToast } from "@/components/ui/Toast/Toast";
 import { useNotifications } from "@/hooks/useNotifications";
+import { useHydrated } from "@/hooks/useHydrated";
 import { usePathname, useRouter } from "@/i18n/navigation";
 import type { AppNotification } from "@/lib/api/notification";
 import { logout } from "@/lib/api/auth";
@@ -34,8 +35,6 @@ const languageOptions = [
 
 const keepMenuOpenKey = "yogoda:keep-menu-open-after-locale-change";
 
-const subscribe = () => () => {};
-
 function shouldKeepMenuOpenAfterLocaleChange() {
   if (typeof window === "undefined") {
     return false;
@@ -44,16 +43,8 @@ function shouldKeepMenuOpenAfterLocaleChange() {
   return window.sessionStorage.getItem(keepMenuOpenKey) === "true";
 }
 
-function useMounted() {
-  return useSyncExternalStore(
-    subscribe,
-    () => true,
-    () => false,
-  );
-}
-
 export function MainShell({ children }: MainShellProps) {
-  const mounted = useMounted();
+  const mounted = useHydrated();
   const [isMenuOpen, setIsMenuOpen] = useState(
     shouldKeepMenuOpenAfterLocaleChange,
   );

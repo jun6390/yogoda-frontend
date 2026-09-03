@@ -1,7 +1,5 @@
 "use client";
 
-import { useSyncExternalStore } from "react";
-
 import { useQuery } from "@tanstack/react-query";
 import { CheckCircle2, ChevronRight, Gift } from "lucide-react";
 import { useTranslations } from "next-intl";
@@ -11,18 +9,9 @@ import { PlanVisual } from "@/components/plans/PlanVisual";
 import { EmptyState } from "@/components/ui/EmptyState/EmptyState";
 import { ErrorState } from "@/components/ui/ErrorState/ErrorState";
 import { Link } from "@/i18n/navigation";
+import { useHydrated } from "@/hooks/useHydrated";
 import { getCurrentPlan, getPlanByCode } from "@/lib/api/plan";
 import { useAuthStore } from "@/stores/useAuthStore";
-
-const subscribe = () => () => {};
-
-function useHydrated() {
-  return useSyncExternalStore(
-    subscribe,
-    () => true,
-    () => false,
-  );
-}
 
 export function BenefitManagementContent() {
   const t = useTranslations("MyBenefits");

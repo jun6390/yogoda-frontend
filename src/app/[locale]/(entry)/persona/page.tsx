@@ -2,7 +2,7 @@
 
 import { ChevronLeft } from "lucide-react";
 import { useState } from "react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 
 import { Button } from "@/components/ui/Button/Button";
 import { useRouter } from "@/i18n/navigation";
@@ -37,6 +37,7 @@ const PERSONA_KEYS = [
 
 export default function PersonaPage() {
   const t = useTranslations("Persona");
+  const locale = useLocale();
   const router = useRouter();
 
   /*
@@ -51,6 +52,7 @@ export default function PersonaPage() {
 
   // AI 분석 API 호출 중 중복 요청을 막고 버튼 로딩 상태를 표시함
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [analysisError, setAnalysisError] = useState<string | null>(null);
 
   /*
    * 설문 답변은 페이지 로컬 state가 아닌 Zustand store에 저장함
@@ -67,6 +69,7 @@ export default function PersonaPage() {
 
   // 현재 질문의 선택값을 의미 있는 key 기준으로 저장함
   const handleSelect = (value: string) => {
+    setAnalysisError(null);
     setAnswer(currentKey, value);
   };
 
@@ -100,17 +103,19 @@ export default function PersonaPage() {
 
     try {
       setIsAnalyzing(true);
+      setAnalysisError(null);
 
       /*
        * 여섯 개 설문 답변을 AI 분석 API에 전달하고
        * 반환된 분석 결과를 결과 화면에서도 사용할 수 있도록 저장함
        */
-      const result = await analyzePersona(answers);
+      const result = await analyzePersona(answers, locale);
 
       setAnalysisResult(result);
       router.push("/persona/result");
     } catch (error) {
       console.error("페르소나 AI 분석에 실패했습니다.", error);
+      setAnalysisError(t("analysisError"));
     } finally {
       setIsAnalyzing(false);
     }
@@ -146,7 +151,7 @@ export default function PersonaPage() {
             onClick={handleBack}
             aria-label={t("back")}
             disabled={isAnalyzing}
-            className="flex size-[24px] items-center justify-center text-icon-default focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-action-primary disabled:pointer-events-none"
+            className="-m-[10px] flex size-touch items-center justify-center text-icon-default focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-action-primary disabled:pointer-events-none"
           >
             <ChevronLeft aria-hidden="true" size={24} strokeWidth={2} />
           </button>
@@ -250,11 +255,20 @@ export default function PersonaPage() {
           {currentStep === totalSteps - 1 ? t("analyze") : t("next")}
         </Button>
 
+        {analysisError && (
+          <p
+            role="alert"
+            className="text-center font-sans text-caption-12-regular text-action-primary"
+          >
+            {analysisError}
+          </p>
+        )}
+
         <button
           type="button"
           onClick={handleSkip}
           disabled={isAnalyzing}
-          className="font-sans text-label-14-medium text-text-secondary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-action-primary disabled:pointer-events-none"
+          className="min-h-touch px-md font-sans text-label-14-medium text-text-secondary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-action-primary disabled:pointer-events-none"
         >
           {t("skip")}
         </button>

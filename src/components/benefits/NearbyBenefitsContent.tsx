@@ -1,15 +1,14 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
-  ChevronRight,
-  List,
-  LocateFixed,
-  Map,
-  RefreshCw,
-  X,
-} from "lucide-react";
+  useCallback,
+  useDeferredValue,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { ChevronRight, LocateFixed, RefreshCw, Search, X } from "lucide-react";
 import { useTranslations } from "next-intl";
 
 import { BenefitsSubNav } from "./BenefitsSubNav";
@@ -18,6 +17,11 @@ import { Button } from "@/components/ui/Button/Button";
 import { EmptyState } from "@/components/ui/EmptyState/EmptyState";
 import { ErrorState } from "@/components/ui/ErrorState/ErrorState";
 import { FavoriteIcon } from "@/components/ui/FavoriteIcon/FavoriteIcon";
+import { Input } from "@/components/ui/Input/Input";
+import {
+  MapFilterChips,
+  MapViewToggle,
+} from "@/components/ui/MapBrowseControls/MapBrowseControls";
 import { NaverMap } from "@/components/ui/NaverMap/NaverMap";
 import { PageIntro } from "@/components/ui/PageIntro/PageIntro";
 import { FloatingToast } from "@/components/ui/Toast/Toast";
@@ -25,12 +29,17 @@ import { getNearbyBenefits, setBenefitSaved } from "@/lib/api/benefit";
 import { cn } from "@/lib/utils";
 
 const LOCATIONS_PER_PAGE = 6;
+const categories = ["all", "food", "culture", "shopping"] as const;
 
 export function NearbyBenefitsContent() {
   const t = useTranslations("NearbyBenefits");
   const queryClient = useQueryClient();
   const [selectedId, setSelectedId] = useState<string>();
-  const [userLocation, setUserLocation] = useState<{
+  const [actualLocation, setActualLocation] = useState<{
+    latitude: number;
+    longitude: number;
+  }>();
+  const [searchLocation, setSearchLocation] = useState<{
     latitude: number;
     longitude: number;
   }>();
@@ -50,15 +59,30 @@ export function NearbyBenefitsContent() {
   >("all");
   const [detailOpen, setDetailOpen] = useState(false);
   const [visibleCount, setVisibleCount] = useState(LOCATIONS_PER_PAGE);
+  const [keyword, setKeyword] = useState("");
+  const deferredKeyword = useDeferredValue(keyword.trim().toLocaleLowerCase());
   const query = useQuery({
-    queryKey: ["nearby-benefits", userLocation],
-    queryFn: () => getNearbyBenefits(userLocation),
+    queryKey: ["nearby-benefits", searchLocation],
+    queryFn: () => getNearbyBenefits(searchLocation),
+    placeholderData: (previousData) => previousData,
     retry: false,
   });
   const locations = query.data?.locations ?? [];
-  const filteredLocations = locations.filter(
-    (location) => category === "all" || location.category === category,
-  );
+  const filteredLocations = locations.filter((location) => {
+    const matchesCategory =
+      category === "all" || location.category === category;
+    const searchableText = [
+      location.name,
+      location.address,
+      location.benefit.brand,
+      location.benefit.title,
+    ]
+      .filter(Boolean)
+      .join(" ")
+      .toLocaleLowerCase();
+
+    return matchesCategory && searchableText.includes(deferredKeyword);
+  });
   const mapLocations = useMemo(
     () =>
       filteredLocations.map((location) => ({
@@ -98,7 +122,8 @@ export function NearbyBenefitsContent() {
           latitude: coords.latitude,
           longitude: coords.longitude,
         };
-        setUserLocation(nextLocation);
+        setActualLocation(nextLocation);
+        setSearchLocation(nextLocation);
         setVisibleCount(LOCATIONS_PER_PAGE);
         setMapCenter(nextLocation);
         setSearchedMapCenter(nextLocation);
@@ -124,7 +149,7 @@ export function NearbyBenefitsContent() {
     if (!mapCenter) return;
     setSelectedId(undefined);
     setVisibleCount(LOCATIONS_PER_PAGE);
-    setUserLocation(mapCenter);
+    setSearchLocation(mapCenter);
     setSearchedMapCenter(mapCenter);
   };
 
@@ -139,49 +164,43 @@ export function NearbyBenefitsContent() {
             {t("locationError")}
           </p>
         )}
-        <div className="flex gap-sm overflow-x-auto">
-          {(["all", "food", "culture", "shopping"] as const).map((item) => (
-            <button
-              key={item}
-              type="button"
-              aria-pressed={category === item}
-              onClick={() => {
-                setCategory(item);
-                setSelectedId(undefined);
-                setVisibleCount(LOCATIONS_PER_PAGE);
-              }}
-              className={cn(
-                "h-[36px] shrink-0 rounded-full border px-lg font-sans text-caption-13-bold transition-colors",
-                category === item
-                  ? "border-action-primary bg-action-primary text-text-on-primary"
-                  : "border-border-default bg-surface text-text-secondary",
-              )}
-            >
-              {t(`categories.${item}`)}
-            </button>
-          ))}
+        <div className="relative">
+          <Search
+            aria-hidden="true"
+            className="absolute left-md top-1/2 z-[1] -translate-y-1/2 text-icon-secondary"
+            size={19}
+          />
+          <Input
+            value={keyword}
+            onChange={(event) => {
+              setKeyword(event.target.value);
+              setSelectedId(undefined);
+              setVisibleCount(LOCATIONS_PER_PAGE);
+            }}
+            placeholder={t("searchPlaceholder")}
+            aria-label={t("searchLabel")}
+            className="pl-[40px]"
+          />
         </div>
-        <div className="grid grid-cols-2 rounded-lg bg-surface-subtle p-xs">
-          {(["map", "list"] as const).map((item) => {
-            const Icon = item === "map" ? Map : List;
-            return (
-              <button
-                key={item}
-                type="button"
-                onClick={() => setView(item)}
-                className={cn(
-                  "flex min-h-[40px] items-center justify-center gap-sm rounded-sm font-sans text-caption-13-bold",
-                  view === item
-                    ? "bg-surface text-text-primary shadow-sm"
-                    : "text-text-secondary",
-                )}
-              >
-                <Icon size={17} />
-                {t(`views.${item}`)}
-              </button>
-            );
-          })}
-        </div>
+        {view === "list" && (
+          <MapFilterChips
+            value={category}
+            options={categories.map((item) => ({
+              value: item,
+              label: t(`categories.${item}`),
+            }))}
+            onChange={(item) => {
+              setCategory(item);
+              setSelectedId(undefined);
+              setVisibleCount(LOCATIONS_PER_PAGE);
+            }}
+          />
+        )}
+        <MapViewToggle
+          value={view}
+          onChange={setView}
+          labels={{ map: t("views.map"), list: t("views.list") }}
+        />
       </section>
 
       {query.isPending ? (
@@ -208,7 +227,7 @@ export function NearbyBenefitsContent() {
             onRetry={() => query.refetch()}
           />
         </div>
-      ) : filteredLocations.length === 0 ? (
+      ) : filteredLocations.length === 0 && view === "list" ? (
         <div className="px-page py-xl">
           <EmptyState
             heading={t("empty")}
@@ -223,17 +242,31 @@ export function NearbyBenefitsContent() {
               selectedId={selected?.id}
               onSelect={setSelectedId}
               onCenterChange={handleMapCenterChange}
-              center={userLocation}
+              center={searchLocation}
+              currentLocation={actualLocation}
               className="h-[440px]"
               errorTitle={t("mapError")}
               errorDescription={t("mapErrorDescription")}
             />
+            <MapFilterChips
+              value={category}
+              options={categories.map((item) => ({
+                value: item,
+                label: t(`categories.${item}`),
+              }))}
+              onChange={(item) => {
+                setCategory(item);
+                setSelectedId(undefined);
+                setVisibleCount(LOCATIONS_PER_PAGE);
+              }}
+              overlay
+            />
             <button
               type="button"
               aria-label={
-                userLocation ? t("locationApplied") : t("useLocation")
+                actualLocation ? t("locationApplied") : t("useLocation")
               }
-              title={userLocation ? t("locationApplied") : t("useLocation")}
+              title={actualLocation ? t("locationApplied") : t("useLocation")}
               onClick={requestLocation}
               className={cn(
                 "absolute right-md z-[210] flex size-touch items-center justify-center rounded-full border border-border-default bg-surface text-icon-brand shadow-md focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-action-primary",
@@ -246,7 +279,7 @@ export function NearbyBenefitsContent() {
               <button
                 type="button"
                 onClick={searchCurrentMapArea}
-                className="absolute left-md top-md z-[210] flex min-h-[40px] items-center gap-sm rounded-full border border-border-default bg-surface px-lg font-sans text-caption-13-bold text-text-primary shadow-md focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-action-primary"
+                className="absolute left-md top-[66px] z-[210] flex min-h-[40px] items-center gap-sm whitespace-nowrap rounded-full border border-border-default bg-surface px-lg font-sans text-caption-13-bold text-text-primary shadow-md focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-action-primary"
               >
                 <RefreshCw aria-hidden="true" size={16} />
                 {t("searchThisArea")}

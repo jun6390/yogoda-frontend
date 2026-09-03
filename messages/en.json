@@ -24,6 +24,7 @@
     "optionGroup": "Select your mobile usage type",
     "next": "Next",
     "analyze": "Start AI analysis",
+    "analysisError": "We couldn't complete the AI analysis. Please try again shortly.",
     "questions": [
       {
         "title": "Which type best matches\nyour mobile usage style?",
@@ -371,6 +372,8 @@
     "locationApplied": "Showing your current location",
     "locationError": "Location is unavailable. Check your browser permissions.",
     "searchThisArea": "Search this area",
+    "searchLabel": "Search partner locations or benefits",
+    "searchPlaceholder": "Search by store, address, or benefit",
     "save": "Save",
     "removeSaved": "Remove saved",
     "savedToast": "Benefit saved.",
@@ -478,7 +481,10 @@
     "monthly": "Checked in {count} days this month",
     "error": "Unable to load attendance.",
     "errorDescription": "Please try again in a moment.",
-    "retry": "Try again"
+    "retry": "Try again",
+    "pointsLoading": "Loading points.",
+    "pointsUnavailable": "Unavailable",
+    "checkInError": "Check-in failed. Please try again."
   },
   "My": {
     "defaultUserName": "User",
@@ -604,6 +610,7 @@
     "regionFilterLabel": "Select region",
     "serviceFilterLabel": "Select service",
     "nearbySort": "Use my location",
+    "searchThisArea": "Search this area",
     "locationApplied": "Showing your current location",
     "locationError": "Location is unavailable. Check your browser permissions.",
     "resultCount": "{count} direct stores",
@@ -757,6 +764,8 @@
     "dropDescription": "Ends the OTT subscriptions and applies three months of gradually declining data usage.",
     "applyDrop": "Apply stage 2",
     "applied": "Demo data applied.",
+    "baselineAppliedToast": "Stage 1 demo data applied.",
+    "dropAppliedToast": "Stage 2 usage pattern applied.",
     "error": "Unable to apply demo data.",
     "viewReport": "View usage report"
   },
@@ -1035,6 +1044,7 @@
   },
   "PlanJoinConfirm": {
     "loading": "Loading your subscription details.",
+    "loadError": "Couldn't load the plan you selected.",
     "back": "Go back",
     "header": "Plan Subscription",
     "title": "Please review your\nsubscription details",

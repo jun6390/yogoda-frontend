@@ -79,7 +79,7 @@ export function HomeBannerCarousel() {
                 href={slide.href}
                 aria-hidden={activeIndex !== index}
                 tabIndex={activeIndex === index ? undefined : -1}
-                className="relative block aspect-[653/494] min-w-full bg-surface focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-action-primary"
+                className="relative block aspect-653/400 min-w-full bg-surface focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-action-primary"
               >
                 <Image
                   src={slide.src}
@@ -90,7 +90,7 @@ export function HomeBannerCarousel() {
                   fetchPriority={isActiveSlide ? "high" : "auto"}
                   sizes="(max-width: 448px) calc(100vw - 40px), 408px"
                   quality={75}
-                  className="object-contain"
+                  className="object-cover"
                 />
               </Link>
             );
@@ -101,7 +101,7 @@ export function HomeBannerCarousel() {
           type="button"
           aria-label={t("bannerPrevious")}
           onClick={() => moveTo(activeIndex - 1)}
-          className="absolute left-sm top-1/2 flex size-[36px] -translate-y-1/2 items-center justify-center rounded-full bg-surface/85 text-icon-brand shadow-sm backdrop-blur-sm transition-colors hover:bg-surface focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-action-primary"
+          className="absolute left-sm top-1/2 flex size-[36px] -translate-y-1/2 items-center justify-center rounded-full bg-surface/50 text-icon-brand shadow-sm transition-colors hover:bg-surface/85 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-action-primary"
         >
           <ChevronLeft size={20} strokeWidth={2} />
         </button>
@@ -110,7 +110,7 @@ export function HomeBannerCarousel() {
           type="button"
           aria-label={t("bannerNext")}
           onClick={() => moveTo(activeIndex + 1)}
-          className="absolute right-sm top-1/2 flex size-[36px] -translate-y-1/2 items-center justify-center rounded-full bg-surface/85 text-icon-brand shadow-sm backdrop-blur-sm transition-colors hover:bg-surface focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-action-primary"
+          className="absolute right-sm top-1/2 flex size-[36px] -translate-y-1/2 items-center justify-center rounded-full bg-surface/50 text-icon-brand shadow-sm transition-colors hover:bg-surface/85 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-action-primary"
         >
           <ChevronRight size={20} strokeWidth={2} />
         </button>

@@ -2,14 +2,11 @@ import { clsx, type ClassValue } from "clsx";
 import { extendTailwindMerge } from "tailwind-merge";
 
 const typographyTokens = [
-  "display-40-bold",
-  "display-32-bold",
   "display-28-bold",
   "title-24-bold",
   "title-20-bold",
   "title-18-bold",
   "title-16-bold",
-  "body-16-regular",
   "body-14-regular",
   "label-14-bold",
   "label-14-medium",

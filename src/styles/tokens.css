@@ -13,8 +13,6 @@
   --primitive-brand-deep: #211524;
   --primitive-brand-pink-50: #fff0f8;
   --primitive-brand-pink-100: #fceef5;
-  --primitive-navy-800: #4b5563;
-
   --primitive-white: #ffffff;
   --primitive-gray-50: #f8f8fb;
   --primitive-gray-100: #f2f3f5;
@@ -36,7 +34,6 @@
   --primitive-error-light: #ff6b7a;
   --primitive-info: #3478f6;
   --primitive-info-light: #6ea8ff;
-  --primitive-ai-soft: #f6f0ff;
 
   /*
    * 실제 컴포넌트는 아래 Semantic Token을 사용함
@@ -46,7 +43,6 @@
   --semantic-surface: var(--primitive-white);
   --semantic-surface-subtle: var(--primitive-gray-100);
   --semantic-brand-soft: var(--primitive-brand-pink-50);
-  --semantic-ai-soft: var(--primitive-ai-soft);
   --semantic-glow-accent: var(--primitive-brand-pink-50);
   --semantic-bubble-user: var(--primitive-brand-pink-100);
 
@@ -96,8 +92,7 @@
   --semantic-surface: var(--primitive-gray-800);
   --semantic-surface-subtle: var(--primitive-gray-700);
   --semantic-brand-soft: var(--primitive-brand-deep);
-  --semantic-bubble-user: var(--primitive-navy-800);
-  --semantic-ai-soft: #2f2438;
+  --semantic-bubble-user: var(--primitive-gray-600);
   --semantic-glow-accent: #2f3d5c;
 
   --semantic-text-on-primary: var(--primitive-white);
@@ -157,7 +152,6 @@
   --color-surface-subtle: var(--semantic-surface-subtle);
   --color-brand-soft: var(--semantic-brand-soft);
   --color-bubble-user: var(--semantic-bubble-user);
-  --color-ai-soft: var(--semantic-ai-soft);
   --color-glow-accent: var(--semantic-glow-accent);
 
   --color-text-on-primary: var(--semantic-text-on-primary);
@@ -209,14 +203,7 @@
 
   /* 공통 레이아웃 값임 */
   --spacing-page: 20px;
-  --spacing-card: 16px;
-  --spacing-chat: 16px;
-  --spacing-section: 32px;
-
   --spacing-touch: 44px;
-  --spacing-header: 56px;
-  --spacing-profile-header: 72px;
-  --spacing-chat-header: 54px;
   --spacing-bottom-nav: 72px;
 
   /*
@@ -249,16 +236,6 @@
   --tracking-code: 4px;
 
   /* Typography - Display */
-  --text-display-40-bold: 40px;
-  --text-display-40-bold--line-height: 52px;
-  --text-display-40-bold--letter-spacing: 0;
-  --text-display-40-bold--font-weight: 700;
-
-  --text-display-32-bold: 32px;
-  --text-display-32-bold--line-height: 42px;
-  --text-display-32-bold--letter-spacing: 0;
-  --text-display-32-bold--font-weight: 700;
-
   --text-display-28-bold: 28px;
   --text-display-28-bold--line-height: 38px;
   --text-display-28-bold--letter-spacing: 0;
@@ -286,11 +263,6 @@
   --text-title-16-bold--font-weight: 700;
 
   /* Typography - Body */
-  --text-body-16-regular: 16px;
-  --text-body-16-regular--line-height: 26px;
-  --text-body-16-regular--letter-spacing: 0;
-  --text-body-16-regular--font-weight: 400;
-
   --text-body-14-regular: 14px;
   --text-body-14-regular--line-height: 22px;
   --text-body-14-regular--letter-spacing: 0;

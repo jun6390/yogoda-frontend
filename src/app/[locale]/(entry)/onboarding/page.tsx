@@ -53,7 +53,7 @@ export default function OnboardingPage() {
 
         <Link
           href="/login"
-          className="font-sans text-caption-13-bold text-text-brand focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-action-primary"
+          className="inline-flex min-h-touch items-center px-md font-sans text-caption-13-bold text-text-brand focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-action-primary"
         >
           {t("loginAction")}
         </Link>

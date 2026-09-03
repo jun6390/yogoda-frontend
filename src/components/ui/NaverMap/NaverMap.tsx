@@ -6,7 +6,7 @@ import { MapPin } from "lucide-react";
 import { loadNaverMap } from "@/lib/naver-map";
 import { cn } from "@/lib/utils";
 
-export interface MapLocation {
+interface MapLocation {
   id: string;
   name: string;
   latitude: number;
@@ -19,6 +19,7 @@ interface NaverMapProps {
   onSelect?: (id: string) => void;
   onCenterChange?: (center: { latitude: number; longitude: number }) => void;
   center?: { latitude: number; longitude: number };
+  currentLocation?: { latitude: number; longitude: number };
   className?: string;
   errorTitle: string;
   errorDescription: string;
@@ -30,6 +31,7 @@ export function NaverMap({
   onSelect,
   onCenterChange,
   center,
+  currentLocation,
   className,
   errorTitle,
   errorDescription,
@@ -39,6 +41,7 @@ export function NaverMap({
   const markersRef = useRef<NaverMarker[]>([]);
   const currentLocationMarkerRef = useRef<NaverMarker | null>(null);
   const listenersRef = useRef<unknown[]>([]);
+  const markerListenersRef = useRef<unknown[]>([]);
   const onSelectRef = useRef(onSelect);
   const onCenterChangeRef = useRef(onCenterChange);
   const initialCenterRef = useRef(center);
@@ -96,6 +99,10 @@ export function NaverMap({
         );
       }
       listenersRef.current = [];
+      markerListenersRef.current.forEach((listener) =>
+        maps?.Event.removeListener(listener),
+      );
+      markerListenersRef.current = [];
       markersRef.current.forEach((marker) => marker.setMap(null));
       markersRef.current = [];
       currentLocationMarkerRef.current?.setMap(null);
@@ -111,27 +118,46 @@ export function NaverMap({
     const maps = window.naver?.maps;
     if (!mapReady || !map || !maps) return;
 
+    markerListenersRef.current.forEach((listener) =>
+      maps.Event.removeListener(listener),
+    );
+    markerListenersRef.current = [];
     markersRef.current.forEach((marker) => marker.setMap(null));
     markersRef.current = locations.map((location) => {
-      const active = location.id === selectedId;
       const marker = new maps.Marker({
         map,
         position: new maps.LatLng(location.latitude, location.longitude),
         title: location.name,
-        icon: {
-          content: `<button type="button" aria-label="${escapeHtml(location.name)}" style="width:${active ? 38 : 32}px;height:${active ? 38 : 32}px;border:3px solid white;border-radius:50%;background:#e01485;color:white;box-shadow:0 2px 8px rgba(0,0,0,.24);cursor:pointer;font:700 12px sans-serif">U+</button>`,
-        },
+        icon: createMarkerIcon(location.name, false),
       });
-      maps.Event.addListener(marker, "click", () =>
-        onSelectRef.current?.(location.id),
+      markerListenersRef.current.push(
+        maps.Event.addListener(marker, "click", () =>
+          onSelectRef.current?.(location.id),
+        ),
       );
       return marker;
     });
 
     return () => {
+      markerListenersRef.current.forEach((listener) =>
+        maps.Event.removeListener(listener),
+      );
+      markerListenersRef.current = [];
       markersRef.current.forEach((marker) => marker.setMap(null));
       markersRef.current = [];
     };
+  }, [locations, mapReady]);
+
+  useEffect(() => {
+    if (!mapReady) return;
+
+    markersRef.current.forEach((marker, index) => {
+      const location = locations[index];
+      if (!location) return;
+      marker.setIcon(
+        createMarkerIcon(location.name, location.id === selectedId),
+      );
+    });
   }, [locations, mapReady, selectedId]);
 
   useEffect(() => {
@@ -141,18 +167,30 @@ export function NaverMap({
 
     const nextCenter = new maps.LatLng(center.latitude, center.longitude);
     map.setCenter(nextCenter);
+  }, [center, mapReady]);
+
+  useEffect(() => {
+    const map = mapRef.current;
+    const maps = window.naver?.maps;
+    if (!mapReady || !map || !maps) return;
 
     currentLocationMarkerRef.current?.setMap(null);
+    currentLocationMarkerRef.current = null;
+    if (!currentLocation) return;
+
     currentLocationMarkerRef.current = new maps.Marker({
       map,
-      position: nextCenter,
+      position: new maps.LatLng(
+        currentLocation.latitude,
+        currentLocation.longitude,
+      ),
       title: "현재 위치",
       icon: {
         content:
           '<span aria-label="현재 위치" style="display:block;width:18px;height:18px;border:4px solid white;border-radius:50%;background:#3478f6;box-shadow:0 2px 8px rgba(0,0,0,.3)"></span>',
       },
     });
-  }, [center, mapReady]);
+  }, [currentLocation, mapReady]);
 
   if (failed) {
     return (
@@ -193,4 +231,11 @@ function escapeHtml(value: string) {
         '"': "&quot;",
       })[character] ?? character,
   );
+}
+
+function createMarkerIcon(name: string, active: boolean) {
+  const size = active ? 38 : 32;
+  return {
+    content: `<button type="button" aria-label="${escapeHtml(name)}" style="width:${size}px;height:${size}px;border:3px solid white;border-radius:50%;background:#e01485;color:white;box-shadow:0 2px 8px rgba(0,0,0,.24);cursor:pointer;font:700 12px sans-serif">U+</button>`,
+  };
 }

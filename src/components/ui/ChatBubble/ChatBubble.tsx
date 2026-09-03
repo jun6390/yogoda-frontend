@@ -19,7 +19,7 @@ export function UserChatBubble({ children, className }: UserChatBubbleProps) {
     <div className="flex w-full justify-end items-start gap-sm">
       <div
         className={cn(
-          "rounded-[12px] rounded-tr-[4px] px-lg py-md font-sans text-body-14-regular whitespace-pre-line break-words shadow-sm",
+          "rounded-[12px] rounded-tr-[4px] px-lg py-md font-sans text-body-14-regular whitespace-pre-line wrap-break-word shadow-sm",
           "bg-bubble-user text-text-primary border border-border-default max-w-[80%]",
           className,
         )}
@@ -50,7 +50,7 @@ export function AIChatBubble({
           !noBackground &&
             "rounded-[12px] rounded-tl-[4px] px-lg py-md bg-surface text-text-primary border border-border-default shadow-sm",
           noBackground ? "w-[85%]" : "max-w-[85%]",
-          "font-sans text-body-14-regular whitespace-pre-line break-words",
+          "font-sans text-body-14-regular whitespace-pre-line wrap-break-word",
           className,
         )}
       >

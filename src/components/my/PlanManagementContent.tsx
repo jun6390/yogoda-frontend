@@ -1,6 +1,6 @@
 "use client";
 
-import { useSyncExternalStore, useState } from "react";
+import { useState } from "react";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { AlertTriangle, ChevronRight } from "lucide-react";
@@ -11,22 +11,13 @@ import { PlanVisual } from "@/components/plans/PlanVisual";
 import { Button } from "@/components/ui/Button/Button";
 import { ErrorState } from "@/components/ui/ErrorState/ErrorState";
 import { Link, useRouter } from "@/i18n/navigation";
+import { useHydrated } from "@/hooks/useHydrated";
 import {
   cancelCurrentPlan,
   getCurrentPlan,
   getPlanByCode,
 } from "@/lib/api/plan";
 import { useAuthStore } from "@/stores/useAuthStore";
-
-const subscribe = () => () => {};
-
-function useHydrated() {
-  return useSyncExternalStore(
-    subscribe,
-    () => true,
-    () => false,
-  );
-}
 
 export function PlanManagementContent() {
   const t = useTranslations("MyPlan");

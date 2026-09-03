@@ -7,7 +7,7 @@ export type SessionDropStage =
   | "signup_started"
   | "signup_completed";
 
-export interface SessionListItem {
+interface SessionListItem {
   sessionId: string;
   userName: string;
   status: "completed" | "dropped";
@@ -39,7 +39,7 @@ export interface SessionListParams {
   limit?: number;
 }
 
-export interface SessionMessage {
+interface SessionMessage {
   messageId: string;
   sender: "user" | "ai";
   content: string;

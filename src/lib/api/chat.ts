@@ -2,7 +2,7 @@ import { apiFetch } from "./client";
 
 import type { ChatPlanCard } from "@/types/chat";
 
-export interface ChatSessionMessage {
+interface ChatSessionMessage {
   id: string;
   role: "user" | "ai";
   content: string;

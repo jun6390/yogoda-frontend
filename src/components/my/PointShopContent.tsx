@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useSyncExternalStore } from "react";
+import { useEffect, useState } from "react";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { CircleStar, Ticket } from "lucide-react";
@@ -16,19 +16,10 @@ import { ErrorState } from "@/components/ui/ErrorState/ErrorState";
 import { Modal } from "@/components/ui/Modal/Modal";
 import { FloatingToast } from "@/components/ui/Toast/Toast";
 import { Link } from "@/i18n/navigation";
+import { useHydrated } from "@/hooks/useHydrated";
 import { exchangePointProduct, getPointProducts } from "@/lib/api/reward";
 import { useAuthStore } from "@/stores/useAuthStore";
 import type { PointProduct } from "@/types/point-shop";
-
-const subscribe = () => () => {};
-
-function useHydrated() {
-  return useSyncExternalStore(
-    subscribe,
-    () => true,
-    () => false,
-  );
-}
 
 function createRequestKey() {
   return (
@@ -169,7 +160,7 @@ export function PointShopContent() {
                 <EmptyState
                   heading={t("emptyTitle")}
                   description={t("emptyDescription")}
-                  className="w-full rounded-lg bg-surface"
+                  className="w-full"
                 />
               )}
             </section>

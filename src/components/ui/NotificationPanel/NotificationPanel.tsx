@@ -259,7 +259,7 @@ function NotificationItem({
           onClick={(e) => void handleDeleteClick(e)}
           className={cn(
             "absolute right-0 top-0 flex h-full w-[76px] flex-col items-center justify-center gap-[3px]",
-            "bg-error text-white transition-opacity",
+            "bg-error text-text-on-primary transition-opacity",
             offset <= -(REVEAL_WIDTH / 2) ? "opacity-100" : "opacity-0",
           )}
         >

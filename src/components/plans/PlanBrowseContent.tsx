@@ -5,7 +5,6 @@ import { useQuery } from "@tanstack/react-query";
 import { Search } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 
-import { Spinner } from "@/components/ui/Spinner/Spinner";
 import { Button } from "@/components/ui/Button/Button";
 import { ErrorState } from "@/components/ui/ErrorState/ErrorState";
 import { Chip } from "@/components/ui/Chip/Chip";
@@ -55,6 +54,7 @@ export function PlanBrowseContent() {
   } = useQuery({
     queryKey: ["plans", accessToken ? "member-compare" : "public"],
     queryFn: () => (accessToken ? getComparedPlans() : getPlans()),
+    retry: false,
   });
 
   const { data: currentPlan } = useQuery({
@@ -88,24 +88,30 @@ export function PlanBrowseContent() {
     const normalizedKeyword = deferredKeyword.trim().toLocaleLowerCase(locale);
 
     if (normalizedKeyword) {
-      nextPlans = nextPlans.filter((plan) =>
-        [
-          plan.name,
-          plan.code,
-          plan.network,
-          plan.data.display,
-          plan.data.sharingDisplay,
-          plan.voice,
-          plan.sms,
-          ...plan.perks,
-          ...plan.tags,
-          ...plan.recommendationTags,
-        ]
+      const isNumericSearch = /^\d+$/.test(normalizedKeyword);
+
+      nextPlans = nextPlans.filter((plan) => {
+        const searchableFields = isNumericSearch
+          ? [plan.name, plan.code]
+          : [
+              plan.name,
+              plan.code,
+              plan.network,
+              plan.data.display,
+              plan.data.sharingDisplay,
+              plan.voice,
+              plan.sms,
+              ...plan.perks,
+              ...plan.tags,
+              ...plan.recommendationTags,
+            ];
+
+        return searchableFields
           .filter(Boolean)
           .join(" ")
           .toLocaleLowerCase(locale)
-          .includes(normalizedKeyword),
-      );
+          .includes(normalizedKeyword);
+      });
     }
 
     if (activeSort === "priceHigh") {
@@ -153,15 +159,7 @@ export function PlanBrowseContent() {
   ];
 
   if (isPending) {
-    return (
-      <div className="flex min-h-[50vh] items-center justify-center">
-        <Spinner
-          size="lg"
-          className="text-action-primary"
-          label={t("loading")}
-        />
-      </div>
-    );
+    return <PlanBrowseSkeleton />;
   }
 
   if (isError) {
@@ -284,5 +282,29 @@ export function PlanBrowseContent() {
         )}
       </div>
     </>
+  );
+}
+
+function PlanBrowseSkeleton() {
+  return (
+    <div className="animate-pulse" aria-hidden="true">
+      <div className="mt-xl flex items-center justify-between gap-md">
+        <div className="flex gap-sm">
+          <span className="h-[36px] w-[68px] rounded-full bg-surface-subtle" />
+          <span className="h-[36px] w-[52px] rounded-full bg-surface-subtle" />
+          <span className="h-[36px] w-[68px] rounded-full bg-surface-subtle" />
+        </div>
+        <span className="h-[36px] w-[112px] rounded-full bg-surface-subtle" />
+      </div>
+      <div className="mt-md h-[48px] rounded-lg bg-surface-subtle" />
+      <div className="mt-xl space-y-lg">
+        {Array.from({ length: 3 }).map((_, index) => (
+          <div
+            key={index}
+            className="h-[116px] rounded-lg border border-border-default bg-surface-subtle shadow-sm"
+          />
+        ))}
+      </div>
+    </div>
   );
 }
