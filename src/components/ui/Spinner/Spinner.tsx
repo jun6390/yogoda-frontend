@@ -6,6 +6,8 @@ interface SpinnerProps {
   size?: SpinnerSize;
   className?: string;
   label?: string;
+  // 기본 굵기(SIZE별 STROKE 값)를 이 화면에서만 다르게 쓰고 싶을 때
+  strokeWidth?: number;
 }
 
 const SIZE: Record<SpinnerSize, string> = {
@@ -28,8 +30,9 @@ export function Spinner({
   size = "md",
   className,
   label = "로딩 중",
+  strokeWidth,
 }: SpinnerProps) {
-  const stroke = STROKE[size];
+  const stroke = strokeWidth ?? STROKE[size];
   const r = 50 - stroke / 2;
   const circumference = 2 * Math.PI * r;
 

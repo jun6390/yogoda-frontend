@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { RotateCcw, Send } from "lucide-react";
 
 import { AdminTypingIndicator } from "@/components/admin/AdminTypingIndicator";
@@ -28,6 +28,14 @@ export function PromptTestChat({ promptContent }: PromptTestChatProps) {
   const [input, setInput] = useState("");
   const { messages, isTyping, isFinalizing, error, sendMessage, reset } =
     usePromptTestConversation(promptContent);
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const container = messagesContainerRef.current;
+    if (!container) return;
+
+    container.scrollTo({ top: container.scrollHeight, behavior: "smooth" });
+  }, [messages, isTyping]);
 
   const handleSend = (text: string) => {
     sendMessage(text);
@@ -43,7 +51,7 @@ export function PromptTestChat({ promptContent }: PromptTestChatProps) {
     <div className="flex h-full flex-col rounded-lg border border-border-default bg-background">
       <div className="flex items-center justify-between gap-sm border-b border-border-default px-lg py-md">
         <div className="flex items-center gap-sm">
-          <Badge variant="accent">테스트 모드</Badge>
+          <Badge variant="default">테스트 모드</Badge>
           <span className="font-sans text-caption-12-regular text-text-tertiary">
             저장 전 프롬프트로 대화 중
           </span>
@@ -59,7 +67,10 @@ export function PromptTestChat({ promptContent }: PromptTestChatProps) {
         </button>
       </div>
 
-      <div className="flex flex-1 flex-col gap-md overflow-y-auto p-lg">
+      <div
+        ref={messagesContainerRef}
+        className="flex flex-1 flex-col gap-md overflow-y-auto p-lg"
+      >
         {messages.length === 0 && !isTyping && (
           <p className="font-sans text-body-14-regular text-text-tertiary">
             아래 빠른 테스트 버튼을 누르거나 메시지를 입력해서 지금 작성 중인
@@ -104,7 +115,7 @@ export function PromptTestChat({ promptContent }: PromptTestChatProps) {
             onClick={() => handleSend(quickMessage)}
             disabled={isTyping}
             className={cn(
-              "shrink-0 whitespace-nowrap rounded-full border border-border-default px-md py-xs",
+              "shrink-0 whitespace-nowrap rounded-full border border-border-default bg-surface px-md py-xs",
               "font-sans text-caption-12-bold text-text-secondary transition-colors hover:bg-surface-subtle",
               "disabled:cursor-not-allowed disabled:opacity-50",
             )}

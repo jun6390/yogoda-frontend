@@ -18,6 +18,7 @@ interface SelectProps<T extends string> {
   icon?: ReactNode;
   className?: string;
   triggerClassName?: string;
+  triggerLabelClassName?: string;
   openTriggerClassName?: string;
   menuClassName?: string;
   optionClassName?: string;
@@ -32,6 +33,7 @@ export function Select<T extends string>({
   icon,
   className,
   triggerClassName,
+  triggerLabelClassName,
   openTriggerClassName,
   menuClassName,
   optionClassName,
@@ -99,6 +101,7 @@ export function Select<T extends string>({
           className={cn(
             "min-w-0 flex-1 truncate font-sans text-label-14-bold",
             icon && "px-sm",
+            triggerLabelClassName,
           )}
         >
           {selectedLabel}

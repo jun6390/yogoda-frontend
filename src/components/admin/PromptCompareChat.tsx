@@ -1,12 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { RotateCcw, Send } from "lucide-react";
 
 import { AdminTypingIndicator } from "@/components/admin/AdminTypingIndicator";
 import { Select } from "@/components/admin/Select";
-import { Badge } from "@/components/ui/Badge/Badge";
 import {
   AIChatBubble,
   UserChatBubble,
@@ -70,27 +69,31 @@ function useVersionContent(selectedValue: string, draftContent: string) {
 }
 
 function ChatColumn({
-  label,
   messages,
   isTyping,
   isFinalizing,
   error,
 }: {
-  label: string;
   messages: TestMessage[];
   isTyping: boolean;
   isFinalizing: boolean;
   error: string | null;
 }) {
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const container = messagesContainerRef.current;
+    if (!container) return;
+
+    container.scrollTo({ top: container.scrollHeight, behavior: "smooth" });
+  }, [messages, isTyping]);
+
   return (
     <div className="flex flex-1 flex-col rounded-lg border border-border-default bg-background">
-      <div className="shrink-0 border-b border-border-default px-lg py-md">
-        <span className="font-sans text-caption-12-bold text-text-primary">
-          {label}
-        </span>
-      </div>
-
-      <div className="flex min-h-0 flex-1 flex-col gap-md overflow-y-auto p-lg">
+      <div
+        ref={messagesContainerRef}
+        className="flex min-h-0 flex-1 flex-col gap-md overflow-y-auto p-lg"
+      >
         {messages.length === 0 && !isTyping && (
           <p className="font-sans text-caption-12-regular text-text-tertiary">
             아래에서 메시지를 보내면 이 버전의 응답이 여기 표시돼요.
@@ -99,13 +102,18 @@ function ChatColumn({
 
         {messages.map((message) =>
           message.sender === "user" ? (
-            <UserChatBubble key={message.id}>{message.text}</UserChatBubble>
+            <UserChatBubble
+              key={message.id}
+              className="text-caption-12-regular"
+            >
+              {message.text}
+            </UserChatBubble>
           ) : (
             <AIChatBubble key={message.id}>
               {message.text ? (
-                <ChatMarkdown>{message.text}</ChatMarkdown>
+                <ChatMarkdown compact>{message.text}</ChatMarkdown>
               ) : (
-                <span className="font-sans text-body-14-regular text-text-tertiary">
+                <span className="font-sans text-caption-12-regular text-text-tertiary">
                   입력 중...
                 </span>
               )}
@@ -181,14 +189,11 @@ export function PromptCompareChat({
   };
 
   return (
-    <div className="flex h-full flex-col gap-md">
-      <div className="flex flex-wrap items-center justify-between gap-md">
-        <div className="flex items-center gap-sm">
-          <Badge variant="accent">버전 비교</Badge>
-          <span className="font-sans text-caption-12-regular text-text-tertiary">
-            같은 메시지를 두 버전에 동시에 보내서 답변을 비교해요
-          </span>
-        </div>
+    <div className="flex h-full flex-col rounded-lg border border-border-default bg-background">
+      <div className="flex flex-wrap items-center justify-between gap-md border-b border-border-default px-lg py-md">
+        <span className="font-sans text-caption-12-regular text-text-tertiary">
+          같은 메시지를 두 버전에 동시에 보내서 답변을 비교해요
+        </span>
 
         <button
           type="button"
@@ -200,7 +205,7 @@ export function PromptCompareChat({
         </button>
       </div>
 
-      <div className="flex flex-col gap-md sm:flex-row">
+      <div className="flex flex-col gap-md px-lg pt-md pb-md sm:flex-row">
         <Select
           value={leftValue}
           options={selectOptions}
@@ -208,6 +213,11 @@ export function PromptCompareChat({
           onChange={setLeftValue}
           className="flex-1"
           triggerClassName="min-h-10 rounded-md"
+          triggerLabelClassName="text-caption-12-bold"
+          openTriggerClassName="border-border-strong"
+          menuClassName="max-h-52 overflow-y-auto"
+          optionClassName="min-h-9 rounded-md text-caption-12-regular"
+          selectedOptionClassName="bg-surface-subtle text-text-primary"
         />
         <Select
           value={rightValue}
@@ -216,25 +226,22 @@ export function PromptCompareChat({
           onChange={setRightValue}
           className="flex-1"
           triggerClassName="min-h-10 rounded-md"
+          triggerLabelClassName="text-caption-12-bold"
+          openTriggerClassName="border-border-strong"
+          menuClassName="max-h-52 overflow-y-auto"
+          optionClassName="min-h-9 rounded-md text-caption-12-regular"
+          selectedOptionClassName="bg-surface-subtle text-text-primary"
         />
       </div>
 
-      <div className="flex min-h-0 flex-1 flex-col gap-md sm:flex-row">
+      <div className="flex min-h-0 flex-1 flex-col gap-md px-lg pb-lg sm:flex-row">
         <ChatColumn
-          label={
-            selectOptions.find((option) => option.value === leftValue)?.label ??
-            ""
-          }
           messages={left.messages}
           isTyping={left.isTyping}
           isFinalizing={left.isFinalizing}
           error={left.error}
         />
         <ChatColumn
-          label={
-            selectOptions.find((option) => option.value === rightValue)
-              ?.label ?? ""
-          }
           messages={right.messages}
           isTyping={right.isTyping}
           isFinalizing={right.isFinalizing}
@@ -242,7 +249,7 @@ export function PromptCompareChat({
         />
       </div>
 
-      <div className="flex flex-wrap gap-xs">
+      <div className="flex flex-wrap gap-xs border-t border-border-default px-lg pt-md">
         {QUICK_TEST_MESSAGES.map((quickMessage) => (
           <button
             key={quickMessage}
@@ -250,7 +257,7 @@ export function PromptCompareChat({
             onClick={() => handleSend(quickMessage)}
             disabled={isTyping}
             className={cn(
-              "shrink-0 whitespace-nowrap rounded-full border border-border-default px-md py-xs",
+              "shrink-0 whitespace-nowrap rounded-full border border-border-default bg-surface px-md py-xs",
               "font-sans text-caption-12-bold text-text-secondary transition-colors hover:bg-surface-subtle",
               "disabled:cursor-not-allowed disabled:opacity-50",
             )}
@@ -265,7 +272,7 @@ export function PromptCompareChat({
           event.preventDefault();
           handleSend(input);
         }}
-        className="flex items-center gap-sm"
+        className="flex items-center gap-sm p-lg pt-md"
       >
         <input
           type="text"
