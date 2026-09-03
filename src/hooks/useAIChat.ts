@@ -95,11 +95,6 @@ export interface UseAIChatOptions {
    * 여기서 직접 못 지우므로, 콜백으로 상위에서 지우게 함
    */
   onSignupExit?: () => void;
-  /**
-   * 일반 상담 중 AI가 가입 의사를 감지해 가입 플로우 진입을 요청했을 때
-   * (signup_kickoff_requested) 호출됨 — "AI와 가입하기" 버튼과 동일한 효과
-   */
-  onSignupKickoffRequested?: (plan: PreselectedPlan) => void;
 }
 
 /**
@@ -113,7 +108,6 @@ export interface UseAIChatOptions {
 export function useAIChat({
   preselectedPlan,
   onSignupExit,
-  onSignupKickoffRequested,
 }: UseAIChatOptions = {}) {
   const accessToken = useAuthStore((state) => state.accessToken);
   const user = useAuthStore((state) => state.user);
@@ -124,12 +118,6 @@ export function useAIChat({
   useEffect(() => {
     onSignupExitRef.current = onSignupExit;
   }, [onSignupExit]);
-
-  // 소켓 핸들러 클로저에서 최신 onSignupKickoffRequested를 참조하기 위한 ref
-  const onSignupKickoffRequestedRef = useRef(onSignupKickoffRequested);
-  useEffect(() => {
-    onSignupKickoffRequestedRef.current = onSignupKickoffRequested;
-  }, [onSignupKickoffRequested]);
 
   // 소켓 이벤트 핸들러 클로저에서 isLoggedIn 최신 값을 참조하기 위한 ref
   const isLoggedInRef = useRef(isLoggedIn);
@@ -543,21 +531,6 @@ export function useAIChat({
       clearChatSessionStorage();
       // preselectedPlan은 페이지 state라 여기서 못 지우므로 콜백으로 알림
       onSignupExitRef.current?.();
-    });
-
-    // 일반 상담 중 AI가 가입 의사를 감지했을 때. "AI와 가입하기" 버튼과 동일하게
-    // 잔여 상태를 지우고 preselectedPlan을 세션 스토리지에 저장함
-    socket.on("signup_kickoff_requested", (plan: PreselectedPlan) => {
-      try {
-        sessionStorage.removeItem("signupEntryShown");
-        sessionStorage.removeItem("signupStep");
-        sessionStorage.removeItem("signupQuickReplies");
-        sessionStorage.removeItem("signupKickoffSent");
-        sessionStorage.setItem("preselectedPlan", JSON.stringify(plan));
-      } catch {
-        /* noop */
-      }
-      onSignupKickoffRequestedRef.current?.(plan);
     });
 
     socket.on("thinking", (msg: string) => {

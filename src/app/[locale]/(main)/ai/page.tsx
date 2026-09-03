@@ -89,7 +89,6 @@ export default function AIConsultationPage() {
   } = useAIChat({
     preselectedPlan,
     onSignupExit: () => setPreselectedPlan(undefined),
-    onSignupKickoffRequested: (plan) => setPreselectedPlan(plan),
   });
 
   const [inputText, setInputText] = useState("");
