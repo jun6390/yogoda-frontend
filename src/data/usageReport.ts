@@ -1,4 +1,4 @@
-export interface UsageHistoryItem {
+interface UsageHistoryItem {
   month: string;
   amount: number;
 }

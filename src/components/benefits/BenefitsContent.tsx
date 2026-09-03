@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect, useState, useSyncExternalStore } from "react";
+import { useEffect, useState } from "react";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Check, ChevronRight, Heart, MapPin, X } from "lucide-react";
+import { Check, ChevronRight, MapPin, X } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 
@@ -13,27 +13,20 @@ import {
   resolveBrandLogoName,
 } from "@/components/ui/BrandLogo/BrandLogo";
 import { Button } from "@/components/ui/Button/Button";
-import { Toast } from "@/components/ui/Toast/Toast";
+import { FloatingToast } from "@/components/ui/Toast/Toast";
 import { BenefitsSubNav } from "./BenefitsSubNav";
 import { EmptyState } from "@/components/ui/EmptyState/EmptyState";
 import { ErrorState } from "@/components/ui/ErrorState/ErrorState";
+import { FavoriteIcon } from "@/components/ui/FavoriteIcon/FavoriteIcon";
 import { PageIntro } from "@/components/ui/PageIntro/PageIntro";
 import { getBenefits, setBenefitSaved } from "@/lib/api/benefit";
+import { useHydrated } from "@/hooks/useHydrated";
 import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/stores/useAuthStore";
 import type { Benefit, BenefitFilter } from "@/types/benefit";
 
-const subscribe = () => () => {};
 const filters: BenefitFilter[] = ["all", "membership", "partner", "discount"];
 const BENEFITS_PER_PAGE = 6;
-
-function useHydrated() {
-  return useSyncExternalStore(
-    subscribe,
-    () => true,
-    () => false,
-  );
-}
 
 export function BenefitsContent() {
   const t = useTranslations("Benefits");
@@ -55,6 +48,7 @@ export function BenefitsContent() {
     queryKey: ["benefits", filter],
     queryFn: () => getBenefits(filter),
     enabled: isLoggedIn,
+    placeholderData: (previousData) => previousData,
     retry: false,
   });
 
@@ -228,11 +222,7 @@ export function BenefitsContent() {
         />
       )}
       {toastMessage && (
-        <Toast
-          message={toastMessage}
-          actionLabel={null}
-          className="fixed bottom-[88px] left-1/2 z-[70] -translate-x-1/2"
-        />
+        <FloatingToast message={toastMessage} actionLabel={null} />
       )}
     </div>
   );
@@ -259,12 +249,16 @@ function BenefitDetail({
   });
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 sm:items-center sm:p-xl">
+    <div
+      className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 sm:items-center sm:p-xl"
+      onMouseDown={onClose}
+    >
       <section
         role="dialog"
         aria-modal="true"
         aria-labelledby="benefit-title"
         className="w-full max-w-mobile rounded-t-xl bg-background p-page sm:rounded-xl"
+        onMouseDown={(event) => event.stopPropagation()}
       >
         <div className="flex items-start justify-between gap-lg">
           <BrandLogo
@@ -323,11 +317,7 @@ function BenefitDetail({
           loading={saveMutation.isPending}
           onClick={() => saveMutation.mutate()}
         >
-          <Heart
-            aria-hidden="true"
-            size={18}
-            fill={benefit.saved ? "currentColor" : "none"}
-          />
+          <FavoriteIcon selected={benefit.saved} />
           {benefit.saved ? t("removeSaved") : t("save")}
         </Button>
       </section>
@@ -350,9 +340,26 @@ function DetailRow({ label, value }: { label: string; value: string }) {
 
 function BenefitSkeleton() {
   return (
-    <div className="space-y-md" aria-hidden="true">
-      <div className="h-[210px] animate-pulse rounded-lg border border-border-default bg-surface-subtle shadow-sm" />
-      <div className="h-[88px] animate-pulse rounded-lg border border-border-default bg-surface-subtle shadow-sm" />
-    </div>
+    <section
+      className="animate-pulse rounded-lg border border-border-default bg-surface p-lg shadow-sm"
+      aria-hidden="true"
+    >
+      <div className="mb-xl flex items-center justify-between">
+        <div className="h-[22px] w-[88px] rounded-sm bg-surface-subtle" />
+        <div className="h-[25px] w-[52px] rounded-full bg-surface-subtle" />
+      </div>
+      <div className="space-y-xl">
+        {Array.from({ length: BENEFITS_PER_PAGE }).map((_, index) => (
+          <div key={index} className="flex h-[40px] items-center gap-md">
+            <div className="size-[40px] shrink-0 rounded-sm bg-surface-subtle" />
+            <div className="min-w-0 flex-1 space-y-xs">
+              <div className="h-[14px] w-2/5 rounded-sm bg-surface-subtle" />
+              <div className="h-[12px] w-3/5 rounded-sm bg-surface-subtle" />
+            </div>
+            <div className="h-[14px] w-[56px] rounded-sm bg-surface-subtle" />
+          </div>
+        ))}
+      </div>
+    </section>
   );
 }

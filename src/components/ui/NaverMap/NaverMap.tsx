@@ -6,7 +6,7 @@ import { MapPin } from "lucide-react";
 import { loadNaverMap } from "@/lib/naver-map";
 import { cn } from "@/lib/utils";
 
-export interface MapLocation {
+interface MapLocation {
   id: string;
   name: string;
   latitude: number;
@@ -19,6 +19,7 @@ interface NaverMapProps {
   onSelect?: (id: string) => void;
   onCenterChange?: (center: { latitude: number; longitude: number }) => void;
   center?: { latitude: number; longitude: number };
+  currentLocation?: { latitude: number; longitude: number };
   className?: string;
   errorTitle: string;
   errorDescription: string;
@@ -30,6 +31,7 @@ export function NaverMap({
   onSelect,
   onCenterChange,
   center,
+  currentLocation,
   className,
   errorTitle,
   errorDescription,
@@ -37,8 +39,23 @@ export function NaverMap({
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<NaverMap | null>(null);
   const markersRef = useRef<NaverMarker[]>([]);
+  const currentLocationMarkerRef = useRef<NaverMarker | null>(null);
   const listenersRef = useRef<unknown[]>([]);
+  const markerListenersRef = useRef<unknown[]>([]);
+  const onSelectRef = useRef(onSelect);
+  const onCenterChangeRef = useRef(onCenterChange);
+  const initialCenterRef = useRef(center);
+  const initialLocationsRef = useRef(locations);
+  const [mapReady, setMapReady] = useState(false);
   const [failed, setFailed] = useState(false);
+
+  useEffect(() => {
+    onSelectRef.current = onSelect;
+  }, [onSelect]);
+
+  useEffect(() => {
+    onCenterChangeRef.current = onCenterChange;
+  }, [onCenterChange]);
 
   useEffect(() => {
     let cancelled = false;
@@ -47,59 +64,29 @@ export function NaverMap({
       .then(() => {
         if (cancelled || !containerRef.current || !window.naver?.maps) return;
         const maps = window.naver.maps;
-        const first = locations[0];
-        const initialCenter = new maps.LatLng(
-          center?.latitude ?? first?.latitude ?? 37.5665,
-          center?.longitude ?? first?.longitude ?? 126.978,
+        const first = initialLocationsRef.current[0];
+        const initialCenter = initialCenterRef.current;
+        const mapCenter = new maps.LatLng(
+          initialCenter?.latitude ?? first?.latitude ?? 37.5665,
+          initialCenter?.longitude ?? first?.longitude ?? 126.978,
         );
         const map = new maps.Map(containerRef.current, {
-          center: initialCenter,
+          center: mapCenter,
           zoom: 13,
           zoomControl: true,
           zoomControlOptions: { position: maps.Position.TOP_RIGHT },
         });
         mapRef.current = map;
 
-        if (onCenterChange) {
-          const listener = maps.Event.addListener(map, "idle", () => {
-            const nextCenter = map.getCenter();
-            onCenterChange({
-              latitude: nextCenter.lat(),
-              longitude: nextCenter.lng(),
-            });
+        const listener = maps.Event.addListener(map, "idle", () => {
+          const nextCenter = map.getCenter();
+          onCenterChangeRef.current?.({
+            latitude: nextCenter.lat(),
+            longitude: nextCenter.lng(),
           });
-          listenersRef.current.push(listener);
-        }
-
-        markersRef.current = locations.map((location) => {
-          const active = location.id === selectedId;
-          const marker = new maps.Marker({
-            map,
-            position: new maps.LatLng(location.latitude, location.longitude),
-            title: location.name,
-            icon: {
-              content: `<button type="button" aria-label="${escapeHtml(location.name)}" style="width:${active ? 38 : 32}px;height:${active ? 38 : 32}px;border:3px solid white;border-radius:50%;background:#e01485;color:white;box-shadow:0 2px 8px rgba(0,0,0,.24);cursor:pointer;font:700 12px sans-serif">U+</button>`,
-            },
-          });
-          const listener = maps.Event.addListener(marker, "click", () =>
-            onSelect?.(location.id),
-          );
-          listenersRef.current.push(listener);
-          return marker;
         });
-        if (center) {
-          markersRef.current.push(
-            new maps.Marker({
-              map,
-              position: new maps.LatLng(center.latitude, center.longitude),
-              title: "현재 위치",
-              icon: {
-                content:
-                  '<span aria-label="현재 위치" style="display:block;width:18px;height:18px;border:4px solid white;border-radius:50%;background:#3478f6;box-shadow:0 2px 8px rgba(0,0,0,.3)"></span>',
-              },
-            }),
-          );
-        }
+        listenersRef.current.push(listener);
+        setMapReady(true);
       })
       .catch(() => !cancelled && setFailed(true));
 
@@ -112,12 +99,98 @@ export function NaverMap({
         );
       }
       listenersRef.current = [];
+      markerListenersRef.current.forEach((listener) =>
+        maps?.Event.removeListener(listener),
+      );
+      markerListenersRef.current = [];
       markersRef.current.forEach((marker) => marker.setMap(null));
       markersRef.current = [];
+      currentLocationMarkerRef.current?.setMap(null);
+      currentLocationMarkerRef.current = null;
       mapRef.current?.destroy();
       mapRef.current = null;
+      setMapReady(false);
     };
-  }, [center, locations, onCenterChange, onSelect, selectedId]);
+  }, []);
+
+  useEffect(() => {
+    const map = mapRef.current;
+    const maps = window.naver?.maps;
+    if (!mapReady || !map || !maps) return;
+
+    markerListenersRef.current.forEach((listener) =>
+      maps.Event.removeListener(listener),
+    );
+    markerListenersRef.current = [];
+    markersRef.current.forEach((marker) => marker.setMap(null));
+    markersRef.current = locations.map((location) => {
+      const marker = new maps.Marker({
+        map,
+        position: new maps.LatLng(location.latitude, location.longitude),
+        title: location.name,
+        icon: createMarkerIcon(location.name, false),
+      });
+      markerListenersRef.current.push(
+        maps.Event.addListener(marker, "click", () =>
+          onSelectRef.current?.(location.id),
+        ),
+      );
+      return marker;
+    });
+
+    return () => {
+      markerListenersRef.current.forEach((listener) =>
+        maps.Event.removeListener(listener),
+      );
+      markerListenersRef.current = [];
+      markersRef.current.forEach((marker) => marker.setMap(null));
+      markersRef.current = [];
+    };
+  }, [locations, mapReady]);
+
+  useEffect(() => {
+    if (!mapReady) return;
+
+    markersRef.current.forEach((marker, index) => {
+      const location = locations[index];
+      if (!location) return;
+      marker.setIcon(
+        createMarkerIcon(location.name, location.id === selectedId),
+      );
+    });
+  }, [locations, mapReady, selectedId]);
+
+  useEffect(() => {
+    const map = mapRef.current;
+    const maps = window.naver?.maps;
+    if (!mapReady || !map || !maps || !center) return;
+
+    const nextCenter = new maps.LatLng(center.latitude, center.longitude);
+    map.setCenter(nextCenter);
+  }, [center, mapReady]);
+
+  useEffect(() => {
+    const map = mapRef.current;
+    const maps = window.naver?.maps;
+    if (!mapReady || !map || !maps) return;
+
+    currentLocationMarkerRef.current?.setMap(null);
+    currentLocationMarkerRef.current = null;
+    if (!currentLocation) return;
+
+    currentLocationMarkerRef.current = new maps.Marker({
+      map,
+      position: new maps.LatLng(
+        currentLocation.latitude,
+        currentLocation.longitude,
+      ),
+      title: "현재 위치",
+      icon: {
+        content:
+          '<span aria-label="현재 위치" style="display:block;width:18px;height:18px;border:4px solid white;border-radius:50%;background:#3478f6;box-shadow:0 2px 8px rgba(0,0,0,.3)"></span>',
+      },
+    });
+  }, [currentLocation, mapReady]);
 
   if (failed) {
     return (
@@ -158,4 +231,11 @@ function escapeHtml(value: string) {
         '"': "&quot;",
       })[character] ?? character,
   );
+}
+
+function createMarkerIcon(name: string, active: boolean) {
+  const size = active ? 38 : 32;
+  return {
+    content: `<button type="button" aria-label="${escapeHtml(name)}" style="width:${size}px;height:${size}px;border:3px solid white;border-radius:50%;background:#e01485;color:white;box-shadow:0 2px 8px rgba(0,0,0,.24);cursor:pointer;font:700 12px sans-serif">U+</button>`,
+  };
 }

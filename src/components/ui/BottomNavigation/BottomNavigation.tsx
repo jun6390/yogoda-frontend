@@ -1,6 +1,7 @@
 "use client";
 
 import type { HTMLAttributes } from "react";
+import { Bot } from "lucide-react";
 import { useTranslations } from "next-intl";
 
 import { Link, usePathname } from "@/i18n/navigation";
@@ -101,11 +102,22 @@ export function BottomNavigation({
         const content = (
           <>
             <span className="relative size-[24px] overflow-hidden">
-              <FigmaImage
-                alt=""
-                src={isActive ? item.activeIcon : item.icon}
-                className="size-full"
-              />
+              {item.value === "ai" ? (
+                <Bot
+                  aria-hidden="true"
+                  size={24}
+                  strokeWidth={1.8}
+                  className={cn(
+                    isActive ? "text-action-primary" : "text-icon-secondary",
+                  )}
+                />
+              ) : (
+                <FigmaImage
+                  alt=""
+                  src={isActive ? item.activeIcon : item.icon}
+                  className="size-full"
+                />
+              )}
             </span>
 
             <span

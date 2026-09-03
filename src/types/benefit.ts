@@ -1,4 +1,4 @@
-export type BenefitCategory = "membership" | "partner" | "discount";
+type BenefitCategory = "membership" | "partner" | "discount";
 export type BenefitFilter = "all" | BenefitCategory;
 
 export interface Benefit {
@@ -40,7 +40,7 @@ export interface BenefitListResponse {
   benefits: Benefit[];
 }
 
-export interface NearbyBenefitLocation {
+interface NearbyBenefitLocation {
   id: string;
   code: string;
   name: string;

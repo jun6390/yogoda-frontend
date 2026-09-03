@@ -6,11 +6,11 @@ import { useQuery } from "@tanstack/react-query";
 import {
   BadgeCheck,
   Bell,
+  Bot,
   ChartNoAxesColumn,
   ChevronRight,
   ReceiptText,
   Search,
-  Sparkles,
   TicketPercent,
 } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
@@ -210,7 +210,7 @@ export function HomeContent() {
           href: "/ai",
           title: t("noPlanTodoAiTitle"),
           description: t("noPlanTodoAiDescription"),
-          icon: Sparkles,
+          icon: Bot,
         },
       ];
 
@@ -285,7 +285,9 @@ export function HomeContent() {
     : t("noPlanCouponDescription");
 
   const membershipGrade = hasCurrentPlan
-    ? (planDetail?.membershipTier ?? t("membershipGradeUnknown"))
+    ? isPlanDetailError
+      ? t("membershipGradeUnknown")
+      : (planDetail?.membershipTier ?? t("membershipGradeStandard"))
     : t("noPlanMembershipGrade");
 
   const membershipDescription = hasCurrentPlan
@@ -459,17 +461,9 @@ export function HomeContent() {
       )}
 
       <section className="flex flex-col gap-md">
-        <div className="flex items-center justify-between gap-md">
-          <h2 className="font-sans text-title-16-bold text-text-primary">
-            {t("membershipTitle")}
-          </h2>
-          <Link
-            href={hasCurrentPlan ? "/my/benefits" : "/plans"}
-            className="font-sans text-caption-12-medium text-text-tertiary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-action-primary"
-          >
-            {t("viewAll")} ›
-          </Link>
-        </div>
+        <h2 className="font-sans text-title-16-bold text-text-primary">
+          {t("membershipTitle")}
+        </h2>
 
         <Link
           href={hasCurrentPlan ? "/my/benefits" : "/plans"}
@@ -501,7 +495,7 @@ function CurrentPlanLoading() {
   const t = useTranslations("Home");
 
   return (
-    <section className="min-h-[226px] rounded-lg border border-border-default bg-surface p-lg shadow-sm">
+    <section className="min-h-[210px] rounded-lg border border-border-default bg-surface p-lg shadow-sm">
       <p className="font-sans text-caption-13-bold text-text-secondary">
         {t("currentPlanLoading")}
       </p>

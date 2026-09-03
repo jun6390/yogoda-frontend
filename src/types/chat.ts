@@ -10,7 +10,7 @@ export interface ChatPlanCard {
 }
 
 // 가입 플로우 단계
-export type SignupStep =
+type SignupStep =
   | "confirm_plan"
   | "fraud_warning"
   | "terms_agreement"
@@ -18,7 +18,9 @@ export type SignupStep =
   | "select_benefits"
   | "select_payment"
   | "final_confirm"
-  | "completed";
+  | "completed"
+  // 사용자가 가입 단계와 무관한 이야기를 해서 잠시 대화를 벗어난 상태
+  | "paused";
 
 // 가입 플로우 중 수집된 데이터 (단계별로 점진적으로 채워짐)
 export interface SignupCollectedData {
@@ -31,6 +33,8 @@ export interface SignupCollectedData {
   selectedBenefits?: Record<string, string[]>;
   paymentMethod?:
     "계좌이체" | "신용카드" | "카카오페이" | "네이버페이" | "토스";
+  // signupStep이 "paused"일 때, 재개하면 돌아갈 원래 단계
+  pausedStep?: SignupStep;
 }
 
 // 가입 플로우에서 사용하는 요금제 정보
@@ -38,6 +42,9 @@ export interface PreselectedPlan {
   code: string;
   name: string;
   monthlyFee: number;
+  // AI 추천 카드를 통해 들어왔는지 여부. 가입 전환율 집계에서
+  // "AI 추천 → 가입"과 "혼자 탐색 → 가입"을 구분하는 데 씀
+  recommendedByAI: boolean;
 }
 
 // 채팅 화면에 표시되는 메시지 한 건

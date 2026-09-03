@@ -86,7 +86,11 @@ export default function AIConsultationPage() {
     trackUiEvent,
     showConsentBanner,
     respondToConsent,
-  } = useAIChat({ preselectedPlan });
+  } = useAIChat({
+    preselectedPlan,
+    onSignupExit: () => setPreselectedPlan(undefined),
+    onSignupKickoffRequested: (plan) => setPreselectedPlan(plan),
+  });
 
   const [inputText, setInputText] = useState("");
   // 회원 전용 "채팅 끝내기" 확인 팝업 표시 여부
@@ -246,8 +250,11 @@ export default function AIConsultationPage() {
   };
 
   // 가입 완료 후에도 입력창을 막지 않고 계속 대화를 이어갈 수 있게 함. 완료 시점에
-  // preselectedPlan이 초기화돼서, 이후 메시지는 자연스럽게 일반 상담 플로우로 이어짐
-  const isInputDisabled = false;
+  // preselectedPlan이 초기화돼서, 이후 메시지는 자연스럽게 일반 상담 플로우로 이어짐.
+  // paused 상태에서만 예외적으로 입력창을 막음 — "가입 계속하기"/"가입 중단하기"
+  // 둘 중 하나만 정확히 탭하도록 강제해야, 자유 텍스트로 인한 AI 판단 오류
+  // (메시지·메타데이터 불일치 등)를 원천적으로 막을 수 있음
+  const isInputDisabled = currentSignupStep === "paused";
 
   return (
     <div className="relative flex h-full flex-col bg-background">
@@ -305,87 +312,83 @@ export default function AIConsultationPage() {
               <ChatLogConsentBanner onRespond={respondToConsent} />
             )}
 
-            {/*
-              배너에 응답하기 전까지는 웰컴 메시지도 같이 숨겨서 배너에 먼저 집중하게 함.
-              이미 대화 내역이 있는 경우(길이 1 초과)는 배너 응답 전이어도 그대로 보여줌 —
-              돌아온 유저의 기존 대화까지 가리면 안 되므로
-            */}
-            {!(showConsentBanner && messages.length <= 1) &&
-              messages.map((msg) => {
-                if (msg.sender === "user") {
-                  return (
-                    <UserChatBubble key={msg.id}>{msg.text}</UserChatBubble>
-                  );
-                }
+            {messages.map((msg) => {
+              if (msg.sender === "user") {
+                return <UserChatBubble key={msg.id}>{msg.text}</UserChatBubble>;
+              }
 
-                // 응답 대기 중인 빈 AI 자리표시 메시지는 렌더링하지 않음
-                // (하단의 타이핑 인디케이터가 대신 표시되므로, 그리지 않으면 말풍선이 2개로 보임)
-                if (msg.type === "text" && !msg.text) {
-                  return null;
-                }
+              // 응답 대기 중인 빈 AI 자리표시 메시지는 렌더링하지 않음
+              // (하단의 타이핑 인디케이터가 대신 표시되므로, 그리지 않으면 말풍선이 2개로 보임)
+              if (msg.type === "text" && !msg.text) {
+                return null;
+              }
 
-                // 가입 완료 카드는 풀너비 페이지형으로 AIChatBubble 밖에서 독립 렌더링
-                if (msg.type === "signup_complete") {
-                  return <SignupCompleteCard key={msg.id} />;
-                }
+              // 가입 완료 카드는 풀너비 페이지형으로 AIChatBubble 밖에서 독립 렌더링
+              if (msg.type === "signup_complete") {
+                return <SignupCompleteCard key={msg.id} />;
+              }
 
-                return (
-                  <AIChatBubble key={msg.id} noBackground={msg.type !== "text"}>
-                    {/* 일반 텍스트 말풍선 (AI 응답의 마크다운 서식을 그대로 렌더링) */}
-                    {msg.type === "text" && msg.text && (
-                      <ChatMarkdown>{msg.text}</ChatMarkdown>
-                    )}
+              return (
+                <AIChatBubble key={msg.id} noBackground={msg.type !== "text"}>
+                  {/* 일반 텍스트 말풍선 (AI 응답의 마크다운 서식을 그대로 렌더링) */}
+                  {msg.type === "text" && msg.text && (
+                    <ChatMarkdown>{msg.text}</ChatMarkdown>
+                  )}
 
-                    {/* 추천 요금제 카드 */}
-                    {msg.type === "plans" && msg.plans && (
-                      <PlanRecommendationCards
-                        plans={msg.plans}
-                        trackUiEvent={trackUiEvent}
-                      />
-                    )}
+                  {/* 추천 요금제 카드 */}
+                  {msg.type === "plans" && msg.plans && (
+                    <PlanRecommendationCards
+                      plans={msg.plans}
+                      trackUiEvent={trackUiEvent}
+                    />
+                  )}
 
-                    {/* 명의도용 방지 안내 카드 */}
-                    {msg.type === "fraud_warning" && <FraudWarningCard />}
+                  {/* 명의도용 방지 안내 카드 */}
+                  {msg.type === "fraud_warning" && <FraudWarningCard />}
 
-                    {/* 약관 동의 카드. 이미 다음 단계로 넘어갔다면(=지난 대화의 카드라면)
+                  {/* 약관 동의 카드. 이미 다음 단계로 넘어갔다면(=지난 대화의 카드라면)
                       체크박스/다음 버튼을 잠가서 재제출을 막음 */}
-                    {msg.type === "terms" && (
-                      <TermsAgreementCard
-                        onAgree={sendMessageSilent}
-                        disabled={currentSignupStep !== "terms_agreement"}
-                      />
-                    )}
+                  {msg.type === "terms" && (
+                    <TermsAgreementCard
+                      onAgree={sendMessageSilent}
+                      disabled={currentSignupStep !== "terms_agreement"}
+                    />
+                  )}
 
-                    {/* 휴대폰 본인인증 카드 */}
-                    {msg.type === "identity_verification" && (
-                      <IdentityVerificationCard onVerify={sendMessageSilent} />
-                    )}
+                  {/* 휴대폰 본인인증 카드. 이미 다음 단계로 넘어갔다면(=지난 대화의
+                        카드라면) 트리거 버튼을 잠가서 재제출을 막음 */}
+                  {msg.type === "identity_verification" && (
+                    <IdentityVerificationCard
+                      onVerify={sendMessageSilent}
+                      disabled={currentSignupStep !== "identity_verification"}
+                    />
+                  )}
 
-                    {/* 가입 정보 최종 확인 카드 */}
-                    {msg.type === "signup_summary" && (
-                      <SignupSummaryCard
-                        signupData={msg.signupData ?? {}}
-                        plan={msg.preselectedPlan ?? preselectedPlan}
-                      />
-                    )}
+                  {/* 가입 정보 최종 확인 카드 */}
+                  {msg.type === "signup_summary" && (
+                    <SignupSummaryCard
+                      signupData={msg.signupData ?? {}}
+                      plan={msg.preselectedPlan ?? preselectedPlan}
+                    />
+                  )}
 
-                    {/* 링크 이동 말풍선 */}
-                    {msg.type === "link" && msg.textKey && (
-                      <button className="flex items-center gap-xs font-sans text-caption-13-bold text-text-brand hover:underline self-start">
-                        {t(msg.textKey)} <ChevronRight size={16} />
-                      </button>
-                    )}
+                  {/* 링크 이동 말풍선 */}
+                  {msg.type === "link" && msg.textKey && (
+                    <button className="flex items-center gap-xs font-sans text-caption-13-bold text-text-brand hover:underline self-start">
+                      {t(msg.textKey)} <ChevronRight size={16} />
+                    </button>
+                  )}
 
-                    {/* 에러 발생 시 재시도 배너 */}
-                    {msg.type === "error" && (
-                      <AITypingIndicator
-                        state="error"
-                        onRetry={() => retryMessage(msg.id)}
-                      />
-                    )}
-                  </AIChatBubble>
-                );
-              })}
+                  {/* 에러 발생 시 재시도 배너 */}
+                  {msg.type === "error" && (
+                    <AITypingIndicator
+                      state="error"
+                      onRetry={() => retryMessage(msg.id)}
+                    />
+                  )}
+                </AIChatBubble>
+              );
+            })}
           </>
         )}
         {/* 타이핑 애니메이션 인디케이터 */}
@@ -394,17 +397,14 @@ export default function AIConsultationPage() {
             <AITypingIndicator state="typing" message={thinkingMessage} />
           </AIChatBubble>
         )}
-        {/* 답변 텍스트는 다 왔지만 카드/퀵답변처럼 더 올 수 있는 내용을 기다리는 중 */}
-        {!isTyping && isLoadingExtra && (
-          <AIChatBubble noBackground>
-            <AITypingIndicator state="typing" message={t("loadingExtra")} />
-          </AIChatBubble>
-        )}
+        {/* 답변 텍스트는 다 왔지만 카드처럼 더 올 수 있는 내용을 기다리는 중 (가입 플로우 전용) */}
+        {!isTyping && isLoadingExtra && isSignupFlow && <SignupCardSkeleton />}
         <div ref={chatEndRef} />
       </div>
 
-      {/* AI의 질문에 바로 탭해서 답할 수 있는 빠른 답변 후보 */}
-      {quickReplies.length > 0 && !isInputDisabled && (
+      {/* AI의 질문에 바로 탭해서 답할 수 있는 빠른 답변 후보. isInputDisabled여도
+          (예: paused 상태) 이 칩만은 유일한 상호작용 수단이라 계속 보여야 함 */}
+      {quickReplies.length > 0 && (
         <div className="absolute bottom-[88px] left-0 right-0 flex flex-nowrap gap-xs px-lg pb-xs z-10 overflow-x-auto scrollbar-hide">
           {quickReplies.map((reply) => (
             <button
@@ -554,32 +554,77 @@ export default function AIConsultationPage() {
   );
 }
 
+// AI 말풍선 스켈레톤 한 개. lineWidths로 줄 수와 각 줄의 너비를 다르게 줘서
+// 실제 대화처럼 길이가 들쭉날쭉해 보이게 함
+function AIBubbleSkeleton({ lineWidths }: { lineWidths: string[] }) {
+  return (
+    <div className="flex w-full items-start gap-sm">
+      <div className="mt-[2px] size-[32px] shrink-0 animate-pulse rounded-full bg-surface-subtle" />
+      <div className="flex w-[85%] flex-col gap-xs rounded-[12px] rounded-tl-[4px] border border-border-default bg-surface px-lg py-md shadow-sm">
+        {lineWidths.map((width, i) => (
+          <div
+            key={i}
+            className={`h-[14px] animate-pulse rounded-full bg-surface-subtle ${width}`}
+          />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// 유저 말풍선 스켈레톤 한 개
+function UserBubbleSkeleton({
+  height,
+  width,
+}: {
+  height: string;
+  width: string;
+}) {
+  return (
+    <div className="flex w-full justify-end">
+      <div
+        className={`animate-pulse rounded-[12px] rounded-tr-[4px] bg-action-primary/20 ${height} ${width}`}
+      />
+    </div>
+  );
+}
+
+// 가입 플로우 카드(약관 동의/본인 확인 등)가 오기 전 자리에 보여주는 스켈레톤.
+// 실제 카드들의 공통 형태(아이콘+제목 헤더, 목록, 하단 버튼)를 본떠서 만듦
+function SignupCardSkeleton() {
+  const shimmer =
+    "bg-linear-to-r from-surface-subtle via-surface to-surface-subtle bg-size-[200%_100%] animate-[skeletonShimmer_1.5s_ease-in-out_infinite]";
+
+  return (
+    <AIChatBubble noBackground>
+      <div className="w-full rounded-md rounded-tl-xs border border-border-default bg-surface p-lg flex flex-col gap-md shadow-sm">
+        <div className="flex items-center gap-sm">
+          <div className={`size-7 shrink-0 rounded-full ${shimmer}`} />
+          <div className={`h-3.5 w-32 rounded ${shimmer}`} />
+        </div>
+        <div className="flex flex-col gap-sm">
+          <div className={`h-3 w-full rounded ${shimmer}`} />
+          <div className={`h-3 w-5/6 rounded ${shimmer}`} />
+          <div className={`h-3 w-3/5 rounded ${shimmer}`} />
+        </div>
+        <div className={`h-11 w-full rounded-md ${shimmer}`} />
+      </div>
+    </AIChatBubble>
+  );
+}
+
 function ChatHistorySkeleton() {
   return (
     <>
-      {/* AI 말풍선 스켈레톤 */}
-      <div className="flex w-full items-start gap-sm">
-        <div className="mt-[2px] size-[32px] shrink-0 animate-pulse rounded-full bg-surface-subtle" />
-        <div className="flex w-[85%] flex-col gap-xs rounded-[12px] rounded-tl-[4px] border border-border-default bg-surface px-lg py-md shadow-sm">
-          <div className="h-[14px] w-full animate-pulse rounded-full bg-surface-subtle" />
-          <div className="h-[14px] w-4/5 animate-pulse rounded-full bg-surface-subtle" />
-          <div className="h-[14px] w-3/5 animate-pulse rounded-full bg-surface-subtle" />
-        </div>
-      </div>
-
-      {/* 유저 말풍선 스켈레톤 */}
-      <div className="flex w-full justify-end">
-        <div className="h-[42px] w-[80%] animate-pulse rounded-[12px] rounded-tr-[4px] bg-action-primary/20" />
-      </div>
-
-      {/* AI 말풍선 스켈레톤 */}
-      <div className="flex w-full items-start gap-sm">
-        <div className="mt-[2px] size-[32px] shrink-0 animate-pulse rounded-full bg-surface-subtle" />
-        <div className="flex w-[85%] flex-col gap-xs rounded-[12px] rounded-tl-[4px] border border-border-default bg-surface px-lg py-md shadow-sm">
-          <div className="h-[14px] w-full animate-pulse rounded-full bg-surface-subtle" />
-          <div className="h-[14px] w-4/5 animate-pulse rounded-full bg-surface-subtle" />
-        </div>
-      </div>
+      <AIBubbleSkeleton lineWidths={["w-full", "w-4/5", "w-3/5"]} />
+      <UserBubbleSkeleton height="h-[42px]" width="w-[80%]" />
+      <AIBubbleSkeleton lineWidths={["w-full", "w-full", "w-4/5", "w-2/5"]} />
+      <UserBubbleSkeleton height="h-[68px]" width="w-[65%]" />
+      <AIBubbleSkeleton lineWidths={["w-full", "w-3/5"]} />
+      <UserBubbleSkeleton height="h-[42px]" width="w-[45%]" />
+      <AIBubbleSkeleton
+        lineWidths={["w-full", "w-full", "w-full", "w-4/5", "w-1/2"]}
+      />
     </>
   );
 }

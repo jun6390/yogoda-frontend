@@ -1,27 +1,17 @@
 "use client";
 
-import { useSyncExternalStore } from "react";
-
 import { useQuery } from "@tanstack/react-query";
 import { CheckCircle2, ChevronRight, Gift } from "lucide-react";
 import { useTranslations } from "next-intl";
 
 import { MySubpageHeader } from "@/components/my/MySubpageHeader";
+import { PlanVisual } from "@/components/plans/PlanVisual";
 import { EmptyState } from "@/components/ui/EmptyState/EmptyState";
 import { ErrorState } from "@/components/ui/ErrorState/ErrorState";
 import { Link } from "@/i18n/navigation";
+import { useHydrated } from "@/hooks/useHydrated";
 import { getCurrentPlan, getPlanByCode } from "@/lib/api/plan";
 import { useAuthStore } from "@/stores/useAuthStore";
-
-const subscribe = () => () => {};
-
-function useHydrated() {
-  return useSyncExternalStore(
-    subscribe,
-    () => true,
-    () => false,
-  );
-}
 
 export function BenefitManagementContent() {
   const t = useTranslations("MyBenefits");
@@ -108,28 +98,24 @@ export function BenefitManagementContent() {
           </section>
         ) : (
           <>
-            <section>
-              <div className="flex items-end justify-between gap-md">
-                <div>
-                  <p className="font-sans text-caption-12-regular text-text-secondary">
-                    {t("currentPlan")}
-                  </p>
-                  <h1 className="mt-xs font-sans text-title-20-bold text-text-primary">
-                    {currentPlan.planName}
-                  </h1>
-                </div>
-                <span className="shrink-0 font-sans text-caption-12-bold text-text-brand">
+            <section className="-mx-page -mt-xl flex min-h-[116px] items-center justify-between gap-lg bg-surface px-page py-xl">
+              <div className="min-w-0">
+                <p className="font-sans text-caption-12-regular text-text-secondary">
+                  {t("currentPlan")}
+                </p>
+                <h1 className="mt-xs truncate font-sans text-title-20-bold text-text-primary">
+                  {currentPlan.planName}
+                </h1>
+                <span className="mt-sm block font-sans text-caption-12-bold text-text-brand">
                   {t("selectedCount", { count: selectedBenefits.length })}
                 </span>
               </div>
+              <PlanVisual planName={currentPlan.planName} />
             </section>
 
             <section>
-              <h2 className="font-sans text-title-16-bold text-text-primary">
-                {t("selectedTitle")}
-              </h2>
               {selectedBenefits.length > 0 ? (
-                <div className="mt-md space-y-sm">
+                <div className="space-y-sm">
                   {selectedBenefits.map((benefit) => (
                     <BenefitCard
                       key={benefit.code}
@@ -143,7 +129,7 @@ export function BenefitManagementContent() {
                 <EmptyState
                   heading={t("emptySelected")}
                   description={t("emptySelectedDescription")}
-                  className="mt-md w-full rounded-lg bg-surface"
+                  className="w-full"
                 />
               )}
             </section>

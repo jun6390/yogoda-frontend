@@ -1,6 +1,6 @@
 "use client";
 
-import Image from "next/image";
+import { Bot } from "lucide-react";
 import { useTranslations } from "next-intl";
 
 import { Button } from "@/components/ui/Button/Button";
@@ -21,12 +21,11 @@ export default function OnboardingPage() {
        */}
       <div className="flex flex-col items-center pt-[160px]">
         <div className="flex size-[64px] items-center justify-center rounded-full border border-action-primary/10 bg-surface shadow-[0_8px_12px_rgb(0_0_0_/_4%)]">
-          <Image
-            src="/figma-assets/icon-modal-sparkles.svg"
-            alt=""
-            width={28}
-            height={28}
+          <Bot
             aria-hidden="true"
+            size={28}
+            strokeWidth={1.8}
+            className="text-action-primary"
           />
         </div>
       </div>
@@ -54,7 +53,7 @@ export default function OnboardingPage() {
 
         <Link
           href="/login"
-          className="font-sans text-caption-13-bold text-text-brand focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-action-primary"
+          className="inline-flex min-h-touch items-center px-md font-sans text-caption-13-bold text-text-brand focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-action-primary"
         >
           {t("loginAction")}
         </Link>

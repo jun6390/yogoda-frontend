@@ -1,29 +1,23 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { useSyncExternalStore } from "react";
 
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { Activity, ChevronRight, Database, Sparkles } from "lucide-react";
+import { Activity, Bot, ChevronRight, Database } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 
 import { MySubpageHeader } from "@/components/my/MySubpageHeader";
 import { ErrorState } from "@/components/ui/ErrorState/ErrorState";
 import { Link } from "@/i18n/navigation";
+import { useHydrated } from "@/hooks/useHydrated";
 import { getMyUsageRecommendation, getMyUsageReport } from "@/lib/api/usage";
 import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/stores/useAuthStore";
 
-const subscribe = () => () => {};
-
 export function UsageReportContent() {
   const t = useTranslations("UsageReport");
   const locale = useLocale();
-  const hydrated = useSyncExternalStore(
-    subscribe,
-    () => true,
-    () => false,
-  );
+  const hydrated = useHydrated();
   const accessToken = useAuthStore((state) => state.accessToken);
   const reportQuery = useQuery({
     queryKey: ["my-usage-report"],
@@ -223,35 +217,6 @@ export function UsageReportContent() {
           </p>
         </ReportCard>
 
-        <section className="space-y-md">
-          <button
-            type="button"
-            disabled={recommendationMutation.isPending}
-            onClick={() => recommendationMutation.mutate()}
-            className="flex h-[52px] w-full items-center justify-center gap-sm rounded-lg bg-action-primary font-sans text-title-16-bold text-text-on-primary disabled:opacity-60"
-          >
-            <Sparkles aria-hidden="true" size={18} />
-            {recommendationMutation.isPending
-              ? t("analyzingRecommendation")
-              : t("analyzeRecommendation")}
-          </button>
-          {recommendationMutation.isError && (
-            <p
-              role="alert"
-              className="text-center font-sans text-caption-12-regular text-error"
-            >
-              {t("recommendationError")}
-            </p>
-          )}
-        </section>
-
-        {recommendationMutation.data && (
-          <RecommendationCard
-            recommendation={recommendationMutation.data}
-            locale={locale}
-          />
-        )}
-
         <section>
           <div className="flex items-center gap-sm">
             <Database
@@ -278,22 +243,45 @@ export function UsageReportContent() {
           </p>
         </section>
 
-        <section className="space-y-md pt-sm text-center">
-          <Link
-            href="/my/subscriptions"
-            className="flex h-[52px] items-center justify-center rounded-lg bg-action-primary font-sans text-title-16-bold text-text-on-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-action-primary"
+        <section className="space-y-md">
+          <button
+            type="button"
+            disabled={recommendationMutation.isPending}
+            onClick={() => recommendationMutation.mutate()}
+            className="flex h-[52px] w-full items-center justify-center gap-sm rounded-lg bg-action-primary font-sans text-title-16-bold text-text-on-primary disabled:opacity-60"
           >
-            {t("manageSubscriptions")}
-          </Link>
-          {process.env.NODE_ENV !== "production" && (
+            <Bot aria-hidden="true" size={18} />
+            {recommendationMutation.isPending
+              ? t("analyzingRecommendation")
+              : t("analyzeRecommendation")}
+          </button>
+          {recommendationMutation.isError && (
+            <p
+              role="alert"
+              className="text-center font-sans text-caption-12-regular text-error"
+            >
+              {t("recommendationError")}
+            </p>
+          )}
+        </section>
+
+        {recommendationMutation.data && (
+          <RecommendationCard
+            recommendation={recommendationMutation.data}
+            locale={locale}
+          />
+        )}
+
+        {process.env.NODE_ENV !== "production" && (
+          <div className="pt-sm text-center">
             <Link
               href="/my/usage/demo"
               className="inline-flex font-sans text-caption-13-medium text-text-secondary"
             >
               {t("demoSettings")}
             </Link>
-          )}
-        </section>
+          </div>
+        )}
       </main>
     </div>
   );
@@ -314,7 +302,7 @@ function RecommendationCard({
     <section className="rounded-lg border border-action-primary bg-surface p-lg shadow-sm">
       <div className="flex items-center justify-between gap-md">
         <span className="inline-flex items-center gap-xs font-sans text-caption-13-bold text-text-brand">
-          <Sparkles aria-hidden="true" size={16} />
+          <Bot aria-hidden="true" size={16} />
           {recommendation.analysisSource === "ai"
             ? t("aiRecommendation")
             : t("ruleRecommendation")}
@@ -389,11 +377,19 @@ function UsageReportLoading() {
   return (
     <div className="min-h-full bg-background pb-3xl">
       <div className="h-[64px] border-b border-border-default bg-surface" />
-      <main className="space-y-lg px-page py-lg" aria-busy="true">
-        <div className="h-[48px] animate-pulse rounded-md bg-surface-subtle" />
-        <div className="h-[150px] animate-pulse rounded-lg bg-surface" />
-        <div className="h-[176px] animate-pulse rounded-lg bg-surface" />
-        <div className="h-[180px] animate-pulse rounded-lg bg-surface" />
+      <main
+        className="animate-pulse space-y-lg px-page py-lg"
+        aria-busy="true"
+        aria-label="Loading usage report"
+      >
+        <div className="h-[48px] rounded-md bg-surface-subtle" />
+        <div className="h-[118px] rounded-lg border border-border-default bg-surface" />
+        <div className="h-[176px] rounded-lg border border-border-default bg-surface" />
+        <div className="h-[164px] rounded-lg border border-border-default bg-surface" />
+        <div className="h-[88px] rounded-lg border border-border-default bg-surface" />
+        <div className="h-[132px] rounded-lg border border-border-default bg-surface-subtle" />
+        <div className="h-[82px] rounded-md bg-surface-subtle" />
+        <div className="h-[52px] rounded-lg bg-surface-subtle" />
       </main>
     </div>
   );

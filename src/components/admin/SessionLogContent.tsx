@@ -9,6 +9,7 @@ import { ChevronDown, ChevronUp } from "lucide-react";
 
 import { Badge } from "@/components/ui/Badge/Badge";
 import { ErrorState } from "@/components/ui/ErrorState/ErrorState";
+import { Switch } from "@/components/ui/Switch/Switch";
 import { Button } from "@/components/admin/Button";
 import { DateRangePicker } from "@/components/admin/DateRangePicker";
 import { Select } from "@/components/admin/Select";
@@ -60,7 +61,9 @@ function toDateKey(date: Date) {
 }
 
 // 이탈 대화를 우선 노출하는 게 더 중요해서, 기본값은 "최근 7일 · 이탈"로 좁혀두고
-// 필요할 때 "전체"로 넓혀 보도록 함
+// 필요할 때 "전체"로 넓혀 보도록 함. 대화 열람 동의를 안 한 세션은 내용을 볼 수
+// 없으니 기본값에서는 동의한 세션만 보이게 함
+
 function getDefaultFilters(): FilterState {
   const today = new Date();
   const start = new Date();
@@ -72,7 +75,7 @@ function getDefaultFilters(): FilterState {
     status: "dropped",
     dropStage: "all",
     promptVersion: "",
-    consentOnly: false,
+    consentOnly: true,
   };
 }
 
@@ -94,6 +97,36 @@ const filterInputClassName = cn(
   "font-sans text-body-14-regular text-text-primary",
   "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-border-strong",
 );
+
+function SessionListSkeleton() {
+  return (
+    <div className="flex flex-col gap-sm">
+      {Array.from({ length: 5 }).map((_, index) => (
+        <div
+          key={index}
+          className="rounded-md border border-border-default p-lg"
+        >
+          <div className="flex items-center justify-between gap-sm">
+            <div className="h-4 w-24 animate-pulse rounded-full bg-surface-subtle" />
+            <div className="h-5 w-14 animate-pulse rounded-full bg-surface-subtle" />
+          </div>
+          <div className="mt-xs h-3 w-32 animate-pulse rounded-full bg-surface-subtle" />
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function SessionDetailSkeleton() {
+  return (
+    <div className="flex flex-col gap-md">
+      <div className="ml-auto h-10 w-3/5 animate-pulse rounded-md bg-surface-subtle" />
+      <div className="h-16 w-4/5 animate-pulse rounded-md bg-surface-subtle" />
+      <div className="ml-auto h-10 w-2/5 animate-pulse rounded-md bg-surface-subtle" />
+      <div className="h-12 w-3/5 animate-pulse rounded-md bg-surface-subtle" />
+    </div>
+  );
+}
 
 export function SessionLogContent() {
   // 대시보드의 퍼널 행 클릭에서 ?drop_stage=xxx&start_date=...&end_date=...로 들어오면
@@ -129,6 +162,7 @@ export function SessionLogContent() {
   } = useQuery({
     queryKey: ADMIN_SESSION_QUERY_KEYS.list(listParams),
     queryFn: () => getSessions(listParams),
+    placeholderData: (previousData) => previousData,
   });
 
   const {
@@ -167,7 +201,7 @@ export function SessionLogContent() {
         이탈이 발생한 실제 대화를 읽고 프롬프트 개선 지점을 찾으세요
       </p>
 
-      <section className="mt-2xl flex flex-wrap items-end gap-sm rounded-lg border border-border-default bg-surface p-lg">
+      <section className="mt-2xl flex flex-wrap items-end gap-lg rounded-lg border border-border-default bg-surface p-lg">
         <label className="flex flex-col gap-sm">
           <span className="font-sans text-micro-11-bold text-text-tertiary">
             기간
@@ -266,9 +300,9 @@ export function SessionLogContent() {
           <span className="font-sans text-micro-11-bold text-text-tertiary">
             동의 여부
           </span>
-          <label className="flex h-9 items-center gap-xs">
-            <input
-              type="checkbox"
+          <div className="flex h-9 items-center">
+            <Switch
+              trackClassName="peer-checked:bg-text-secondary"
               checked={draftFilters.consentOnly}
               onChange={(e) =>
                 setDraftFilters((prev) => ({
@@ -276,15 +310,11 @@ export function SessionLogContent() {
                   consentOnly: e.target.checked,
                 }))
               }
-              className="size-4 accent-text-secondary"
             />
-            <span className="font-sans text-caption-12-regular text-text-secondary">
-              동의한 것만
-            </span>
-          </label>
+          </div>
         </div>
 
-        <div className="flex gap-sm">
+        <div className="ml-xl flex gap-sm">
           <Button
             className="h-9 rounded-md px-lg py-0 text-label-14-bold"
             onClick={handleApplyFilters}
@@ -313,11 +343,7 @@ export function SessionLogContent() {
           </h2>
 
           <div className="mt-md flex-1 overflow-y-auto">
-            {isListPending && (
-              <p className="font-sans text-body-14-regular text-text-secondary">
-                불러오는 중이에요...
-              </p>
-            )}
+            {isListPending && <SessionListSkeleton />}
 
             {isListError && (
               <ErrorState
@@ -401,11 +427,7 @@ export function SessionLogContent() {
             </p>
           )}
 
-          {selectedSessionId && isDetailPending && (
-            <p className="font-sans text-body-14-regular text-text-secondary">
-              불러오는 중이에요...
-            </p>
-          )}
+          {selectedSessionId && isDetailPending && <SessionDetailSkeleton />}
 
           {selectedSessionId && isDetailError && (
             <ErrorState

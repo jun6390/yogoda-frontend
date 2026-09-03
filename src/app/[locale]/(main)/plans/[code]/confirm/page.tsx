@@ -69,7 +69,12 @@ function PlanJoinConfirmContent({ code }: PlanJoinConfirmContentProps) {
     }
   }, [selectedBenefits, code, router]);
 
-  const { data: plan, isPending: isPlanPending } = useQuery({
+  const {
+    data: plan,
+    isPending: isPlanPending,
+    isError: isPlanError,
+    refetch: refetchPlan,
+  } = useQuery({
     queryKey: ["plans", code],
     queryFn: () => getPlanByCode(code),
     enabled: Boolean(code),
@@ -84,8 +89,20 @@ function PlanJoinConfirmContent({ code }: PlanJoinConfirmContentProps) {
   const formatNumber = (value: number) =>
     new Intl.NumberFormat(locale).format(value);
 
-  if (selectedBenefits === null || isPlanPending || !plan) {
+  if (selectedBenefits === null || isPlanPending) {
     return <PageSpinner label={t("loading")} />;
+  }
+
+  if (isPlanError || !plan) {
+    return (
+      <PageContainer className="py-xl">
+        <ErrorState
+          title={t("loadError")}
+          retryLabel={t("retry")}
+          onRetry={() => refetchPlan()}
+        />
+      </PageContainer>
+    );
   }
 
   const isPlanChange =
@@ -257,7 +274,7 @@ function PlanJoinConfirmContent({ code }: PlanJoinConfirmContentProps) {
         >
           {isSubmitting ? (
             <span className="flex items-center justify-center gap-sm">
-              <Spinner size="sm" className="text-white" />
+              <Spinner size="sm" className="text-text-on-primary" />
               {t("submitting")}
             </span>
           ) : (

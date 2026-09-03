@@ -25,7 +25,7 @@ export interface CreatePromptResponse {
   deployedBy: string;
 }
 
-export interface PromptVersionSummary {
+interface PromptVersionSummary {
   versionId: string;
   version: string;
   summary: string;

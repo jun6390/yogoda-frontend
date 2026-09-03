@@ -9,7 +9,7 @@ import {
 } from "react";
 import { io, Socket } from "socket.io-client";
 
-import { API_BASE_URL } from "@/lib/api/client";
+import { API_BASE_URL, refreshAccessToken } from "@/lib/api/client";
 import { endChatSession, getLatestChatSession } from "@/lib/api/chat";
 import { clearChatSessionStorage } from "@/lib/chatSessionStorage";
 import { useAuthStore } from "@/stores/useAuthStore";
@@ -34,7 +34,7 @@ const WELCOME_MESSAGE: ChatMessage = {
   id: "welcome",
   sender: "ai",
   type: "text",
-  text: "안녕하세요! 사용자님에게 딱 맞는 베스트 요금제를 추천해 드릴게요. 평소 데이터 사용량이나 선호하시는 혜택(OTT 등)에 대해 편하게 말씀해 주세요!",
+  text: "안녕하세요! 요고다 AI 요금제 상담원이에요 :) 딱 맞는 요금제 추천부터 혜택 안내까지, 궁금하신 걸 편하게 물어봐 주세요.",
 };
 
 function createSignupEntryMessage(
@@ -90,6 +90,16 @@ function useAuthHydrated() {
 export interface UseAIChatOptions {
   /** 요금제 둘러보기 페이지에서 바로 가입할 때 넘겨주는 선택된 요금제 정보 */
   preselectedPlan?: PreselectedPlan;
+  /**
+   * 가입 중단(signup_exit) 시 호출됨. preselectedPlan은 호출한 쪽(페이지)의 state라
+   * 여기서 직접 못 지우므로, 콜백으로 상위에서 지우게 함
+   */
+  onSignupExit?: () => void;
+  /**
+   * 일반 상담 중 AI가 가입 의사를 감지해 가입 플로우 진입을 요청했을 때
+   * (signup_kickoff_requested) 호출됨 — "AI와 가입하기" 버튼과 동일한 효과
+   */
+  onSignupKickoffRequested?: (plan: PreselectedPlan) => void;
 }
 
 /**
@@ -100,10 +110,26 @@ export interface UseAIChatOptions {
  * - preselectedPlan이 있으면 히스토리 복원 후 정적 안내 메시지를 추가해
  *   가입 플로우를 즉시 시작함
  */
-export function useAIChat({ preselectedPlan }: UseAIChatOptions = {}) {
+export function useAIChat({
+  preselectedPlan,
+  onSignupExit,
+  onSignupKickoffRequested,
+}: UseAIChatOptions = {}) {
   const accessToken = useAuthStore((state) => state.accessToken);
   const user = useAuthStore((state) => state.user);
   const isLoggedIn = !!accessToken;
+
+  // 소켓 핸들러 클로저에서 최신 onSignupExit을 참조하기 위한 ref
+  const onSignupExitRef = useRef(onSignupExit);
+  useEffect(() => {
+    onSignupExitRef.current = onSignupExit;
+  }, [onSignupExit]);
+
+  // 소켓 핸들러 클로저에서 최신 onSignupKickoffRequested를 참조하기 위한 ref
+  const onSignupKickoffRequestedRef = useRef(onSignupKickoffRequested);
+  useEffect(() => {
+    onSignupKickoffRequestedRef.current = onSignupKickoffRequested;
+  }, [onSignupKickoffRequested]);
 
   // 소켓 이벤트 핸들러 클로저에서 isLoggedIn 최신 값을 참조하기 위한 ref
   const isLoggedInRef = useRef(isLoggedIn);
@@ -140,8 +166,17 @@ export function useAIChat({ preselectedPlan }: UseAIChatOptions = {}) {
   // AI의 질문에 바로 탭해서 답할 수 있는 빠른 답변 후보. 다음 메시지를 보내면 비워짐
   const [quickReplies, setQuickReplies] = useState<string[]>([]);
   // 관리자의 대화 열람에 동의하는지 묻는 배너. 세션당 한 번만 물어보면 되므로
-  // sessionStorage에 물어봤음을 남겨서 새로고침해도 다시 뜨지 않게 함
-  const [showConsentBanner, setShowConsentBanner] = useState(false);
+  // sessionStorage에 물어봤음을 남겨서 새로고침해도 다시 뜨지 않게 함.
+  // 초기값을 소켓의 session_created 응답이 올 때까지 기다리지 않고 여기서 바로
+  // sessionStorage로 판단함 — 그렇지 않으면 마운트 직후엔 항상 false였다가 소켓
+  // 왕복이 끝난 뒤에야 true로 바뀌면서 "안 보였다 보이는" 깜빡임이 있었음
+  const [showConsentBanner, setShowConsentBanner] = useState(() => {
+    try {
+      return sessionStorage.getItem("chatLogConsentAsked") !== "true";
+    } catch {
+      return false;
+    }
+  });
 
   // quickReplies가 바뀌면 일반 채팅 한정으로 sessionStorage에 저장 (새로고침 복원용)
   // 빈 배열이 되면 키를 제거해 "사용자가 이미 답변했음"을 표시
@@ -271,13 +306,25 @@ export function useAIChat({ preselectedPlan }: UseAIChatOptions = {}) {
     if (socketRef.current) return; // 연결 중(connecting)인 소켓도 재사용 — connected 체크만 하면 두 번째 호출 시 중복 소켓이 생성됨
 
     const apiBase = API_BASE_URL || "http://localhost:8000";
-    const { accessToken: token } = useAuthStore.getState();
 
     const socket = io(`${apiBase}/chat`, {
       transports: ["websocket"],
-      auth: {
-        token: token ?? undefined,
-        sessionId: sessionIdRef.current ?? undefined,
+      // 함수로 주면 (재)연결마다 다시 평가됨. accessToken이 만료된 채로 붙으면
+      // 백엔드가 에러 없이 조용히 비회원으로 처리해버려서, 연결 시도 직전에 매번
+      // 먼저 갱신을 시도해 만료된 토큰으로 붙는 걸 최대한 막음
+      auth: async (cb) => {
+        const { accessToken } = useAuthStore.getState();
+        let token = accessToken ?? undefined;
+        if (token) {
+          try {
+            token = await refreshAccessToken();
+          } catch {
+            // refresh token까지 만료된 경우 — 이 연결은 비회원으로 진행함
+            // (clearAuth는 refreshAccessToken 내부에서 이미 처리됨)
+            token = undefined;
+          }
+        }
+        cb({ token, sessionId: sessionIdRef.current ?? undefined });
       },
     });
     socketRef.current = socket;
@@ -458,6 +505,7 @@ export function useAIChat({ preselectedPlan }: UseAIChatOptions = {}) {
           code: data.planCode,
           name: data.planName,
           monthlyFee: 0,
+          recommendedByAI: false,
         };
         preselectedPlanRef.current = undefined;
         // 재가입 시 같은 요금제라도 인삿말이 다시 나오도록 초기화
@@ -479,6 +527,38 @@ export function useAIChat({ preselectedPlan }: UseAIChatOptions = {}) {
         ]);
       },
     );
+
+    /*
+     * 가입 플로우를 완전히 벗어나 일반 상담으로 전환됐을 때 (paused 상태에서
+     * "다른 요금제 추천받기" 선택). signup_complete와 달리 완료 카드는 없고, 이후
+     * 메시지가 preselectedPlanCode 없이 나가도록 상태만 정리함
+     */
+    socket.on("signup_exit", () => {
+      preselectedPlanRef.current = undefined;
+      // 재가입 시 같은 요금제라도 인삿말이 다시 나오도록 초기화
+      signupEntrySentRef.current = null;
+      setIsSignupFlowActive(false);
+      setCurrentSignupStep(null);
+      setSignupCollectedData({});
+      clearChatSessionStorage();
+      // preselectedPlan은 페이지 state라 여기서 못 지우므로 콜백으로 알림
+      onSignupExitRef.current?.();
+    });
+
+    // 일반 상담 중 AI가 가입 의사를 감지했을 때. "AI와 가입하기" 버튼과 동일하게
+    // 잔여 상태를 지우고 preselectedPlan을 세션 스토리지에 저장함
+    socket.on("signup_kickoff_requested", (plan: PreselectedPlan) => {
+      try {
+        sessionStorage.removeItem("signupEntryShown");
+        sessionStorage.removeItem("signupStep");
+        sessionStorage.removeItem("signupQuickReplies");
+        sessionStorage.removeItem("signupKickoffSent");
+        sessionStorage.setItem("preselectedPlan", JSON.stringify(plan));
+      } catch {
+        /* noop */
+      }
+      onSignupKickoffRequestedRef.current?.(plan);
+    });
 
     socket.on("thinking", (msg: string) => {
       setThinkingMessage(msg);
@@ -582,7 +662,9 @@ export function useAIChat({ preselectedPlan }: UseAIChatOptions = {}) {
               signupEntrySentRef.current = signupPlanOnLoad.code;
             }
             setMessages([
-              WELCOME_MESSAGE,
+              // 가입 플로우로 들어온 경우, dbMessages 맨 앞에 이미 저장된
+              // 가입 인삿말이 있으므로 일반 웰컴 메시지를 따로 붙이지 않음
+              ...(isSignupFlowOnLoad ? [] : [WELCOME_MESSAGE]),
               ...dbMessages.flatMap((m) => {
                 // 카드 타입 메시지 — 텍스트 없이 카드만 렌더링
                 if (m.messageType === "fraud_warning") {
@@ -830,6 +912,9 @@ export function useAIChat({ preselectedPlan }: UseAIChatOptions = {}) {
         extra.preselectedPlanCode = preselectedPlanRef.current.code;
         extra.signupCollectedData = signupCollectedData;
         extra.currentSignupStep = currentSignupStepRef.current;
+        // 가입 전환율 집계에서 "AI 추천 → 가입"만 구분해서 잡기 위해, 가입
+        // 플로우가 진행되는 매 턴마다 백엔드가 이 값을 확인하므로 계속 실어 보냄
+        extra.recommendedByAI = preselectedPlanRef.current.recommendedByAI;
       }
 
       // 30초 안에 done이 안 오면 에러 처리
@@ -883,6 +968,7 @@ export function useAIChat({ preselectedPlan }: UseAIChatOptions = {}) {
         extra.preselectedPlanCode = preselectedPlanRef.current.code;
         extra.signupCollectedData = signupCollectedData;
         extra.currentSignupStep = currentSignupStepRef.current;
+        extra.recommendedByAI = preselectedPlanRef.current.recommendedByAI;
       }
       // 30초 안에 done이 안 오면 에러 처리
       clearResponseTimeout();
@@ -931,7 +1017,13 @@ export function useAIChat({ preselectedPlan }: UseAIChatOptions = {}) {
     signupEntrySentRef.current = preselectedPlan.code;
 
     const entryMessage = createSignupEntryMessage(preselectedPlan, user?.name);
-    setMessages((prev) => [...prev, entryMessage]);
+    setMessages((prev) =>
+      // 아직 일반 웰컴 메시지 하나뿐인 첫 진입이면, 서로 연관 없어 보이는
+      // 두 말풍선이 쌓이지 않도록 가입 인삿말로 교체함
+      prev.length === 1 && prev[0].id === WELCOME_MESSAGE.id
+        ? [entryMessage]
+        : [...prev, entryMessage],
+    );
     setQuickReplies(["네, 진행할게요"]);
 
     // 화면에 보여준 인삿말을 그대로 DB에도 저장해, 새로고침해도 실제 대화

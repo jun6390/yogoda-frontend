@@ -1,7 +1,6 @@
-export type UiElement =
-  "plan_detail" | "plan_comparison" | "explore_plans" | "signup_button";
+export type UiElement = "plan_detail" | "plan_comparison" | "explore_plans";
 
-export interface UiElementStat {
+interface UiElementStat {
   element: UiElement;
   label: string;
   impressions: number;

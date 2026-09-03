@@ -16,7 +16,7 @@ import {
   Users,
 } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
-import { useParams } from "next/navigation";
+import { useParams, useSearchParams } from "next/navigation";
 
 import { PageContainer } from "@/components/layout/PageContainer";
 import { ErrorState } from "@/components/ui/ErrorState/ErrorState";
@@ -52,6 +52,7 @@ interface PlanDetailContentProps {
 
 function PlanDetailContent({ code }: PlanDetailContentProps) {
   const router = useRouter();
+  const searchParams = useSearchParams();
 
   const t = useTranslations("PlanDetail");
   const locale = useLocale();
@@ -459,7 +460,6 @@ function PlanDetailContent({ code }: PlanDetailContentProps) {
     sessionStorage.removeItem("signupEntryShown");
     sessionStorage.removeItem("signupStep");
     sessionStorage.removeItem("signupQuickReplies");
-    sessionStorage.removeItem("signupCollectedData");
     sessionStorage.removeItem("signupKickoffSent");
     sessionStorage.setItem(
       "preselectedPlan",
@@ -467,6 +467,9 @@ function PlanDetailContent({ code }: PlanDetailContentProps) {
         code: plan.code,
         name: plan.name,
         monthlyFee: plan.monthlyFee,
+        // 추천 카드(PlanRecommendationCards)를 통해 들어온 경우에만 쿼리에 붙는 값.
+        // 가입 전환율 집계에서 "AI 추천 → 가입"만 구분해서 잡기 위해 필요함
+        recommendedByAI: searchParams.get("recommended") === "true",
       }),
     );
     // 사용자가 선택한 혜택 타이틀을 AI 인삿말 생성에 활용
@@ -478,6 +481,19 @@ function PlanDetailContent({ code }: PlanDetailContentProps) {
       );
     } else {
       sessionStorage.removeItem("preselectedPlanBenefits");
+    }
+    // 상세 페이지에서 이미 고른 선택형 혜택을 가입 플로우에 그대로 넘겨서,
+    // AI가 select_benefits 단계에서 같은 걸 또 묻지 않게 함
+    const nonEmptySelectedBenefits = Object.fromEntries(
+      Object.entries(selectedBenefits).filter(([, codes]) => codes.length > 0),
+    );
+    if (Object.keys(nonEmptySelectedBenefits).length > 0) {
+      sessionStorage.setItem(
+        "signupCollectedData",
+        JSON.stringify({ selectedBenefits: nonEmptySelectedBenefits }),
+      );
+    } else {
+      sessionStorage.removeItem("signupCollectedData");
     }
     // entry 쿼리 파라미터로 매번 다른 값을 붙여, 직전에 /ai를 방문한 적이 있어
     // 페이지가 재사용되는 경우에도 preselectedPlan을 다시 읽어오도록 강제함
@@ -556,9 +572,23 @@ function PlanDetailContent({ code }: PlanDetailContentProps) {
                 </p>
               )}
 
-              <p className="mt-xs font-sans text-micro-11-regular text-text-primary line-through">
+              <p
+                className={
+                  plan.promotion.effectiveMonthlyFee !== null
+                    ? "mt-xs font-sans text-micro-11-regular text-text-primary line-through"
+                    : "font-sans text-title-20-bold text-text-primary"
+                }
+              >
                 {formatNumber(plan.monthlyFee)}
-                {t("wonPerMonth")}
+                <span
+                  className={
+                    plan.promotion.effectiveMonthlyFee === null
+                      ? "ml-xs font-sans text-caption-13-medium"
+                      : undefined
+                  }
+                >
+                  {t("wonPerMonth")}
+                </span>
               </p>
             </div>
 
@@ -712,6 +742,10 @@ function PlanDetailContent({ code }: PlanDetailContentProps) {
                         title={getStepTitle(step)}
                         instruction={getStepInstruction(step) ?? undefined}
                         selectedCodes={selectedBenefits[step.code] ?? []}
+                        disabled={
+                          isCurrentPlan ||
+                          (Boolean(accessToken) && isCurrentPlanPending)
+                        }
                         onSelect={(optionCode) =>
                           handleSelectOption(step, optionCode)
                         }
@@ -852,7 +886,7 @@ function PlanDetailContent({ code }: PlanDetailContentProps) {
               <button
                 type="button"
                 onClick={handleConfirmExit}
-                className="h-[52px] rounded-lg bg-action-primary font-sans text-label-14-bold text-white"
+                className="h-[52px] rounded-lg bg-action-primary font-sans text-label-14-bold text-text-on-primary"
               >
                 {t("exitModal.confirm")}
               </button>
@@ -899,7 +933,7 @@ function PlanDetailContent({ code }: PlanDetailContentProps) {
               <button
                 type="button"
                 onClick={proceedToAISignup}
-                className="h-[52px] rounded-lg bg-action-primary font-sans text-label-14-bold text-white"
+                className="h-[52px] rounded-lg bg-action-primary font-sans text-label-14-bold text-text-on-primary"
               >
                 {t("switchPlanModal.confirm")}
               </button>
@@ -916,6 +950,7 @@ interface ChoiceStepProps {
   title: string;
   instruction?: string;
   selectedCodes: string[];
+  disabled: boolean;
   onSelect: (optionCode: string) => void;
   formatNumber: (value: number) => string;
   monthlyValueLabel: (amount: string) => string;
@@ -926,6 +961,7 @@ function ChoiceStep({
   title,
   instruction,
   selectedCodes,
+  disabled,
   onSelect,
   formatNumber,
   monthlyValueLabel,
@@ -963,7 +999,7 @@ function ChoiceStep({
             <button
               key={option.code}
               type="button"
-              disabled={selectionLimitReached}
+              disabled={disabled || selectionLimitReached}
               aria-pressed={isSelected}
               onClick={() => onSelect(option.code)}
               className={`min-h-[104px] rounded-lg border-2 p-md text-left transition-colors ${
@@ -971,7 +1007,11 @@ function ChoiceStep({
                   ? "border-action-primary bg-surface"
                   : "border-border-default bg-surface"
               } ${
-                selectionLimitReached ? "cursor-not-allowed opacity-40" : ""
+                disabled
+                  ? "cursor-default"
+                  : selectionLimitReached
+                    ? "cursor-not-allowed opacity-40"
+                    : ""
               }`}
             >
               <BenefitOptionContent

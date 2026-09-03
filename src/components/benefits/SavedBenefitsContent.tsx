@@ -14,7 +14,7 @@ import { EmptyState } from "@/components/ui/EmptyState/EmptyState";
 import { ErrorState } from "@/components/ui/ErrorState/ErrorState";
 import { Modal } from "@/components/ui/Modal/Modal";
 import { PageIntro } from "@/components/ui/PageIntro/PageIntro";
-import { Toast } from "@/components/ui/Toast/Toast";
+import { FloatingToast } from "@/components/ui/Toast/Toast";
 import { getSavedBenefits, setBenefitSaved } from "@/lib/api/benefit";
 import type { Benefit } from "@/types/benefit";
 
@@ -47,7 +47,21 @@ export function SavedBenefitsContent() {
       <PageIntro title={t("title")} description={t("description")} />
       <div className="space-y-xl px-page py-xl">
         {query.isPending ? (
-          <div className="h-[120px] animate-pulse rounded-lg border border-border-default bg-surface-subtle shadow-sm" />
+          <div className="animate-pulse space-y-lg" aria-hidden="true">
+            {Array.from({ length: 3 }).map((_, index) => (
+              <div
+                key={index}
+                className="flex h-[84px] items-center gap-md rounded-lg border border-border-default bg-surface p-lg shadow-sm"
+              >
+                <div className="size-[40px] shrink-0 rounded-sm bg-surface-subtle" />
+                <div className="min-w-0 flex-1 space-y-xs">
+                  <div className="h-[14px] w-2/5 rounded-sm bg-surface-subtle" />
+                  <div className="h-[12px] w-3/5 rounded-sm bg-surface-subtle" />
+                </div>
+                <div className="size-touch shrink-0 rounded-full bg-surface-subtle" />
+              </div>
+            ))}
+          </div>
         ) : query.isError ? (
           <ErrorState
             title={t("error")}
@@ -95,12 +109,15 @@ export function SavedBenefitsContent() {
           <EmptyState
             heading={t("empty")}
             description={t("emptyDescription")}
-            className="w-full rounded-lg bg-surface"
+            className="w-full"
           />
         )}
       </div>
       {pendingRemoval && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/40 px-lg">
+        <div
+          className="fixed inset-0 z-[60] flex items-center justify-center bg-black/40 px-lg"
+          onMouseDown={() => setPendingRemoval(null)}
+        >
           <Modal
             icon={
               <Trash2
@@ -123,11 +140,7 @@ export function SavedBenefitsContent() {
         </div>
       )}
       {showRemovedToast && (
-        <Toast
-          message={t("removedToast")}
-          actionLabel={null}
-          className="fixed bottom-[88px] left-1/2 z-[70] -translate-x-1/2"
-        />
+        <FloatingToast message={t("removedToast")} actionLabel={null} />
       )}
     </div>
   );

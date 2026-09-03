@@ -7,9 +7,18 @@ interface SwitchProps extends Omit<
   "type"
 > {
   label?: ReactNode;
+  // 켜졌을 때 트랙 색상을 브랜드색 대신 다른 톤으로 쓰고 싶을 때 (예: 근처에
+  // 이미 브랜드색 버튼이 있어서 겹쳐 보이는 화면)
+  trackClassName?: string;
 }
 
-export function Switch({ label, className, disabled, ...props }: SwitchProps) {
+export function Switch({
+  label,
+  className,
+  trackClassName,
+  disabled,
+  ...props
+}: SwitchProps) {
   return (
     <label
       className={cn(
@@ -33,6 +42,7 @@ export function Switch({ label, className, disabled, ...props }: SwitchProps) {
           "transition-colors duration-300 ease-out peer-checked:bg-action-primary peer-checked:[&>span]:translate-x-[16px]",
           "peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-action-primary",
           "peer-disabled:bg-border-default",
+          trackClassName,
         )}
       >
         <span

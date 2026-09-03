@@ -1,6 +1,7 @@
 "use client";
 
-import { useMemo, useState, useSyncExternalStore } from "react";
+import Image from "next/image";
+import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   Clapperboard,
@@ -25,6 +26,7 @@ import {
   reactivateMySubscription,
 } from "@/lib/api/subscription";
 import { cn } from "@/lib/utils";
+import { useHydrated } from "@/hooks/useHydrated";
 import { useAuthStore } from "@/stores/useAuthStore";
 import type {
   SubscriptionCategory,
@@ -33,7 +35,32 @@ import type {
   UserSubscription,
 } from "@/types/subscription";
 
-const subscribe = () => () => {};
+const subscriptionLogos = {
+  netflix: {
+    src: "/brand-logos/netflix-app.png",
+    className: "size-full object-cover",
+  },
+  tving: {
+    src: "/brand-logos/tving-app.png",
+    className: "size-full object-cover",
+  },
+};
+
+function resolveSubscriptionLogo(subscription: UserSubscription) {
+  const identity = `${subscription.serviceCode} ${subscription.serviceName}`
+    .trim()
+    .toLowerCase();
+
+  if (identity.includes("netflix") || identity.includes("넷플릭스")) {
+    return subscriptionLogos.netflix;
+  }
+
+  if (identity.includes("tving") || identity.includes("티빙")) {
+    return subscriptionLogos.tving;
+  }
+
+  return null;
+}
 
 const serviceCatalog: Array<
   SubscriptionInput & { monthlyFee: number; category: SubscriptionCategory }
@@ -88,14 +115,6 @@ const serviceCatalog: Array<
     startedAt: "",
   },
 ];
-
-function useHydrated() {
-  return useSyncExternalStore(
-    subscribe,
-    () => true,
-    () => false,
-  );
-}
 
 export function SubscriptionManagementContent() {
   const t = useTranslations("MySubscriptions");
@@ -352,7 +371,10 @@ export function SubscriptionManagementContent() {
       </div>
 
       {cancelTarget && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/40 px-lg">
+        <div
+          className="fixed inset-0 z-[60] flex items-center justify-center bg-black/40 px-lg"
+          onMouseDown={() => setCancelTarget(null)}
+        >
           <Modal
             heading={t("cancelTitle", { name: cancelTarget.serviceName })}
             description={t("cancelDescription")}
@@ -393,11 +415,27 @@ function SubscriptionCard({
         : subscription.category === "delivery"
           ? PackageCheck
           : ShoppingBag;
+  const logo = resolveSubscriptionLogo(subscription);
 
   return (
     <article className="flex items-start gap-md rounded-lg border border-border-default bg-surface p-lg shadow-sm">
-      <span className="flex size-[40px] shrink-0 items-center justify-center rounded-sm bg-brand-soft text-icon-brand">
-        <Icon aria-hidden="true" size={20} />
+      <span
+        className={cn(
+          "flex size-[40px] shrink-0 items-center justify-center overflow-hidden rounded-sm",
+          logo ? "bg-white" : "bg-brand-soft text-icon-brand",
+        )}
+      >
+        {logo ? (
+          <Image
+            src={logo.src}
+            alt=""
+            width={40}
+            height={40}
+            className={logo.className}
+          />
+        ) : (
+          <Icon aria-hidden="true" size={20} />
+        )}
       </span>
       <div className="min-w-0 flex-1">
         <div className="flex items-start justify-between gap-md">
@@ -433,15 +471,22 @@ function SubscriptionCard({
 
 function SubscriptionSkeleton() {
   return (
-    <div className="space-y-xl" aria-hidden="true">
-      <div className="h-[112px] animate-pulse rounded-lg bg-surface-subtle" />
-      <div className="h-[48px] animate-pulse rounded-lg bg-surface-subtle" />
-      {Array.from({ length: 2 }).map((_, index) => (
-        <div
-          key={index}
-          className="h-[124px] animate-pulse rounded-lg bg-surface-subtle"
-        />
-      ))}
+    <div className="animate-pulse space-y-xl" aria-hidden="true">
+      <div className="h-[88px] rounded-lg border border-border-default bg-surface-subtle" />
+      <div className="h-[48px] rounded-md bg-surface-subtle" />
+      <div className="h-[48px] rounded-lg border border-border-default bg-surface-subtle" />
+      <div className="grid grid-cols-2 gap-xs rounded-lg bg-surface-subtle p-xs">
+        <div className="h-[40px] rounded-sm bg-surface" />
+        <div className="h-[40px] rounded-sm bg-surface" />
+      </div>
+      <div className="space-y-lg">
+        {Array.from({ length: 2 }).map((_, index) => (
+          <div
+            key={index}
+            className="h-[124px] rounded-lg border border-border-default bg-surface-subtle"
+          />
+        ))}
+      </div>
     </div>
   );
 }

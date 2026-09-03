@@ -1,6 +1,5 @@
 "use client";
 
-import { useSyncExternalStore } from "react";
 import Image from "next/image";
 
 import { useQuery } from "@tanstack/react-query";
@@ -10,19 +9,10 @@ import { useLocale, useTranslations } from "next-intl";
 import { ErrorState } from "@/components/ui/ErrorState/ErrorState";
 import { CurrentPlanSummaryCard } from "@/components/plans/CurrentPlanSummaryCard";
 import { Link } from "@/i18n/navigation";
+import { useHydrated } from "@/hooks/useHydrated";
 import { getCurrentPlan, getPlanByCode } from "@/lib/api/plan";
 import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/stores/useAuthStore";
-
-const subscribe = () => () => {};
-
-function useHydrated() {
-  return useSyncExternalStore(
-    subscribe,
-    () => true,
-    () => false,
-  );
-}
 
 function formatPrice(amount: number, locale: string) {
   return new Intl.NumberFormat(locale).format(amount);
@@ -104,11 +94,15 @@ export function MyContent() {
 
   const displayName = user?.name || t("defaultUserName");
   const planPrice = planDetailQuery.data?.monthlyFee ?? currentPlan?.monthlyFee;
-  const membershipTier = planDetailQuery.data?.membershipTier
-    ? t("membershipTier", { tier: planDetailQuery.data.membershipTier })
-    : currentPlan
+  const membershipTier = !currentPlan
+    ? t("membershipUnavailable")
+    : planDetailQuery.isPending
       ? t("membershipPending")
-      : t("membershipUnavailable");
+      : planDetailQuery.isError
+        ? t("membershipCheckRequired")
+        : planDetailQuery.data?.membershipTier
+          ? t("membershipTier", { tier: planDetailQuery.data.membershipTier })
+          : t("membershipStandard");
   const selectedBenefitCount = currentPlan
     ? Object.values(currentPlan.selectedOptions).reduce(
         (total, options) => total + options.length,
@@ -136,7 +130,7 @@ export function MyContent() {
 
         <section className="flex flex-col gap-lg">
           {!hydrated || (currentPlanQuery.isPending && isLoggedIn) ? (
-            <div className="h-[226px] animate-pulse rounded-lg border border-border-default bg-surface shadow-sm" />
+            <MyPlanSkeleton />
           ) : currentPlanQuery.isError ? (
             <ErrorState
               title={t("planError")}
@@ -185,7 +179,7 @@ export function MyContent() {
             className="relative block min-h-[156px] overflow-hidden rounded-lg border border-border-default bg-[#fcdee2] shadow-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-action-primary"
           >
             <Image
-              src="/yogoda-banners/savings-character-scene-v3.webp"
+              src="/yogoda-characters/savings-character-scene-v3.webp"
               alt=""
               width={382}
               height={540}
@@ -258,6 +252,30 @@ export function MyContent() {
           </div>
         </section>
       </main>
+    </div>
+  );
+}
+
+function MyPlanSkeleton() {
+  return (
+    <div
+      className="flex min-h-[210px] animate-pulse flex-col gap-lg rounded-lg border border-border-default bg-surface p-lg shadow-sm"
+      aria-hidden="true"
+    >
+      <div className="h-[12px] w-[92px] rounded-sm bg-surface-subtle" />
+      <div className="flex items-start justify-between gap-lg">
+        <div className="min-w-0 flex-1 space-y-sm">
+          <div className="h-[22px] w-2/5 rounded-sm bg-surface-subtle" />
+          <div className="h-[14px] w-1/3 rounded-sm bg-surface-subtle" />
+          <div className="h-[11px] w-1/4 rounded-sm bg-surface-subtle" />
+        </div>
+        <div className="mr-2xl size-[56px] shrink-0 rounded-md bg-surface-subtle" />
+      </div>
+      <div className="mt-auto grid grid-cols-3 gap-sm">
+        {Array.from({ length: 3 }).map((_, index) => (
+          <div key={index} className="h-[58px] rounded-md bg-surface-subtle" />
+        ))}
+      </div>
     </div>
   );
 }

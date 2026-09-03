@@ -79,7 +79,7 @@ export function RewardCalendar({
               type="button"
               onClick={() => onDateSelect?.(date)}
               className={cn(
-                "relative mx-auto flex size-[40px] items-center justify-center rounded-full font-sans text-caption-13-medium text-text-primary",
+                "relative mx-auto flex size-touch items-center justify-center rounded-full font-sans text-caption-13-medium text-text-primary",
                 selectedDate === date && "bg-brand-soft text-text-brand",
                 marked && !showStamp && "font-bold text-text-brand",
                 showStamp &&
@@ -93,7 +93,7 @@ export function RewardCalendar({
                       src={stampSrc}
                       alt=""
                       fill
-                      sizes="40px"
+                      sizes="44px"
                       className="scale-[1.35] object-cover object-center"
                     />
                   </span>
