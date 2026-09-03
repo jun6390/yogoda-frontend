@@ -5,10 +5,9 @@ import { useQuery } from "@tanstack/react-query";
 import {
   ChevronRight,
   Headset,
-  List,
   LocateFixed,
-  Map,
   MapPin,
+  RefreshCw,
   Search,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
@@ -19,6 +18,10 @@ import { EmptyState } from "@/components/ui/EmptyState/EmptyState";
 import { Button } from "@/components/ui/Button/Button";
 import { ErrorState } from "@/components/ui/ErrorState/ErrorState";
 import { Input } from "@/components/ui/Input/Input";
+import {
+  MapFilterChips,
+  MapViewToggle,
+} from "@/components/ui/MapBrowseControls/MapBrowseControls";
 import { NaverMap } from "@/components/ui/NaverMap/NaverMap";
 import { Select } from "@/components/ui/Select/Select";
 import { Link } from "@/i18n/navigation";
@@ -46,7 +49,12 @@ export function StoreListContent() {
   const [keyword, setKeyword] = useState("");
   const [region, setRegion] = useState("");
   const [service, setService] = useState<"all" | StoreService>("all");
-  const [coordinates, setCoordinates] = useState<Coordinates | null>(null);
+  const [userLocation, setUserLocation] = useState<Coordinates | null>(null);
+  const [searchCoordinates, setSearchCoordinates] =
+    useState<Coordinates | null>(null);
+  const [pendingMapCenter, setPendingMapCenter] = useState<Coordinates | null>(
+    null,
+  );
   const [locationError, setLocationError] = useState(false);
   const [view, setView] = useState<"map" | "list">("map");
   const [selectedStoreCode, setSelectedStoreCode] = useState<string>();
@@ -54,29 +62,30 @@ export function StoreListContent() {
   const deferredKeyword = useDeferredValue(keyword.trim());
 
   const storesQuery = useQuery({
-    queryKey: ["stores", deferredKeyword, region, service, coordinates],
+    queryKey: ["stores", deferredKeyword, region, service, searchCoordinates],
     queryFn: () =>
       getStores({
         keyword: deferredKeyword || undefined,
         region: region || undefined,
         service: service === "all" ? undefined : service,
-        latitude: coordinates?.latitude,
-        longitude: coordinates?.longitude,
+        latitude: searchCoordinates?.latitude,
+        longitude: searchCoordinates?.longitude,
       }),
+    placeholderData: (previousData) => previousData,
     retry: false,
   });
   const stores = useMemo(() => {
     const items = storesQuery.data?.stores ?? [];
 
-    if (!coordinates) return items;
+    if (!userLocation) return items;
 
     return items
       .map((store) => ({
         ...store,
-        distanceKm: calculateDistanceKm(coordinates, store.coordinates),
+        distanceKm: calculateDistanceKm(userLocation, store.coordinates),
       }))
       .sort((a, b) => a.distanceKm - b.distanceKm);
-  }, [coordinates, storesQuery.data?.stores]);
+  }, [userLocation, storesQuery.data?.stores]);
   const mapLocations = useMemo(
     () =>
       stores.map((store) => ({
@@ -99,10 +108,13 @@ export function StoreListContent() {
       ({ coords }) => {
         setSelectedStoreCode(undefined);
         setVisibleCount(STORES_PER_PAGE);
-        setCoordinates({
+        const nextLocation = {
           latitude: coords.latitude,
           longitude: coords.longitude,
-        });
+        };
+        setUserLocation(nextLocation);
+        setSearchCoordinates(nextLocation);
+        setPendingMapCenter(null);
       },
       () => setLocationError(true),
       { enableHighAccuracy: false, timeout: 8000 },
@@ -123,19 +135,21 @@ export function StoreListContent() {
       </section>
 
       <section className="space-y-md px-page py-xl">
-        <Select
-          icon={<Headset size={18} />}
-          ariaLabel={t("serviceFilterLabel")}
-          value={service}
-          onChange={(value) => {
-            setService(value as "all" | StoreService);
-            setVisibleCount(STORES_PER_PAGE);
-          }}
-          options={services.map((item) => ({
-            value: item,
-            label: t(`services.${item}`),
-          }))}
-        />
+        {view === "list" && (
+          <Select
+            icon={<Headset size={18} />}
+            ariaLabel={t("serviceFilterLabel")}
+            value={service}
+            onChange={(value) => {
+              setService(value as "all" | StoreService);
+              setVisibleCount(STORES_PER_PAGE);
+            }}
+            options={services.map((item) => ({
+              value: item,
+              label: t(`services.${item}`),
+            }))}
+          />
+        )}
         <div className="relative">
           <Search
             aria-hidden="true"
@@ -159,27 +173,11 @@ export function StoreListContent() {
           </p>
         )}
 
-        <div className="grid grid-cols-2 rounded-lg bg-surface-subtle p-xs">
-          {(["map", "list"] as const).map((item) => {
-            const Icon = item === "map" ? Map : List;
-            return (
-              <button
-                key={item}
-                type="button"
-                onClick={() => setView(item)}
-                className={cn(
-                  "flex min-h-[40px] items-center justify-center gap-sm rounded-sm font-sans text-caption-13-bold",
-                  view === item
-                    ? "bg-surface text-text-primary shadow-sm"
-                    : "text-text-secondary",
-                )}
-              >
-                <Icon size={17} />
-                {t(`views.${item}`)}
-              </button>
-            );
-          })}
-        </div>
+        <MapViewToggle
+          value={view}
+          onChange={setView}
+          labels={{ map: t("views.map"), list: t("views.list") }}
+        />
         {showRegionFilter && (
           <Select
             icon={<MapPin size={18} />}
@@ -213,23 +211,62 @@ export function StoreListContent() {
           <EmptyState
             heading={t("emptyTitle")}
             description={t("emptyDescription")}
-            className="w-full rounded-lg bg-surface"
+            className="w-full"
           />
         ) : view === "map" ? (
           <div className="relative isolate overflow-hidden rounded-lg border border-border-default bg-surface shadow-sm">
             <NaverMap
               locations={mapLocations}
-              center={coordinates ?? undefined}
+              center={searchCoordinates ?? userLocation ?? undefined}
+              currentLocation={userLocation ?? undefined}
               selectedId={activeStoreCode}
               onSelect={setSelectedStoreCode}
+              onCenterChange={(nextCenter) => {
+                const baseline =
+                  searchCoordinates ?? userLocation ?? mapLocations[0];
+                if (!baseline) return;
+                setPendingMapCenter(
+                  calculateDistanceKm(baseline, nextCenter) >= 0.05
+                    ? nextCenter
+                    : null,
+                );
+              }}
               className="h-[440px]"
               errorTitle={t("mapError")}
               errorDescription={t("mapErrorDescription")}
             />
+            <MapFilterChips
+              value={service}
+              options={services.map((item) => ({
+                value: item,
+                label: t(`services.${item}`),
+              }))}
+              onChange={(item) => {
+                setService(item);
+                setSelectedStoreCode(undefined);
+                setVisibleCount(STORES_PER_PAGE);
+              }}
+              overlay
+            />
+            {pendingMapCenter && (
+              <button
+                type="button"
+                onClick={() => {
+                  setSearchCoordinates(pendingMapCenter);
+                  setPendingMapCenter(null);
+                  setSelectedStoreCode(undefined);
+                  setVisibleCount(STORES_PER_PAGE);
+                }}
+                className="absolute left-md top-[66px] z-[210] flex min-h-[40px] items-center gap-sm whitespace-nowrap rounded-full border border-border-default bg-surface px-lg font-sans text-caption-13-bold text-text-primary shadow-md focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-action-primary"
+              >
+                <RefreshCw aria-hidden="true" size={16} />
+                {t("searchThisArea")}
+              </button>
+            )}
             <button
               type="button"
-              aria-label={coordinates ? t("locationApplied") : t("nearbySort")}
-              title={coordinates ? t("locationApplied") : t("nearbySort")}
+              aria-label={userLocation ? t("locationApplied") : t("nearbySort")}
+              title={userLocation ? t("locationApplied") : t("nearbySort")}
               onClick={requestLocation}
               className={cn(
                 "absolute right-md z-[210] flex size-touch items-center justify-center rounded-full border border-border-default bg-surface text-icon-brand shadow-md focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-action-primary",
@@ -270,7 +307,7 @@ export function StoreListContent() {
               <Link
                 key={store.code}
                 href={`/my/stores/${store.code}`}
-                className="flex min-h-[116px] items-start gap-md rounded-lg border border-border-default bg-surface p-lg shadow-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-action-primary"
+                className="flex items-start gap-md rounded-lg border border-border-default bg-surface p-lg shadow-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-action-primary"
               >
                 <span className="flex size-[36px] shrink-0 items-center justify-center rounded-sm bg-brand-soft text-icon-brand">
                   <MapPin aria-hidden="true" size={20} />
@@ -347,7 +384,7 @@ function StoreListSkeleton() {
       {Array.from({ length: 3 }).map((_, index) => (
         <div
           key={index}
-          className="h-[116px] animate-pulse rounded-lg border border-border-default bg-surface-subtle shadow-sm"
+          className="h-[100px] animate-pulse rounded-lg border border-border-default bg-surface-subtle shadow-sm"
         />
       ))}
     </div>

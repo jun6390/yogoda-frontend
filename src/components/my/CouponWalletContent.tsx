@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useEffect, useState, useSyncExternalStore } from "react";
+import { useEffect, useState } from "react";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { CheckCircle2, Clock3, X } from "lucide-react";
@@ -18,21 +18,13 @@ import { EmptyState } from "@/components/ui/EmptyState/EmptyState";
 import { ErrorState } from "@/components/ui/ErrorState/ErrorState";
 import { FloatingToast } from "@/components/ui/Toast/Toast";
 import { Link } from "@/i18n/navigation";
+import { useHydrated } from "@/hooks/useHydrated";
 import { consumeMyCoupon, getMyCoupons } from "@/lib/api/coupon";
 import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/stores/useAuthStore";
 import type { Coupon, CouponFilter } from "@/types/coupon";
 
-const subscribe = () => () => {};
 const filters: CouponFilter[] = ["available", "expiring", "used", "expired"];
-
-function useHydrated() {
-  return useSyncExternalStore(
-    subscribe,
-    () => true,
-    () => false,
-  );
-}
 
 export function CouponWalletContent() {
   const t = useTranslations("MyCoupons");
@@ -384,10 +376,25 @@ function DetailRow({ label, value }: { label: string; value: string }) {
 
 function CouponSkeleton() {
   return (
-    <div className="space-y-md" aria-hidden="true">
-      <div className="h-[112px] animate-pulse rounded-lg bg-surface-subtle" />
-      <div className="h-[76px] animate-pulse rounded-lg bg-surface-subtle" />
-      <div className="h-[108px] animate-pulse rounded-lg bg-surface-subtle" />
+    <div className="animate-pulse space-y-xl" aria-hidden="true">
+      <div className="min-h-[144px] rounded-lg bg-surface-subtle p-lg">
+        <div className="h-[14px] w-[96px] rounded-sm bg-border-default" />
+        <div className="mt-sm h-[28px] w-[48px] rounded-sm bg-border-default" />
+        <div className="mt-sm h-[12px] w-[110px] rounded-sm bg-border-default" />
+      </div>
+      <div className="grid grid-cols-4 gap-xs rounded-lg bg-surface-subtle p-xs">
+        {Array.from({ length: 4 }).map((_, index) => (
+          <div key={index} className="h-[36px] rounded-sm bg-surface" />
+        ))}
+      </div>
+      <div className="space-y-lg">
+        {Array.from({ length: 2 }).map((_, index) => (
+          <div
+            key={index}
+            className="h-[108px] rounded-lg border border-border-default bg-surface-subtle"
+          />
+        ))}
+      </div>
     </div>
   );
 }

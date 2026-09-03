@@ -10,7 +10,7 @@ export interface ChatPlanCard {
 }
 
 // 가입 플로우 단계
-export type SignupStep =
+type SignupStep =
   | "confirm_plan"
   | "fraud_warning"
   | "terms_agreement"

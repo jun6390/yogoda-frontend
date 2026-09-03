@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/nextjs-vite";
 
-import { Toast } from "./Toast";
+import { FloatingToast, Toast } from "./Toast";
 
 const meta = {
   title: "UI/Toast",
@@ -32,4 +32,8 @@ export const WithoutAction: Story = {
   args: {
     actionLabel: null,
   },
+};
+
+export const Floating: Story = {
+  render: (args) => <FloatingToast {...args} actionLabel={null} />,
 };

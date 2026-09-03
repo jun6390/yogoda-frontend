@@ -37,5 +37,6 @@ declare global {
 
   interface NaverMarker {
     setMap: (map: NaverMap | null) => void;
+    setIcon: (icon: Record<string, unknown>) => void;
   }
 }

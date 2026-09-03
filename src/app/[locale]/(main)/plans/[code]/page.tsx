@@ -874,7 +874,7 @@ function PlanDetailContent({ code }: PlanDetailContentProps) {
               <button
                 type="button"
                 onClick={handleConfirmExit}
-                className="h-[52px] rounded-lg bg-action-primary font-sans text-label-14-bold text-white"
+                className="h-[52px] rounded-lg bg-action-primary font-sans text-label-14-bold text-text-on-primary"
               >
                 {t("exitModal.confirm")}
               </button>
@@ -921,7 +921,7 @@ function PlanDetailContent({ code }: PlanDetailContentProps) {
               <button
                 type="button"
                 onClick={proceedToAISignup}
-                className="h-[52px] rounded-lg bg-action-primary font-sans text-label-14-bold text-white"
+                className="h-[52px] rounded-lg bg-action-primary font-sans text-label-14-bold text-text-on-primary"
               >
                 {t("switchPlanModal.confirm")}
               </button>

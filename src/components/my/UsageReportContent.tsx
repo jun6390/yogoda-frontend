@@ -1,7 +1,6 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { useSyncExternalStore } from "react";
 
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { Activity, Bot, ChevronRight, Database } from "lucide-react";
@@ -10,20 +9,15 @@ import { useLocale, useTranslations } from "next-intl";
 import { MySubpageHeader } from "@/components/my/MySubpageHeader";
 import { ErrorState } from "@/components/ui/ErrorState/ErrorState";
 import { Link } from "@/i18n/navigation";
+import { useHydrated } from "@/hooks/useHydrated";
 import { getMyUsageRecommendation, getMyUsageReport } from "@/lib/api/usage";
 import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/stores/useAuthStore";
 
-const subscribe = () => () => {};
-
 export function UsageReportContent() {
   const t = useTranslations("UsageReport");
   const locale = useLocale();
-  const hydrated = useSyncExternalStore(
-    subscribe,
-    () => true,
-    () => false,
-  );
+  const hydrated = useHydrated();
   const accessToken = useAuthStore((state) => state.accessToken);
   const reportQuery = useQuery({
     queryKey: ["my-usage-report"],
@@ -223,6 +217,32 @@ export function UsageReportContent() {
           </p>
         </ReportCard>
 
+        <section>
+          <div className="flex items-center gap-sm">
+            <Database
+              aria-hidden="true"
+              size={16}
+              className="text-text-secondary"
+            />
+            <h2 className="font-sans text-label-14-bold text-text-primary">
+              {t("sourcesTitle")}
+            </h2>
+          </div>
+          <div className="mt-sm flex flex-wrap gap-sm">
+            {(["demoUsage", "subscriptions"] as const).map((source) => (
+              <span
+                key={source}
+                className="rounded-full border border-border-default bg-surface px-md py-sm font-sans text-caption-12-regular text-text-secondary"
+              >
+                {t(`sources.${source}`)}
+              </span>
+            ))}
+          </div>
+          <p className="mt-sm font-sans text-caption-12-regular text-text-secondary">
+            {t("sourcesDescription")}
+          </p>
+        </section>
+
         <section className="space-y-md">
           <button
             type="button"
@@ -252,48 +272,16 @@ export function UsageReportContent() {
           />
         )}
 
-        <section>
-          <div className="flex items-center gap-sm">
-            <Database
-              aria-hidden="true"
-              size={16}
-              className="text-text-secondary"
-            />
-            <h2 className="font-sans text-label-14-bold text-text-primary">
-              {t("sourcesTitle")}
-            </h2>
-          </div>
-          <div className="mt-sm flex flex-wrap gap-sm">
-            {(["demoUsage", "subscriptions"] as const).map((source) => (
-              <span
-                key={source}
-                className="rounded-full border border-border-default bg-surface px-md py-sm font-sans text-caption-12-regular text-text-secondary"
-              >
-                {t(`sources.${source}`)}
-              </span>
-            ))}
-          </div>
-          <p className="mt-sm font-sans text-caption-12-regular text-text-secondary">
-            {t("sourcesDescription")}
-          </p>
-        </section>
-
-        <section className="space-y-md pt-sm text-center">
-          <Link
-            href="/my/subscriptions"
-            className="flex h-[52px] items-center justify-center rounded-lg bg-action-primary font-sans text-title-16-bold text-text-on-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-action-primary"
-          >
-            {t("manageSubscriptions")}
-          </Link>
-          {process.env.NODE_ENV !== "production" && (
+        {process.env.NODE_ENV !== "production" && (
+          <div className="pt-sm text-center">
             <Link
               href="/my/usage/demo"
               className="inline-flex font-sans text-caption-13-medium text-text-secondary"
             >
               {t("demoSettings")}
             </Link>
-          )}
-        </section>
+          </div>
+        )}
       </main>
     </div>
   );
@@ -389,11 +377,19 @@ function UsageReportLoading() {
   return (
     <div className="min-h-full bg-background pb-3xl">
       <div className="h-[64px] border-b border-border-default bg-surface" />
-      <main className="space-y-lg px-page py-lg" aria-busy="true">
-        <div className="h-[48px] animate-pulse rounded-md bg-surface-subtle" />
-        <div className="h-[150px] animate-pulse rounded-lg bg-surface" />
-        <div className="h-[176px] animate-pulse rounded-lg bg-surface" />
-        <div className="h-[180px] animate-pulse rounded-lg bg-surface" />
+      <main
+        className="animate-pulse space-y-lg px-page py-lg"
+        aria-busy="true"
+        aria-label="Loading usage report"
+      >
+        <div className="h-[48px] rounded-md bg-surface-subtle" />
+        <div className="h-[118px] rounded-lg border border-border-default bg-surface" />
+        <div className="h-[176px] rounded-lg border border-border-default bg-surface" />
+        <div className="h-[164px] rounded-lg border border-border-default bg-surface" />
+        <div className="h-[88px] rounded-lg border border-border-default bg-surface" />
+        <div className="h-[132px] rounded-lg border border-border-default bg-surface-subtle" />
+        <div className="h-[82px] rounded-md bg-surface-subtle" />
+        <div className="h-[52px] rounded-lg bg-surface-subtle" />
       </main>
     </div>
   );

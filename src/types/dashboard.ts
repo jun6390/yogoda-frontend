@@ -1,14 +1,14 @@
 // UI 행동 분석 등 다른 어드민 화면도 같이 쓰는 공용 타입이라 types/admin.ts로 옮기고 재수출함
 export type { AdminPeriod as DashboardPeriod } from "./admin";
 
-export type FunnelStage =
+type FunnelStage =
   | "consultation_started"
   | "recommendation_completed"
   | "plan_comparison_viewed"
   | "signup_started"
   | "signup_completed";
 
-export interface DashboardKpi {
+interface DashboardKpi {
   consultationCount: number;
   consultationChange: number;
   consultationPrev: number;
@@ -20,7 +20,7 @@ export interface DashboardKpi {
   conversionRatePrev: number;
 }
 
-export interface DashboardFunnelStage {
+interface DashboardFunnelStage {
   stage: FunnelStage;
   label: string;
   count: number;
@@ -28,14 +28,14 @@ export interface DashboardFunnelStage {
   dropRate: number | null;
 }
 
-export interface DashboardFunnel {
+interface DashboardFunnel {
   totalDropRate: number;
   // 조회 기간에 데이터가 전혀 없으면(전부 0건) null로 내려옴
   maxDropStage: FunnelStage | null;
   stages: DashboardFunnelStage[];
 }
 
-export interface DashboardPromptConversion {
+interface DashboardPromptConversion {
   version: string;
   conversionRate: number;
   sessionCount: number;

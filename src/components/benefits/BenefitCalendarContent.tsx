@@ -189,7 +189,7 @@ export function BenefitCalendarContent() {
                 <EmptyState
                   heading={t("empty")}
                   description={t("emptyDescription")}
-                  className="mt-md w-full rounded-lg bg-surface"
+                  className="mt-md w-full"
                 />
               )}
             </section>
