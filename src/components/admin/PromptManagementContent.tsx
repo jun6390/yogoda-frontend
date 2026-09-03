@@ -144,15 +144,15 @@ export function PromptManagementContent() {
         AI 추천 상담의 시스템 프롬프트를 수정하고 버전별 성과를 확인하세요
       </p>
 
-      <div className="mt-lg flex w-fit gap-xs rounded-full bg-surface-subtle p-xs">
+      <div className="mt-sm flex justify-end gap-xs">
         <button
           type="button"
           onClick={() => setPageView("editor")}
           className={cn(
-            "h-9 rounded-full px-lg font-sans text-label-14-bold transition-colors",
+            "rounded-t-xl border border-b-0 px-xl py-md font-sans text-label-14-bold transition-colors",
             pageView === "editor"
-              ? "bg-surface text-text-primary shadow-sm"
-              : "text-text-secondary",
+              ? "-mb-px border-border-default bg-surface text-text-primary shadow-[0_-2px_6px_rgba(0,0,0,0.04)]"
+              : "border-transparent bg-surface-subtle text-text-secondary hover:text-text-primary",
           )}
         >
           프롬프트 편집
@@ -161,10 +161,10 @@ export function PromptManagementContent() {
           type="button"
           onClick={() => setPageView("history")}
           className={cn(
-            "h-9 rounded-full px-lg font-sans text-label-14-bold transition-colors",
+            "rounded-t-xl border border-b-0 px-xl py-md font-sans text-label-14-bold transition-colors",
             pageView === "history"
-              ? "bg-surface text-text-primary shadow-sm"
-              : "text-text-secondary",
+              ? "-mb-px border-border-default bg-surface text-text-primary shadow-[0_-2px_6px_rgba(0,0,0,0.04)]"
+              : "border-transparent bg-surface-subtle text-text-secondary hover:text-text-primary",
           )}
         >
           버전 히스토리
@@ -172,7 +172,7 @@ export function PromptManagementContent() {
       </div>
 
       {pageView === "editor" && (
-        <section className="mt-2xl rounded-lg border border-border-default bg-surface p-2xl">
+        <section className="rounded-lg rounded-tr-none border border-border-default bg-surface p-2xl">
           <div className="flex items-center gap-sm">
             <h2 className="font-sans text-title-18-bold text-text-primary">
               현재 적용 중인 프롬프트
