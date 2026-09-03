@@ -44,7 +44,7 @@ export function ErrorState({
           <button
             type="button"
             onClick={onRetry}
-            className="mt-lg font-sans text-label-14-bold text-action-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-action-primary"
+            className="mt-lg font-sans text-label-14-bold text-text-brand focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-action-primary"
           >
             {retryLabel}
           </button>

@@ -73,6 +73,10 @@ function translateStoryValue(value: unknown): unknown {
   return value;
 }
 
+const testEnvironment = (
+  import.meta as ImportMeta & { env?: Record<string, string> }
+).env;
+
 const preview: Preview = {
   parameters: {
     controls: {
@@ -86,7 +90,7 @@ const preview: Preview = {
       // 'todo' - 접근성 위반을 테스트 UI에만 표시함
       // 'error' - 접근성 위반 시 CI 실패 처리함
       // 'off' - 접근성 검사 비활성화함
-      test: "todo",
+      test: "error",
     },
   },
 
@@ -118,8 +122,8 @@ const preview: Preview = {
   },
 
   initialGlobals: {
-    theme: "light",
-    locale: "ko",
+    theme: testEnvironment?.VITE_STORYBOOK_THEME === "dark" ? "dark" : "light",
+    locale: testEnvironment?.VITE_STORYBOOK_LOCALE === "en" ? "en" : "ko",
   },
 
   decorators: [
@@ -131,7 +135,11 @@ const preview: Preview = {
         locale === "en" ? translateStoryValue(context.args) : context.args;
 
       return (
-        <NextIntlClientProvider locale={locale} messages={messages}>
+        <NextIntlClientProvider
+          locale={locale}
+          messages={messages}
+          timeZone="Asia/Seoul"
+        >
           <div
             className={`${isDark ? "dark" : ""} ${notoSansKr.variable} min-h-screen bg-background font-sans text-text-primary`}
           >

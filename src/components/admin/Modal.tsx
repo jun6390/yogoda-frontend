@@ -1,4 +1,5 @@
 import type { ButtonHTMLAttributes, HTMLAttributes, ReactNode } from "react";
+import { useId } from "react";
 import { X } from "lucide-react";
 
 import { Button } from "./Button";
@@ -34,10 +35,14 @@ export function Modal({
   className,
   ...props
 }: ModalProps) {
+  const headingId = useId();
+  const descriptionId = useId();
   return (
     <div
       role="dialog"
       aria-modal="true"
+      aria-labelledby={props["aria-label"] ? undefined : headingId}
+      aria-describedby={descriptionId}
       className={cn(
         "relative flex w-[calc(100vw-40px)] max-w-content flex-col items-center rounded-2xl bg-surface p-2xl text-center shadow-md",
         className,
@@ -56,10 +61,16 @@ export function Modal({
       <div className="flex size-10 items-center justify-center rounded-full bg-brand-soft text-text-brand">
         {icon}
       </div>
-      <h2 className="mt-lg font-sans text-title-16-bold text-text-primary">
+      <h2
+        id={headingId}
+        className="mt-lg font-sans text-title-16-bold text-text-primary"
+      >
         {heading}
       </h2>
-      <p className="whitespace-pre-line py-2xl font-sans text-body-14-regular text-text-secondary">
+      <p
+        id={descriptionId}
+        className="whitespace-pre-line py-2xl font-sans text-body-14-regular text-text-secondary"
+      >
         {description}
       </p>
       <Button

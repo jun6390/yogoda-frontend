@@ -258,11 +258,16 @@
     "closeMenu": "메뉴 닫기"
   },
   "Notifications": {
+    "loading": "알림을 불러오는 중",
+    "loadError": "알림을 불러오지 못했어요.",
+    "retry": "다시 불러오기",
+    "delete": "알림 삭제",
     "title": "알림",
     "empty": "아직 알림이 없어요",
     "close": "알림 닫기",
     "markAllAsRead": "모두 읽음",
-    "markingAllAsRead": "처리 중"
+    "markingAllAsRead": "처리 중",
+    "updateError": "알림을 변경하지 못했어요. 다시 시도해 주세요."
   },
   "Menu": {
     "title": "메뉴",
@@ -532,6 +537,8 @@
     "loginRequired": "로그인이 필요한 화면이에요.",
     "loginDescription": "로그인 후 구독 현황을 관리할 수 있어요.",
     "loadError": "구독 정보를 불러오지 못했어요.",
+    "updateError": "구독 상태를 변경하지 못했어요. 다시 시도해 주세요.",
+    "invalidInput": "월 구독료와 이용 시작일을 확인해 주세요.",
     "loadErrorDescription": "잠시 후 다시 시도해 주세요.",
     "retry": "다시 불러오기",
     "activeSubscriptions": "이용 중인 구독",
@@ -712,6 +719,7 @@
     "gigabytes": "{amount}GB",
     "usageRate": "사용량 {rate}%",
     "remainingData": "남은 데이터 {amount}GB",
+    "unlimitedData": "무제한",
     "recentUsage": "최근 3개월 사용량",
     "averageUsage": "3개월 평균 {amount}GB",
     "summary": "이번 달 이용 요약",
@@ -901,6 +909,7 @@
     "usageLoadError": "사용량 리포트에서 확인해 주세요",
     "dataSummaryTitle": "이번 달 데이터",
     "dataSummaryLimit": "{amount}GB",
+    "unlimitedData": "무제한",
     "dataSummaryUsageRate": "사용량 {rate}%",
     "dataSummaryRemainingData": "남은 데이터 {amount}GB",
     "noPlanBillingAmount": "가입 필요",

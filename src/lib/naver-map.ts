@@ -20,26 +20,36 @@ export function loadNaverMap() {
     const existing = document.querySelector<HTMLScriptElement>(
       "script[data-naver-map-sdk]",
     );
-    if (existing) {
-      existing.addEventListener("load", () => resolve(), { once: true });
-      existing.addEventListener(
-        "error",
-        () => reject(new Error("NAVER Map SDK 로드 실패")),
-        { once: true },
-      );
-      return;
-    }
-
-    const script = document.createElement("script");
+    const script = existing ?? document.createElement("script");
+    const cleanup = () => {
+      clearTimeout(timeout);
+      script.removeEventListener("load", onLoad);
+      script.removeEventListener("error", onError);
+    };
+    const onError = () => {
+      cleanup();
+      script.remove();
+      reject(new Error("NAVER Map SDK 로드 실패"));
+    };
+    const onLoad = () => {
+      if (!window.naver?.maps) {
+        onError();
+        return;
+      }
+      cleanup();
+      resolve();
+    };
+    const timeout = setTimeout(onError, 15000);
+    script.addEventListener("load", onLoad, { once: true });
+    script.addEventListener("error", onError, { once: true });
+    if (existing) return;
     script.dataset.naverMapSdk = "true";
     script.src = `https://oapi.map.naver.com/openapi/v3/maps.js?ncpKeyId=${encodeURIComponent(keyId)}`;
     script.async = true;
-    script.onload = () => resolve();
-    script.onerror = () => {
-      naverMapPromise = null;
-      reject(new Error("NAVER Map SDK 로드 실패"));
-    };
     document.head.appendChild(script);
+  }).catch((error: unknown) => {
+    naverMapPromise = null;
+    throw error;
   });
 
   return naverMapPromise;

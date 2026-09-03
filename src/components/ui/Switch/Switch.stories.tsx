@@ -5,6 +5,7 @@ import { Switch } from "./Switch";
 const meta = {
   title: "UI/Toggle Switch",
   component: Switch,
+  args: { "aria-label": "혜택 알림 받기" },
   parameters: {
     layout: "centered",
   },

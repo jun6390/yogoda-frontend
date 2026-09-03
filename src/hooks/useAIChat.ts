@@ -1,12 +1,6 @@
 "use client";
 
-import {
-  useCallback,
-  useEffect,
-  useRef,
-  useState,
-  useSyncExternalStore,
-} from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { io, Socket } from "socket.io-client";
 
 import {
@@ -30,6 +24,9 @@ import type {
 import type { UiElement } from "@/types/ui-elements";
 
 import { useTypewriter } from "./useTypewriter";
+import { useAuthHydrated } from "./useAuthHydrated";
+import { restoreChatMessages } from "@/lib/chat/restore-messages";
+import { createQueuedChatSender } from "@/lib/chat/queued-sender";
 
 // AI 응답이 이 시간(ms) 안에 오지 않으면 에러로 처리
 const RESPONSE_TIMEOUT_MS = 30_000;
@@ -65,30 +62,6 @@ function createSignupEntryMessage(
     type: "text",
     text,
   };
-}
-
-function subscribeToAuthHydration(onStoreChange: () => void) {
-  const unsubscribeHydrate = useAuthStore.persist.onHydrate(onStoreChange);
-  const unsubscribeFinishHydration =
-    useAuthStore.persist.onFinishHydration(onStoreChange);
-
-  return () => {
-    unsubscribeHydrate();
-    unsubscribeFinishHydration();
-  };
-}
-
-/*
- * accessToken은 zustand persist로 localStorage에서 비동기 복원(hydration)되므로,
- * 새로고침 직후 첫 렌더의 isLoggedIn만 보고 판단하면 항상 비회원으로 오판해
- * 회원의 DB 대화 내역 복원이 실행되지 않음. hydration 완료 여부를 별도로 구독함
- */
-function useAuthHydrated() {
-  return useSyncExternalStore(
-    subscribeToAuthHydration,
-    () => useAuthStore.persist.hasHydrated(),
-    () => false,
-  );
 }
 
 export interface UseAIChatOptions {
@@ -258,6 +231,12 @@ export function useAIChat({
   }, [currentSignupStep]);
 
   const socketRef = useRef<Socket | null>(null);
+  const senderRef = useRef<ReturnType<typeof createQueuedChatSender> | null>(
+    null,
+  );
+  const requestsRef = useRef(
+    new Map<string, { text: string; extra?: Record<string, unknown> }>(),
+  );
   // 응답 타임아웃 타이머 (30초 안에 done이 안 오면 에러 처리)
   const responseTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const clearResponseTimeout = useCallback(() => {
@@ -287,6 +266,33 @@ export function useAIChat({
     );
   }, []);
   const typewriter = useTypewriter(appendChars);
+
+  const failCurrentResponse = useCallback(() => {
+    clearResponseTimeout();
+    senderRef.current?.cancel();
+    const messageId = currentAiMsgIdRef.current;
+    if (messageId) {
+      typewriter.stop(messageId);
+      setMessages((previous) =>
+        previous.map((message) =>
+          message.id === messageId ? { ...message, type: "error" } : message,
+        ),
+      );
+      currentAiMsgIdRef.current = null;
+    }
+    setIsTyping(false);
+    setIsLoadingExtra(false);
+    setThinkingMessage(null);
+    setQuickReplies([]);
+  }, [clearResponseTimeout, typewriter]);
+
+  const startResponseTimeout = useCallback(() => {
+    clearResponseTimeout();
+    responseTimeoutRef.current = setTimeout(
+      failCurrentResponse,
+      RESPONSE_TIMEOUT_MS,
+    );
+  }, [clearResponseTimeout, failCurrentResponse]);
 
   /*
    * 소켓을 열고 영구 이벤트 핸들러를 등록함.
@@ -319,6 +325,7 @@ export function useAIChat({
       },
     });
     socketRef.current = socket;
+    senderRef.current = createQueuedChatSender(socket);
 
     socket.on(
       "session_created",
@@ -480,6 +487,7 @@ export function useAIChat({
         setIsLoadingExtra(false);
         const pendingMessageId = currentAiMsgIdRef.current;
         if (pendingMessageId) {
+          requestsRef.current.delete(pendingMessageId);
           typewriter.stop(pendingMessageId);
           setMessages((prev) =>
             prev.filter(
@@ -542,6 +550,9 @@ export function useAIChat({
 
     socket.on("done", () => {
       clearResponseTimeout();
+      if (currentAiMsgIdRef.current) {
+        requestsRef.current.delete(currentAiMsgIdRef.current);
+      }
       currentAiMsgIdRef.current = null;
       setIsTyping(false);
       setIsLoadingExtra(false);
@@ -549,45 +560,13 @@ export function useAIChat({
       // 소켓은 유지해서 다음 메시지도 핸드셰이크 없이 바로 보낼 수 있게 함
     });
 
-    socket.on("error", () => {
-      clearResponseTimeout();
-      setIsLoadingExtra(false);
-      const aiMsgId = currentAiMsgIdRef.current;
-      if (aiMsgId) {
-        typewriter.stop(aiMsgId);
-        setMessages((prev) =>
-          prev.map((msg) =>
-            msg.id === aiMsgId ? { ...msg, type: "error" } : msg,
-          ),
-        );
-        currentAiMsgIdRef.current = null;
-      }
-      setIsTyping(false);
-      setQuickReplies([]);
+    socket.on("error", failCurrentResponse);
+    socket.on("connect_error", failCurrentResponse);
+    socket.on("disconnect", (reason) => {
+      // Socket.IO owns transient reconnects; retaining the reference avoids duplicate sockets.
+      if (reason !== "io client disconnect") failCurrentResponse();
     });
-
-    socket.on("connect_error", () => {
-      clearResponseTimeout();
-      setIsLoadingExtra(false);
-      const aiMsgId = currentAiMsgIdRef.current;
-      if (aiMsgId) {
-        typewriter.stop(aiMsgId);
-        setMessages((prev) =>
-          prev.map((msg) =>
-            msg.id === aiMsgId ? { ...msg, type: "error" } : msg,
-          ),
-        );
-        currentAiMsgIdRef.current = null;
-      }
-      setIsTyping(false);
-      setQuickReplies([]);
-    });
-
-    socket.on("disconnect", () => {
-      setIsTyping(false);
-      socketRef.current = null;
-    });
-  }, [typewriter, clearResponseTimeout]);
+  }, [typewriter, clearResponseTimeout, failCurrentResponse]);
 
   // 마운트 시 이전 대화 내역 복원 후 소켓 미리 연결
   // accessToken의 hydration이 끝나기 전까지는 로그인 여부를 신뢰할 수 없으므로 대기함
@@ -641,96 +620,7 @@ export function useAIChat({
               // 가입 플로우로 들어온 경우, dbMessages 맨 앞에 이미 저장된
               // 가입 인삿말이 있으므로 일반 웰컴 메시지를 따로 붙이지 않음
               ...(isSignupFlowOnLoad ? [] : [WELCOME_MESSAGE]),
-              ...dbMessages.flatMap((m) => {
-                // 카드 타입 메시지 — 텍스트 없이 카드만 렌더링
-                if (m.messageType === "fraud_warning") {
-                  return [
-                    {
-                      id: m.id,
-                      sender: "ai" as const,
-                      type: "fraud_warning" as const,
-                      signupStep: "fraud_warning",
-                      signupData: {},
-                    },
-                  ] satisfies ChatMessage[];
-                }
-                if (m.messageType === "terms") {
-                  return [
-                    {
-                      id: m.id,
-                      sender: "ai" as const,
-                      type: "terms" as const,
-                      signupStep: "terms_agreement",
-                      signupData: {},
-                    },
-                  ] satisfies ChatMessage[];
-                }
-                if (m.messageType === "identity_verification") {
-                  return [
-                    {
-                      id: m.id,
-                      sender: "ai" as const,
-                      type: "identity_verification" as const,
-                      signupStep: "identity_verification",
-                      signupData: {},
-                    },
-                  ] satisfies ChatMessage[];
-                }
-                if (m.messageType === "signup_summary") {
-                  return [
-                    {
-                      id: m.id,
-                      sender: "ai" as const,
-                      type: "signup_summary" as const,
-                      signupStep: "final_confirm",
-                      signupData:
-                        (m.signupData as import("@/types/chat").SignupCollectedData) ??
-                        {},
-                      preselectedPlan: m.preselectedPlan as
-                        import("@/types/chat").PreselectedPlan | undefined,
-                    },
-                  ] satisfies ChatMessage[];
-                }
-                if (m.messageType === "signup_complete") {
-                  return [
-                    {
-                      id: m.id,
-                      sender: "ai" as const,
-                      type: "signup_complete" as const,
-                      signupStep: "completed" as const,
-                      preselectedPlan: m.preselectedPlan as
-                        import("@/types/chat").PreselectedPlan | undefined,
-                    },
-                  ] satisfies ChatMessage[];
-                }
-
-                // 내용이 빈 문자열(또는 공백뿐)이면 빈 말풍선을 만들지 않음.
-                // 스트리밍 중 리크 필터가 응답 전체를 걸러내는 등의 이유로
-                // DB에 빈 문자열로 저장된 메시지가 있을 수 있음
-                const trimmedContent = m.content.trim();
-                const textMsg: ChatMessage | null = trimmedContent
-                  ? {
-                      id: m.id,
-                      sender: m.role === "user" ? "user" : "ai",
-                      type: "text",
-                      text: m.content,
-                    }
-                  : null;
-
-                // 요금제 추천 카드가 저장된 메시지는, 실시간 대화 때와 동일하게
-                // 텍스트 말풍선 뒤에 카드 메시지를 이어붙여 함께 복원함
-                if (m.plans && m.plans.length > 0) {
-                  const plansMsg: ChatMessage = {
-                    id: `${m.id}-plans`,
-                    sender: "ai",
-                    type: "plans",
-                    plans: m.plans,
-                  };
-                  return textMsg ? [textMsg, plansMsg] : [plansMsg];
-                }
-
-                return textMsg ? [textMsg] : [];
-              }),
+              ...restoreChatMessages(dbMessages),
             ]);
           }
         } catch (err) {
@@ -812,6 +702,7 @@ export function useAIChat({
   useEffect(() => {
     return () => {
       clearResponseTimeout();
+      senderRef.current?.cancel();
       socketRef.current?.disconnect();
       typewriter.stopAll();
     };
@@ -835,14 +726,8 @@ export function useAIChat({
         ...extraPayload,
       };
 
-      if (socketRef.current?.connected) {
-        socketRef.current.emit("message", payload);
-      } else {
-        openSocket();
-        socketRef.current?.once("connect", () => {
-          socketRef.current?.emit("message", payload);
-        });
-      }
+      openSocket();
+      senderRef.current?.send(payload);
     },
     [openSocket],
   );
@@ -893,23 +778,8 @@ export function useAIChat({
         extra.recommendedByAI = preselectedPlanRef.current.recommendedByAI;
       }
 
-      // 30초 안에 done이 안 오면 에러 처리
-      clearResponseTimeout();
-      responseTimeoutRef.current = setTimeout(() => {
-        const timedOutMsgId = currentAiMsgIdRef.current;
-        if (timedOutMsgId) {
-          typewriter.stop(timedOutMsgId);
-          setMessages((prev) =>
-            prev.map((msg) =>
-              msg.id === timedOutMsgId ? { ...msg, type: "error" } : msg,
-            ),
-          );
-          currentAiMsgIdRef.current = null;
-        }
-        setIsTyping(false);
-        setIsLoadingExtra(false);
-        setQuickReplies([]);
-      }, RESPONSE_TIMEOUT_MS);
+      startResponseTimeout();
+      requestsRef.current.set(aiMsgId, { text, extra });
 
       emitMessage(text, Object.keys(extra).length > 0 ? extra : undefined);
     },
@@ -918,8 +788,7 @@ export function useAIChat({
       guestChatCount,
       emitMessage,
       signupCollectedData,
-      clearResponseTimeout,
-      typewriter,
+      startResponseTimeout,
     ],
   );
 
@@ -929,7 +798,7 @@ export function useAIChat({
 
   const sendMessageSilent = useCallback(
     (text: string, extraPayload?: Record<string, unknown>) => {
-      if (!text.trim()) return;
+      if (!text.trim() || currentAiMsgIdRef.current) return;
       const aiMsgId = Date.now().toString();
       setMessages((prev) => [
         ...prev,
@@ -946,27 +815,12 @@ export function useAIChat({
         extra.currentSignupStep = currentSignupStepRef.current;
         extra.recommendedByAI = preselectedPlanRef.current.recommendedByAI;
       }
-      // 30초 안에 done이 안 오면 에러 처리
-      clearResponseTimeout();
-      responseTimeoutRef.current = setTimeout(() => {
-        const timedOutMsgId = currentAiMsgIdRef.current;
-        if (timedOutMsgId) {
-          typewriter.stop(timedOutMsgId);
-          setMessages((prev) =>
-            prev.map((msg) =>
-              msg.id === timedOutMsgId ? { ...msg, type: "error" } : msg,
-            ),
-          );
-          currentAiMsgIdRef.current = null;
-        }
-        setIsTyping(false);
-        setIsLoadingExtra(false);
-        setQuickReplies([]);
-      }, RESPONSE_TIMEOUT_MS);
+      startResponseTimeout();
+      requestsRef.current.set(aiMsgId, { text, extra });
 
       emitMessage(text, Object.keys(extra).length > 0 ? extra : undefined);
     },
-    [emitMessage, signupCollectedData, clearResponseTimeout, typewriter],
+    [emitMessage, signupCollectedData, startResponseTimeout],
   );
 
   // 요금제 상세에서 AI 가입/변경을 선택하면 가입 인삿말("OO님, OO 요금제를
@@ -1049,6 +903,13 @@ export function useAIChat({
 
     // sessionId를 비워야 다음 소켓 연결 시 서버가 새 세션을 발급함
     sessionIdRef.current = null;
+    clearResponseTimeout();
+    senderRef.current?.cancel();
+    currentAiMsgIdRef.current = null;
+    requestsRef.current.clear();
+    typewriter.stopAll();
+    setIsTyping(false);
+    setIsLoadingExtra(false);
     socketRef.current?.disconnect();
     socketRef.current = null;
     openSocket();
@@ -1063,7 +924,7 @@ export function useAIChat({
     setMessages([WELCOME_MESSAGE]);
     setQuickReplies([]);
     setShowConsentBanner(false);
-  }, [isLoggedIn, openSocket]);
+  }, [isLoggedIn, openSocket, clearResponseTimeout, typewriter]);
 
   /*
    * 추천 카드 UI 요소의 노출/클릭을 관리자 "UI 행동 분석" 통계용으로 기록함.
@@ -1096,43 +957,25 @@ export function useAIChat({
 
   const retryMessage = useCallback(
     (failedAiMsgId: string) => {
-      const failedIdx = messages.findIndex((m) => m.id === failedAiMsgId);
-      if (failedIdx <= 0) return;
-
-      const userMsg = messages[failedIdx - 1];
-      if (!userMsg?.text) return;
-
+      if (currentAiMsgIdRef.current) return;
+      const failed = messages.find((message) => message.id === failedAiMsgId);
+      const request = requestsRef.current.get(failedAiMsgId);
+      if (failed?.type !== "error" || !request) return;
       typewriter.stop(failedAiMsgId);
-      setMessages((prev) =>
-        prev.map((msg) =>
-          msg.id === failedAiMsgId ? { ...msg, type: "text", text: "" } : msg,
+      setMessages((previous) =>
+        previous.map((message) =>
+          message.id === failedAiMsgId
+            ? { ...message, type: "text", text: "" }
+            : message,
         ),
       );
       setIsTyping(true);
       setQuickReplies([]);
       currentAiMsgIdRef.current = failedAiMsgId;
-
-      // 30초 안에 done이 안 오면 에러 처리
-      clearResponseTimeout();
-      responseTimeoutRef.current = setTimeout(() => {
-        const timedOutMsgId = currentAiMsgIdRef.current;
-        if (timedOutMsgId) {
-          typewriter.stop(timedOutMsgId);
-          setMessages((prev) =>
-            prev.map((msg) =>
-              msg.id === timedOutMsgId ? { ...msg, type: "error" } : msg,
-            ),
-          );
-          currentAiMsgIdRef.current = null;
-        }
-        setIsTyping(false);
-        setIsLoadingExtra(false);
-        setQuickReplies([]);
-      }, RESPONSE_TIMEOUT_MS);
-
-      emitMessage(userMsg.text);
+      startResponseTimeout();
+      emitMessage(request.text, request.extra);
     },
-    [messages, emitMessage, typewriter, clearResponseTimeout],
+    [messages, typewriter, startResponseTimeout, emitMessage],
   );
 
   /**
@@ -1147,6 +990,7 @@ export function useAIChat({
     if (!aiMsgId) return undefined;
 
     clearResponseTimeout();
+    senderRef.current?.cancel();
     typewriter.stop(aiMsgId);
     currentAiMsgIdRef.current = null;
     socketRef.current?.emit("stop");
