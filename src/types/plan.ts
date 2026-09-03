@@ -1,22 +1,22 @@
-export type PlanNetwork = "5G" | "LTE" | "5G/LTE";
+type PlanNetwork = "5G" | "LTE" | "5G/LTE";
 
-export type PlanCategory = "mobile" | "tablet" | "premium" | "legacy";
+type PlanCategory = "mobile" | "tablet" | "premium" | "legacy";
 
-export type PlanProductLine = "nerget" | "uplus";
+type PlanProductLine = "nerget" | "uplus";
 
-export type PlanBenefitCategory =
+type PlanBenefitCategory =
   "content" | "payment" | "membership" | "device" | "bundle" | "other";
 
-export type PlanChoiceBenefitStepType = "choice" | "info";
+type PlanChoiceBenefitStepType = "choice" | "info";
 
-export type PlanChoiceBenefitSection =
+type PlanChoiceBenefitSection =
   "plus" | "premium" | "detail" | "coupon" | "membership" | "addon" | "other";
 
-export type PlanChoiceBenefitDependencyMatch = "any" | "all";
+type PlanChoiceBenefitDependencyMatch = "any" | "all";
 
 export type SelectedPlanOptions = Record<string, string[]>;
 
-export interface PlanDataAllowance {
+interface PlanDataAllowance {
   display: string;
   amountMb: number | null;
   throttleKbps: number | null;
@@ -24,13 +24,13 @@ export interface PlanDataAllowance {
   familyDataDisplay: string | null;
 }
 
-export interface PlanPromotion {
+interface PlanPromotion {
   badge: string | null;
   effectiveMonthlyFee: number | null;
   maxMonthlyBenefit: number | null;
 }
 
-export interface PlanBenefitDetail {
+interface PlanBenefitDetail {
   category: PlanBenefitCategory;
   title: string;
   description: string | null;
@@ -46,7 +46,7 @@ export interface PlanChoiceBenefitOption {
   monthlyValue: number | null;
 }
 
-export interface PlanChoiceBenefitDependency {
+interface PlanChoiceBenefitDependency {
   stepCode: string;
   optionCodes: string[];
   match: PlanChoiceBenefitDependencyMatch;
@@ -113,21 +113,10 @@ export interface Plan {
   updated_at?: string;
 }
 
-export interface PlanSavings {
+interface PlanSavings {
   amount: number;
   previousMonthlyFee: number;
   newMonthlyFee: number;
-}
-
-export interface JoinPlanResponse {
-  message: string;
-  planCode: string;
-  planName: string;
-  currentPlanId: string;
-  selectedOptions: SelectedPlanOptions;
-  joinedAt: string;
-  monthlyFee: number;
-  savings: PlanSavings | null;
 }
 
 export interface CurrentPlan {
@@ -149,7 +138,7 @@ export interface PlanCancelResult {
   canceledPlanId?: string;
 }
 
-export type PlanComparisonWinner = "current" | "selected" | "tie" | "none";
+type PlanComparisonWinner = "current" | "selected" | "tie" | "none";
 
 export interface PlanComparisonRow {
   label: string;

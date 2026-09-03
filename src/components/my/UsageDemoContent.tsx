@@ -1,12 +1,13 @@
 "use client";
 
-import type { ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Activity, TrendingDown } from "lucide-react";
 import { useTranslations } from "next-intl";
 
 import { MySubpageHeader } from "@/components/my/MySubpageHeader";
+import { FloatingToast } from "@/components/ui/Toast/Toast";
 import { Link } from "@/i18n/navigation";
 import { applyDemoUsageScenario } from "@/lib/api/usage";
 import type { DemoUsageScenario } from "@/types/usage";
@@ -14,16 +15,29 @@ import type { DemoUsageScenario } from "@/types/usage";
 export function UsageDemoContent() {
   const t = useTranslations("UsageDemo");
   const queryClient = useQueryClient();
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
   const mutation = useMutation({
     mutationFn: applyDemoUsageScenario,
-    onSuccess: async () => {
+    onSuccess: async (_, scenario) => {
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: ["my-usage-report"] }),
         queryClient.invalidateQueries({ queryKey: ["my-subscriptions"] }),
       ]);
+      setToastMessage(
+        scenario === "usage-drop"
+          ? t("dropAppliedToast")
+          : t("baselineAppliedToast"),
+      );
     },
+    onError: () => setToastMessage(t("error")),
   });
   const apply = (scenario: DemoUsageScenario) => mutation.mutate(scenario);
+
+  useEffect(() => {
+    if (!toastMessage) return;
+    const timer = window.setTimeout(() => setToastMessage(null), 2500);
+    return () => window.clearTimeout(timer);
+  }, [toastMessage]);
 
   return (
     <div className="min-h-full bg-background pb-3xl">
@@ -53,19 +67,6 @@ export function UsageDemoContent() {
           disabled={mutation.isPending}
           onClick={() => apply("usage-drop")}
         />
-        {mutation.isSuccess && (
-          <p
-            role="status"
-            className="font-sans text-caption-13-bold text-success"
-          >
-            {t("applied")}
-          </p>
-        )}
-        {mutation.isError && (
-          <p role="alert" className="font-sans text-caption-13-bold text-error">
-            {t("error")}
-          </p>
-        )}
         <Link
           href="/my/usage"
           className="flex h-[52px] items-center justify-center rounded-lg bg-action-primary font-sans text-title-16-bold text-text-on-primary"
@@ -73,6 +74,9 @@ export function UsageDemoContent() {
           {t("viewReport")}
         </Link>
       </main>
+      {toastMessage && (
+        <FloatingToast message={toastMessage} actionLabel={null} />
+      )}
     </div>
   );
 }

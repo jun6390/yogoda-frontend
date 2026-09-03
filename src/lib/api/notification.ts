@@ -1,7 +1,10 @@
 import { apiFetch } from "./client";
 
 export type NotificationType =
-  "coupon_expiring" | "attendance_reminder" | "consultation_incomplete";
+  | "coupon_expiring"
+  | "attendance_reminder"
+  | "consultation_incomplete"
+  | "usage_pattern_changed";
 
 export interface AppNotification {
   id: string;

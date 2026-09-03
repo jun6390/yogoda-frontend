@@ -1,11 +1,11 @@
-export interface PersonaAnalysisScores {
+interface PersonaAnalysisScores {
   data: number;
   content: number;
   benefit: number;
   price: number;
 }
 
-export type PersonaAnalysisType =
+type PersonaAnalysisType =
   | "data_heavy"
   | "content_balanced"
   | "benefit_focused"

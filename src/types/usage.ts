@@ -1,6 +1,6 @@
 export type DemoUsageScenario = "baseline" | "usage-drop";
 
-export interface UsageHistoryItem {
+interface UsageHistoryItem {
   month: string;
   amount: number;
 }
@@ -27,7 +27,7 @@ export interface DemoUsageResponse {
   report: UsageReport;
 }
 
-export interface UsageRecommendationPlan {
+interface UsageRecommendationPlan {
   code: string;
   name: string;
   monthlyFee: number;

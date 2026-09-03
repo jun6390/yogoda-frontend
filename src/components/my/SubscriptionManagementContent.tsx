@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useMemo, useState, useSyncExternalStore } from "react";
+import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   Clapperboard,
@@ -26,6 +26,7 @@ import {
   reactivateMySubscription,
 } from "@/lib/api/subscription";
 import { cn } from "@/lib/utils";
+import { useHydrated } from "@/hooks/useHydrated";
 import { useAuthStore } from "@/stores/useAuthStore";
 import type {
   SubscriptionCategory,
@@ -33,8 +34,6 @@ import type {
   SubscriptionStatus,
   UserSubscription,
 } from "@/types/subscription";
-
-const subscribe = () => () => {};
 
 const subscriptionLogos = {
   netflix: {
@@ -116,14 +115,6 @@ const serviceCatalog: Array<
     startedAt: "",
   },
 ];
-
-function useHydrated() {
-  return useSyncExternalStore(
-    subscribe,
-    () => true,
-    () => false,
-  );
-}
 
 export function SubscriptionManagementContent() {
   const t = useTranslations("MySubscriptions");
@@ -480,15 +471,22 @@ function SubscriptionCard({
 
 function SubscriptionSkeleton() {
   return (
-    <div className="space-y-xl" aria-hidden="true">
-      <div className="h-[112px] animate-pulse rounded-lg bg-surface-subtle" />
-      <div className="h-[48px] animate-pulse rounded-lg bg-surface-subtle" />
-      {Array.from({ length: 2 }).map((_, index) => (
-        <div
-          key={index}
-          className="h-[124px] animate-pulse rounded-lg bg-surface-subtle"
-        />
-      ))}
+    <div className="animate-pulse space-y-xl" aria-hidden="true">
+      <div className="h-[88px] rounded-lg border border-border-default bg-surface-subtle" />
+      <div className="h-[48px] rounded-md bg-surface-subtle" />
+      <div className="h-[48px] rounded-lg border border-border-default bg-surface-subtle" />
+      <div className="grid grid-cols-2 gap-xs rounded-lg bg-surface-subtle p-xs">
+        <div className="h-[40px] rounded-sm bg-surface" />
+        <div className="h-[40px] rounded-sm bg-surface" />
+      </div>
+      <div className="space-y-lg">
+        {Array.from({ length: 2 }).map((_, index) => (
+          <div
+            key={index}
+            className="h-[124px] rounded-lg border border-border-default bg-surface-subtle"
+          />
+        ))}
+      </div>
     </div>
   );
 }

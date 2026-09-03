@@ -8,7 +8,7 @@ export type FunnelStage =
   | "signup_started"
   | "signup_completed";
 
-export interface DashboardKpi {
+interface DashboardKpi {
   consultationCount: number;
   consultationChange: number;
   consultationPrev: number;
@@ -20,7 +20,7 @@ export interface DashboardKpi {
   conversionRatePrev: number;
 }
 
-export interface DashboardFunnelStage {
+interface DashboardFunnelStage {
   stage: FunnelStage;
   label: string;
   count: number;
@@ -34,7 +34,7 @@ export interface DashboardFunnelStage {
   baselineCount: number;
 }
 
-export interface DashboardFunnel {
+interface DashboardFunnel {
   totalDropRate: number;
   // 조회 기간에 데이터가 전혀 없거나, 베이스라인보다 나빠진 단계가 하나도
   // 없으면 null로 내려옴
@@ -42,7 +42,7 @@ export interface DashboardFunnel {
   stages: DashboardFunnelStage[];
 }
 
-export interface DashboardPromptConversion {
+interface DashboardPromptConversion {
   version: string;
   conversionRate: number;
   sessionCount: number;

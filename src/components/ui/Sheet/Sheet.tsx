@@ -1,14 +1,9 @@
 "use client";
 
-import {
-  type ReactNode,
-  useEffect,
-  useRef,
-  useState,
-  useSyncExternalStore,
-} from "react";
+import { type ReactNode, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { cn } from "@/lib/utils";
+import { useHydrated } from "@/hooks/useHydrated";
 
 export interface SheetProps {
   open: boolean;
@@ -37,11 +32,7 @@ export function Sheet({
   className,
 }: SheetProps) {
   // SSR hydration 감지: 서버에선 false, 클라이언트에선 true
-  const mounted = useSyncExternalStore(
-    () => () => {},
-    () => true,
-    () => false,
-  );
+  const mounted = useHydrated();
   const [visible, setVisible] = useState(false);
   // 시트가 실제로 "열린 위치"에 있는지. open과 분리해두는 이유는 아래 참고
   const [entered, setEntered] = useState(false);

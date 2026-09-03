@@ -162,6 +162,7 @@ export function SessionLogContent() {
   } = useQuery({
     queryKey: ADMIN_SESSION_QUERY_KEYS.list(listParams),
     queryFn: () => getSessions(listParams),
+    placeholderData: (previousData) => previousData,
   });
 
   const {

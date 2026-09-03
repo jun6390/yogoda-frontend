@@ -1,12 +1,13 @@
 "use client";
 
-import { useEffect, useRef, useState, useSyncExternalStore } from "react";
+import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { IdCard } from "lucide-react";
 import { Sheet } from "@/components/ui/Sheet/Sheet";
 import { Button } from "@/components/ui/Button/Button";
 import { Input } from "@/components/ui/Input/Input";
 import { Toast } from "@/components/ui/Toast/Toast";
+import { useHydrated } from "@/hooks/useHydrated";
 
 interface IdentityVerificationCardProps {
   onVerify?: (message: string, extraPayload?: Record<string, unknown>) => void;
@@ -63,11 +64,7 @@ export function IdentityVerificationCard({
 
   // 채팅 메시지 목록 컨테이너의 translate 유틸이 position:fixed의 containing
   // block을 바꿔버려서, 토스트는 document.body로 포탈해야 뷰포트 기준으로 뜸
-  const mounted = useSyncExternalStore(
-    () => () => {},
-    () => true,
-    () => false,
-  );
+  const mounted = useHydrated();
 
   const [toastDragY, setToastDragY] = useState(0);
   const [isDraggingToast, setIsDraggingToast] = useState(false);

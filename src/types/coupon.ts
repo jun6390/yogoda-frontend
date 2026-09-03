@@ -1,4 +1,4 @@
-export type CouponStatus = "available" | "used" | "expired";
+type CouponStatus = "available" | "used" | "expired";
 export type CouponFilter = CouponStatus | "expiring" | "all";
 
 export interface Coupon {

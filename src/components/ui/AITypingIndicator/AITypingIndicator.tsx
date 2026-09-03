@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import type { ButtonHTMLAttributes, HTMLAttributes } from "react";
+import type { HTMLAttributes } from "react";
 import { useTranslations } from "next-intl";
 
 import { cn } from "@/lib/utils";
@@ -91,5 +91,3 @@ export function AITypingIndicator({
     </div>
   );
 }
-
-export type AITypingRetryButtonProps = ButtonHTMLAttributes<HTMLButtonElement>;

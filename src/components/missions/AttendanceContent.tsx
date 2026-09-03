@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/Button/Button";
 import { ErrorState } from "@/components/ui/ErrorState/ErrorState";
 import { PageIntro } from "@/components/ui/PageIntro/PageIntro";
 import { RewardCalendar } from "@/components/ui/RewardCalendar/RewardCalendar";
+import { Spinner } from "@/components/ui/Spinner/Spinner";
 import { checkIn, getAttendance, getPointWallet } from "@/lib/api/reward";
 
 function currentMonth() {
@@ -54,12 +55,20 @@ export function AttendanceContent() {
         description={t("description")}
         action={
           <span className="rounded-full bg-brand-soft px-lg py-xs font-sans text-label-14-bold text-text-brand">
-            {(wallet.data?.balance ?? 0).toLocaleString()}P
+            {wallet.isPending ? (
+              <Spinner size="sm" label={t("pointsLoading")} />
+            ) : wallet.isError ? (
+              t("pointsUnavailable")
+            ) : (
+              `${(wallet.data?.balance ?? 0).toLocaleString()}P`
+            )}
           </span>
         }
       />
       <div className="space-y-xl px-page py-xl">
-        {attendance.isError ? (
+        {attendance.isPending ? (
+          <AttendanceLoading />
+        ) : attendance.isError ? (
           <ErrorState
             title={t("error")}
             description={t("errorDescription")}
@@ -103,6 +112,14 @@ export function AttendanceContent() {
               >
                 {attendance.data?.checkedInToday ? t("checked") : t("checkIn")}
               </Button>
+              {mutation.isError && (
+                <p
+                  role="alert"
+                  className="relative z-[1] mt-sm max-w-[68%] font-sans text-caption-12-regular text-error"
+                >
+                  {t("checkInError")}
+                </p>
+              )}
             </section>
             <RewardCalendar
               month={month}
@@ -118,6 +135,15 @@ export function AttendanceContent() {
           </>
         )}
       </div>
+    </div>
+  );
+}
+
+function AttendanceLoading() {
+  return (
+    <div role="status" aria-label="Loading attendance" className="space-y-xl">
+      <div className="h-[190px] animate-pulse rounded-lg bg-surface" />
+      <div className="h-[360px] animate-pulse rounded-lg bg-surface" />
     </div>
   );
 }

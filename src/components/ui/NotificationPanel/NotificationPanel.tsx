@@ -3,7 +3,7 @@
 import type { ElementType } from "react";
 import { useCallback, useRef, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
-import { Bell, Tag, Calendar, MessageCircle, Trash2 } from "lucide-react";
+import { Bell, Bot, Tag, Calendar, MessageCircle, Trash2 } from "lucide-react";
 
 import type { AppNotification, NotificationType } from "@/lib/api/notification";
 import { cn } from "@/lib/utils";
@@ -23,6 +23,10 @@ const NOTIFICATION_META: Record<
   },
   consultation_incomplete: {
     icon: MessageCircle,
+    chipClassName: "bg-brand-soft text-icon-brand",
+  },
+  usage_pattern_changed: {
+    icon: Bot,
     chipClassName: "bg-brand-soft text-icon-brand",
   },
 };
@@ -97,10 +101,7 @@ export function NotificationPanel({
           </div>
           <button
             type="button"
-            // unreadCount는 낙관적으로 먼저 0으로 갱신되는 클라이언트 값이라,
-            // 실제로는 서버에 안 읽은 알림이 남아있어도(예: 이전 요청 실패)
-            // 0이면 버튼이 막혀서 다시 시도할 방법이 없었음. 진행 중일 때만 막음
-            disabled={isMarkingAll}
+            disabled={isMarkingAll || unreadCount === 0}
             onClick={() => void handleMarkAllAsRead()}
             className="font-sans text-caption-12-bold text-text-brand disabled:cursor-default disabled:text-text-tertiary"
           >
@@ -247,7 +248,7 @@ function NotificationItem({
           onClick={(e) => void handleDeleteClick(e)}
           className={cn(
             "absolute right-0 top-0 flex h-full w-[76px] flex-col items-center justify-center gap-[3px]",
-            "bg-error text-white transition-opacity",
+            "bg-error text-text-on-primary transition-opacity",
             offset <= -(REVEAL_WIDTH / 2) ? "opacity-100" : "opacity-0",
           )}
         >
