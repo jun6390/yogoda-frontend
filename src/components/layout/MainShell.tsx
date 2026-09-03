@@ -4,7 +4,7 @@ import type { ReactNode } from "react";
 import { useEffect, useState } from "react";
 
 import { useMutation } from "@tanstack/react-query";
-import { Moon, Sun, X } from "lucide-react";
+import { Bell, MapPin, Moon, Sun, X } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 
 import { AppLayout } from "./AppLayout";
@@ -13,6 +13,8 @@ import { LogoutButton } from "@/components/auth/LogoutButton";
 import { BottomNavigation } from "@/components/ui/BottomNavigation/BottomNavigation";
 import { Header } from "@/components/ui/Header/Header";
 import { NotificationPanel } from "@/components/ui/NotificationPanel/NotificationPanel";
+import { Switch } from "@/components/ui/Switch/Switch";
+import { FloatingToast } from "@/components/ui/Toast/Toast";
 import { useNotifications } from "@/hooks/useNotifications";
 import { useHydrated } from "@/hooks/useHydrated";
 import { usePathname, useRouter } from "@/i18n/navigation";
@@ -47,6 +49,11 @@ export function MainShell({ children }: MainShellProps) {
     shouldKeepMenuOpenAfterLocaleChange,
   );
   const [isNotificationPanelOpen, setIsNotificationPanelOpen] = useState(false);
+  const [locationPermission, setLocationPermission] =
+    useState<PermissionState>("prompt");
+  const [notificationPermission, setNotificationPermission] =
+    useState<NotificationPermission>("default");
+  const [permissionToast, setPermissionToast] = useState<string | null>(null);
 
   const {
     notifications,
@@ -78,6 +85,37 @@ export function MainShell({ children }: MainShellProps) {
     window.sessionStorage.removeItem(keepMenuOpenKey);
   }, [isMenuOpen]);
 
+  useEffect(() => {
+    if (!isMenuOpen) return;
+
+    if ("Notification" in window) {
+      queueMicrotask(() => setNotificationPermission(Notification.permission));
+    }
+
+    if (!("permissions" in navigator)) return;
+
+    let permissionStatus: PermissionStatus | null = null;
+    let cancelled = false;
+
+    navigator.permissions.query({ name: "geolocation" }).then((status) => {
+      if (cancelled) return;
+      permissionStatus = status;
+      setLocationPermission(status.state);
+      status.onchange = () => setLocationPermission(status.state);
+    });
+
+    return () => {
+      cancelled = true;
+      if (permissionStatus) permissionStatus.onchange = null;
+    };
+  }, [isMenuOpen]);
+
+  useEffect(() => {
+    if (!permissionToast) return;
+    const timer = window.setTimeout(() => setPermissionToast(null), 2500);
+    return () => window.clearTimeout(timer);
+  }, [permissionToast]);
+
   const closeMenu = () => {
     // 닫는 순간 내부 버튼이 focus를 잡고 있으면 inert 적용 시 브라우저 접근성 경고가 남
     if (document.activeElement instanceof HTMLElement) {
@@ -101,6 +139,38 @@ export function MainShell({ children }: MainShellProps) {
 
   const toggleTheme = () => {
     setTheme(isDark ? "light" : "dark");
+  };
+
+  const toggleLocationPermission = () => {
+    if (locationPermission !== "prompt") {
+      setPermissionToast(menu("changePermissionInBrowser"));
+      return;
+    }
+
+    if (!("geolocation" in navigator)) {
+      setPermissionToast(menu("permissionUnsupported"));
+      return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      () => setLocationPermission("granted"),
+      () => setLocationPermission("denied"),
+      { timeout: 5000 },
+    );
+  };
+
+  const toggleNotificationPermission = async () => {
+    if (!("Notification" in window)) {
+      setPermissionToast(menu("permissionUnsupported"));
+      return;
+    }
+
+    if (notificationPermission !== "default") {
+      setPermissionToast(menu("changePermissionInBrowser"));
+      return;
+    }
+
+    setNotificationPermission(await Notification.requestPermission());
   };
 
   const { mutate: requestLogout, isPending: isPendingLogout } = useMutation({
@@ -276,6 +346,30 @@ export function MainShell({ children }: MainShellProps) {
               </button>
             </section>
 
+            <section className="space-y-sm">
+              <p className="font-sans text-caption-12-bold text-text-tertiary">
+                {menu("permissions")}
+              </p>
+              <div className="divide-y divide-border-default overflow-hidden rounded-lg border border-border-default bg-surface">
+                <PermissionSettingRow
+                  icon={MapPin}
+                  label={menu("locationPermission")}
+                  description={menu(`permissionState.${locationPermission}`)}
+                  checked={locationPermission === "granted"}
+                  onChange={toggleLocationPermission}
+                />
+                <PermissionSettingRow
+                  icon={Bell}
+                  label={menu("notificationPermission")}
+                  description={menu(
+                    `permissionState.${notificationPermission === "default" ? "prompt" : notificationPermission}`,
+                  )}
+                  checked={notificationPermission === "granted"}
+                  onChange={() => void toggleNotificationPermission()}
+                />
+              </div>
+            </section>
+
             {/* 설정과 구분되는 계정 액션은 메뉴 하단에 배치함 */}
             <div className="mt-auto flex flex-col gap-md">
               {accessToken && (
@@ -290,6 +384,45 @@ export function MainShell({ children }: MainShellProps) {
           </div>
         </aside>
       </div>
+      {permissionToast && (
+        <FloatingToast message={permissionToast} actionLabel={null} />
+      )}
     </>
+  );
+}
+
+function PermissionSettingRow({
+  icon: Icon,
+  label,
+  description,
+  checked,
+  onChange,
+}: {
+  icon: typeof MapPin;
+  label: string;
+  description: string;
+  checked: boolean;
+  onChange: () => void;
+}) {
+  return (
+    <div className="flex min-h-[64px] items-center gap-md px-md py-sm">
+      <span className="flex size-[32px] shrink-0 items-center justify-center rounded-sm bg-brand-soft text-icon-brand">
+        <Icon aria-hidden="true" size={18} />
+      </span>
+      <span className="min-w-0 flex-1">
+        <span className="block font-sans text-label-14-bold text-text-primary">
+          {label}
+        </span>
+        <span className="mt-2xs block font-sans text-micro-11-regular text-text-tertiary">
+          {description}
+        </span>
+      </span>
+      <Switch
+        checked={checked}
+        onChange={onChange}
+        aria-label={label}
+        className="shrink-0"
+      />
+    </div>
   );
 }

@@ -56,3 +56,19 @@ export const AllRead: Story = {
   },
 };
 export const Empty: Story = { args: { notifications: [] } };
+
+export const UnknownNotificationType: Story = {
+  args: {
+    notifications: [
+      {
+        id: "legacy-notification",
+        type: "legacy_unknown_type",
+        title: "새로운 알림이 도착했어요",
+        body: "지원하지 않는 알림 유형도 기본 아이콘으로 표시돼요.",
+        link: null,
+        readAt: null,
+        createdAt: new Date().toISOString(),
+      },
+    ],
+  },
+};

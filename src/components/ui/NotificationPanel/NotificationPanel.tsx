@@ -31,6 +31,17 @@ const NOTIFICATION_META: Record<
   },
 };
 
+const DEFAULT_NOTIFICATION_META = {
+  icon: Bell,
+  chipClassName: "bg-surface-subtle text-icon-secondary",
+};
+
+function getNotificationMeta(type: string) {
+  return (
+    NOTIFICATION_META[type as NotificationType] ?? DEFAULT_NOTIFICATION_META
+  );
+}
+
 const REVEAL_WIDTH = 76;
 
 interface NotificationPanelProps {
@@ -148,7 +159,7 @@ function NotificationItem({
   onClick: () => void;
   onDelete?: () => Promise<void>;
 }) {
-  const meta = NOTIFICATION_META[notification.type];
+  const meta = getNotificationMeta(notification.type);
   const Icon = meta.icon;
   const isUnread = !notification.readAt;
 

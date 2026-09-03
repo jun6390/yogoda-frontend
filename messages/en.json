@@ -275,7 +275,17 @@
     "darkMode": "Dark mode",
     "adminPage": "Admin page",
     "logout": "Log out",
-    "loggingOut": "Logging out"
+    "loggingOut": "Logging out",
+    "permissions": "Permissions",
+    "locationPermission": "Location",
+    "notificationPermission": "Notifications",
+    "permissionState": {
+      "granted": "Allowed",
+      "prompt": "Not allowed",
+      "denied": "Blocked"
+    },
+    "changePermissionInBrowser": "Change this permission in your browser settings.",
+    "permissionUnsupported": "This permission is not supported in this browser."
   },
   "Pages": {
     "home": "Home",
