@@ -11,10 +11,18 @@ import { useHydrated } from "@/hooks/useHydrated";
 
 interface IdentityVerificationCardProps {
   onVerify?: (message: string, extraPayload?: Record<string, unknown>) => void;
+  // 이미 이 단계를 지나 다음 단계로 넘어간 경우 true. 지난 대화에 남아있는 카드를
+  // 다시 열어서 재제출하는 걸 막기 위해 트리거 버튼을 잠금
+  disabled?: boolean;
 }
 
 function digitsOnly(value: string) {
   return value.replace(/\D/g, "");
+}
+
+// 완성형 한글 음절(가~힣)과 영문만 남김. 자모 낱자·숫자·기호 등은 제거함
+function nameCharsOnly(value: string) {
+  return value.replace(/[^가-힣a-zA-Z]/g, "");
 }
 
 // 010-1234-5678
@@ -37,9 +45,13 @@ function generateVerificationCode() {
  */
 export function IdentityVerificationCard({
   onVerify,
+  disabled = false,
 }: IdentityVerificationCardProps) {
   const [open, setOpen] = useState(false);
   const [name, setName] = useState("");
+  // 한글 조합 중(IME composing)엔 필터링하면 조합이 끊기므로, 조합이 끝난
+  // 뒤에만 한글 정자 필터를 적용함
+  const [isNameComposing, setIsNameComposing] = useState(false);
   const [birth, setBirth] = useState("");
   const [phone, setPhone] = useState("");
   const [sentCode, setSentCode] = useState<string | null>(null);
@@ -182,6 +194,7 @@ export function IdentityVerificationCard({
         <Button
           variant="inChat"
           className="w-full"
+          disabled={disabled}
           onClick={() => setOpen(true)}
         >
           본인 확인하기
@@ -214,7 +227,18 @@ export function IdentityVerificationCard({
                 </label>
                 <Input
                   value={name}
-                  onChange={(e) => setName(e.target.value)}
+                  onChange={(e) =>
+                    setName(
+                      isNameComposing
+                        ? e.target.value
+                        : nameCharsOnly(e.target.value),
+                    )
+                  }
+                  onCompositionStart={() => setIsNameComposing(true)}
+                  onCompositionEnd={(e) => {
+                    setIsNameComposing(false);
+                    setName(nameCharsOnly(e.currentTarget.value));
+                  }}
                   onKeyDown={(e) => {
                     if (e.key !== "Enter") return;
                     e.preventDefault();
@@ -263,7 +287,7 @@ export function IdentityVerificationCard({
                     className="flex-1"
                   />
                   <Button
-                    variant="primary"
+                    variant="text"
                     className="h-13 shrink-0 whitespace-nowrap"
                     disabled={!canSendCode}
                     onClick={handleSendCode}
@@ -274,20 +298,9 @@ export function IdentityVerificationCard({
               </div>
 
               <div className="flex flex-col gap-xs">
-                <div className="flex items-center justify-between">
-                  <label className="font-sans text-caption-12-medium text-text-secondary">
-                    인증번호 6자리
-                  </label>
-                  {sentCode && (
-                    <button
-                      type="button"
-                      onClick={handleSendCode}
-                      className="font-sans text-micro-11-regular text-action-primary"
-                    >
-                      인증번호 다시 전송
-                    </button>
-                  )}
-                </div>
+                <label className="font-sans text-caption-12-medium text-text-secondary">
+                  인증번호 6자리
+                </label>
                 <Input
                   value={inputCode}
                   onChange={(e) => {
@@ -321,6 +334,7 @@ export function IdentityVerificationCard({
           </div>
 
           <Button
+            variant="primary"
             className="h-13 w-full"
             disabled={!isCodeValid || !sentCode}
             onClick={handleVerify}

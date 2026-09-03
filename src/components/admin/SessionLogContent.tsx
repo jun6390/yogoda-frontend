@@ -95,6 +95,36 @@ const filterInputClassName = cn(
   "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-border-strong",
 );
 
+function SessionListSkeleton() {
+  return (
+    <div className="flex flex-col gap-sm">
+      {Array.from({ length: 5 }).map((_, index) => (
+        <div
+          key={index}
+          className="rounded-md border border-border-default p-lg"
+        >
+          <div className="flex items-center justify-between gap-sm">
+            <div className="h-4 w-24 animate-pulse rounded-full bg-surface-subtle" />
+            <div className="h-5 w-14 animate-pulse rounded-full bg-surface-subtle" />
+          </div>
+          <div className="mt-xs h-3 w-32 animate-pulse rounded-full bg-surface-subtle" />
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function SessionDetailSkeleton() {
+  return (
+    <div className="flex flex-col gap-md">
+      <div className="ml-auto h-10 w-3/5 animate-pulse rounded-md bg-surface-subtle" />
+      <div className="h-16 w-4/5 animate-pulse rounded-md bg-surface-subtle" />
+      <div className="ml-auto h-10 w-2/5 animate-pulse rounded-md bg-surface-subtle" />
+      <div className="h-12 w-3/5 animate-pulse rounded-md bg-surface-subtle" />
+    </div>
+  );
+}
+
 export function SessionLogContent() {
   // 대시보드의 퍼널 행 클릭에서 ?drop_stage=xxx&start_date=...&end_date=...로 들어오면
   // 대시보드에서 보던 단계·기간 그대로 미리 필터링해둠
@@ -314,11 +344,7 @@ export function SessionLogContent() {
           </h2>
 
           <div className="mt-md flex-1 overflow-y-auto">
-            {isListPending && (
-              <p className="font-sans text-body-14-regular text-text-secondary">
-                불러오는 중이에요...
-              </p>
-            )}
+            {isListPending && <SessionListSkeleton />}
 
             {isListError && (
               <ErrorState
@@ -402,11 +428,7 @@ export function SessionLogContent() {
             </p>
           )}
 
-          {selectedSessionId && isDetailPending && (
-            <p className="font-sans text-body-14-regular text-text-secondary">
-              불러오는 중이에요...
-            </p>
-          )}
+          {selectedSessionId && isDetailPending && <SessionDetailSkeleton />}
 
           {selectedSessionId && isDetailError && (
             <ErrorState

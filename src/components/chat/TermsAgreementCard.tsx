@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { ChevronRight, CheckCircle2, Circle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Sheet } from "@/components/ui/Sheet/Sheet";
@@ -88,36 +88,40 @@ export function TermsAgreementCard({
     useState<Record<string, boolean>>(readStoredChecked);
   const [sheetTerm, setSheetTerm] = useState<Term | null>(null);
 
-  useEffect(() => {
-    try {
-      sessionStorage.setItem(CHECKED_STORAGE_KEY, JSON.stringify(checked));
-    } catch {
-      /* noop */
-    }
-  }, [checked]);
-
   const allRequired = TERMS.filter((t) => t.required);
   const allOptional = TERMS.filter((t) => !t.required);
 
   const allRequiredChecked = allRequired.every((t) => checked[t.id]);
   const allChecked = TERMS.every((t) => checked[t.id]);
 
+  const persistChecked = (next: Record<string, boolean>) => {
+    try {
+      sessionStorage.setItem(CHECKED_STORAGE_KEY, JSON.stringify(next));
+    } catch {
+      /* noop */
+    }
+  };
+
+  // sessionStorage 쓰기를 checked 변경에 반응하는 useEffect로 두면, 같은 단계의
+  // 카드가 (백엔드 재전송 등으로) 하나 더 마운트될 때 그 카드의 초기 빈 상태로
+  // 되돌아오는 마운트 이펙트가 방금 사용자가 체크해둔 값을 조용히 덮어써버림.
+  // 그래서 실제 사용자 조작(toggleCheck/toggleAll)에서만 명시적으로 저장함
   const toggleCheck = (id: string) => {
     if (disabled) return;
-    setChecked((prev) => ({ ...prev, [id]: !prev[id] }));
+    setChecked((prev) => {
+      const next = { ...prev, [id]: !prev[id] };
+      persistChecked(next);
+      return next;
+    });
   };
 
   const toggleAll = () => {
     if (disabled) return;
-    if (allChecked) {
-      setChecked({});
-    } else {
-      const all: Record<string, boolean> = {};
-      TERMS.forEach((t) => {
-        all[t.id] = true;
-      });
-      setChecked(all);
-    }
+    const next: Record<string, boolean> = allChecked
+      ? {}
+      : Object.fromEntries(TERMS.map((t) => [t.id, true]));
+    persistChecked(next);
+    setChecked(next);
   };
 
   const handleAgree = () => {
@@ -129,11 +133,9 @@ export function TermsAgreementCard({
       optionalAgreed.length > 0
         ? `동의합니다 (선택 동의: ${optionalAgreed.join(", ")})`
         : "동의합니다";
-    try {
-      sessionStorage.removeItem(CHECKED_STORAGE_KEY);
-    } catch {
-      /* noop */
-    }
+    // 여기서 sessionStorage를 지우지 않음 — 다음 단계로 넘어간 뒤에도 지난
+    // 카드가 새로고침 시 실제로 체크했던 항목 그대로 보여야 하기 때문. 채팅을
+    // 나가거나 로그아웃하면 clearChatSessionStorage가 전체를 정리함
     onAgree?.(message);
   };
 

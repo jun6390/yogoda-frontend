@@ -18,7 +18,9 @@ type SignupStep =
   | "select_benefits"
   | "select_payment"
   | "final_confirm"
-  | "completed";
+  | "completed"
+  // 사용자가 가입 단계와 무관한 이야기를 해서 잠시 대화를 벗어난 상태
+  | "paused";
 
 // 가입 플로우 중 수집된 데이터 (단계별로 점진적으로 채워짐)
 export interface SignupCollectedData {
@@ -31,6 +33,8 @@ export interface SignupCollectedData {
   selectedBenefits?: Record<string, string[]>;
   paymentMethod?:
     "계좌이체" | "신용카드" | "카카오페이" | "네이버페이" | "토스";
+  // signupStep이 "paused"일 때, 재개하면 돌아갈 원래 단계
+  pausedStep?: SignupStep;
 }
 
 // 가입 플로우에서 사용하는 요금제 정보

@@ -26,6 +26,21 @@ const DRAFT_AUTOSAVE_DELAY_MS = 1000;
 type TestMode = "single" | "compare";
 type PageView = "editor" | "history";
 
+function PromptEditorSkeleton() {
+  return (
+    <div className="flex flex-col gap-2xl lg:flex-row">
+      <div className="flex flex-1 flex-col gap-md">
+        <div className="h-45 w-full animate-pulse rounded-md bg-surface-subtle" />
+        <div className="h-10 w-full animate-pulse rounded-md bg-surface-subtle" />
+      </div>
+      <div className="flex flex-1 flex-col gap-md">
+        <div className="h-9 w-full animate-pulse rounded-full bg-surface-subtle" />
+        <div className="h-160 w-full animate-pulse rounded-lg bg-surface-subtle" />
+      </div>
+    </div>
+  );
+}
+
 export function PromptManagementContent() {
   const queryClient = useQueryClient();
   const [testMode, setTestMode] = useState<TestMode>("single");
@@ -173,11 +188,7 @@ export function PromptManagementContent() {
           )}
 
           <div className="mt-lg">
-            {isPending && (
-              <p className="font-sans text-body-14-regular text-text-secondary">
-                불러오는 중이에요...
-              </p>
-            )}
+            {isPending && <PromptEditorSkeleton />}
 
             {isError && (
               <ErrorState
