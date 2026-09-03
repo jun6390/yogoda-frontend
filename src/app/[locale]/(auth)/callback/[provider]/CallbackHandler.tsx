@@ -2,7 +2,6 @@
 
 import { useMutation } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
-import Image from "next/image";
 import { useSearchParams } from "next/navigation";
 import { useEffect, useRef } from "react";
 
@@ -118,36 +117,18 @@ export function CallbackHandler({ provider }: CallbackHandlerProps) {
         className="pointer-events-none absolute top-[6%] left-1/2 h-[300px] w-[300px] -translate-x-1/2 rounded-full bg-glow-accent opacity-80 blur-3xl"
       />
 
-      <div className="relative flex flex-col items-center">
-        <div
-          className={
-            isLoading
-              ? "motion-safe:animate-[float404_3.2s_ease-in-out_infinite]"
-              : ""
-          }
-        >
-          <Image
-            src="/yogoda-characters/login.webp"
-            alt=""
-            width={220}
-            height={247}
-            className="h-[247px] w-[220px] object-contain drop-shadow-[0_10px_14px_rgba(224,20,133,0.16)]"
-            priority
+      <div className="relative flex flex-col items-center gap-lg">
+        {isLoading && (
+          <Spinner
+            size="lg"
+            strokeWidth={5}
+            className="text-action-primary"
+            label={message}
           />
-        </div>
-
-        <div className="mt-xl flex items-center gap-sm">
-          {isLoading && (
-            <Spinner
-              size="md"
-              className="text-action-primary"
-              label={message}
-            />
-          )}
-          <p className="font-sans text-body-14-regular text-text-secondary">
-            {message}
-          </p>
-        </div>
+        )}
+        <p className="font-sans text-body-14-regular text-text-secondary">
+          {message}
+        </p>
       </div>
     </PageContainer>
   );

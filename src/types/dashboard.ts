@@ -1,7 +1,7 @@
 // UI 행동 분석 등 다른 어드민 화면도 같이 쓰는 공용 타입이라 types/admin.ts로 옮기고 재수출함
 export type { AdminPeriod as DashboardPeriod } from "./admin";
 
-type FunnelStage =
+export type FunnelStage =
   | "consultation_started"
   | "recommendation_completed"
   | "plan_comparison_viewed"

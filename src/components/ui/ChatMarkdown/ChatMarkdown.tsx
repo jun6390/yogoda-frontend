@@ -1,8 +1,13 @@
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 
+import { cn } from "@/lib/utils";
+
 interface ChatMarkdownProps {
   children: string;
+  // 프롬프트 버전 비교처럼 채팅창 두 개를 나란히 좁게 보여줘야 하는 화면에서
+  // 본문 글자 크기를 한 단계 줄이기 위함. 기본 채팅에는 영향 없음
+  compact?: boolean;
 }
 
 // 보이지 않을 정도로 얇은 공백(Zs 카테고리라 CommonMark의 "공백"으로 인정됨)
@@ -25,9 +30,13 @@ function fixAmbiguousBoldClose(text: string): string {
  * 부모(AIChatBubble)가 whitespace-pre-line을 쓰기 때문에, 마크다운 블록 요소들이
  * 줄바꿈까지 이중으로 반영되지 않도록 이 래퍼에서 whitespace를 다시 normal로 되돌림.
  */
-export function ChatMarkdown({ children }: ChatMarkdownProps) {
+export function ChatMarkdown({ children, compact = false }: ChatMarkdownProps) {
+  const bodyTextClassName = compact
+    ? "text-caption-12-regular"
+    : "text-body-14-regular";
+
   return (
-    <div className="space-y-sm whitespace-normal break-words">
+    <div className="space-y-sm whitespace-normal wrap-break-word">
       <ReactMarkdown
         remarkPlugins={[remarkGfm]}
         components={{
@@ -47,7 +56,7 @@ export function ChatMarkdown({ children }: ChatMarkdownProps) {
             </strong>
           ),
           p: ({ children }) => (
-            <p className="font-sans text-body-14-regular text-text-primary">
+            <p className={cn("font-sans text-text-primary", bodyTextClassName)}>
               {children}
             </p>
           ),
@@ -57,12 +66,22 @@ export function ChatMarkdown({ children }: ChatMarkdownProps) {
           em: ({ children }) => <em className="italic">{children}</em>,
           hr: () => <hr className="my-md border-t border-border-default" />,
           ul: ({ children }) => (
-            <ul className="list-disc space-y-xs pl-lg font-sans text-body-14-regular text-text-primary">
+            <ul
+              className={cn(
+                "list-disc space-y-xs pl-lg font-sans text-text-primary",
+                bodyTextClassName,
+              )}
+            >
               {children}
             </ul>
           ),
           ol: ({ children }) => (
-            <ol className="list-decimal space-y-xs pl-lg font-sans text-body-14-regular text-text-primary">
+            <ol
+              className={cn(
+                "list-decimal space-y-xs pl-lg font-sans text-text-primary",
+                bodyTextClassName,
+              )}
+            >
               {children}
             </ol>
           ),

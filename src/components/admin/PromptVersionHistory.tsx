@@ -149,7 +149,7 @@ export function PromptVersionHistory() {
   };
 
   return (
-    <section className="mt-2xl rounded-lg border border-border-default bg-surface p-2xl">
+    <section className="rounded-lg rounded-tr-none border border-border-default bg-surface p-2xl">
       <div className="flex items-center justify-between gap-md">
         <h2 className="font-sans text-title-18-bold text-text-primary">
           버전 히스토리
@@ -185,7 +185,7 @@ export function PromptVersionHistory() {
                   <th className="whitespace-nowrap px-sm py-sm font-sans text-caption-12-bold text-text-tertiary">
                     배포 일시
                   </th>
-                  <th className="px-sm py-sm font-sans text-caption-12-bold text-text-tertiary">
+                  <th className="min-w-70 px-sm py-sm font-sans text-caption-12-bold text-text-tertiary">
                     수정 내용 요약
                   </th>
                   <th className="whitespace-nowrap px-sm py-sm text-right font-sans text-caption-12-bold text-text-tertiary">
@@ -221,7 +221,10 @@ export function PromptVersionHistory() {
                       {version.deployedBy}
                     </td>
 
-                    <td className="px-sm py-md font-sans text-caption-13-regular text-text-secondary">
+                    <td
+                      title={version.summary}
+                      className="max-w-0 truncate px-sm py-md font-sans text-caption-13-regular text-text-secondary"
+                    >
                       {version.summary}
                     </td>
 
