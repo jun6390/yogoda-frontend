@@ -137,16 +137,16 @@ export function useNotifications() {
   // 안 읽음으로 남아 배지가 재등장하므로, 목록을 순회하지 않고 서버에 전체
   // 읽음 처리를 한 번만 요청함
   const markAllAsRead = useCallback(async () => {
-    const readAt = new Date().toISOString();
-    setNotifications((prev) =>
-      prev.map((notification) =>
-        notification.readAt ? notification : { ...notification, readAt },
-      ),
-    );
-    setUnreadCount(0);
-
     try {
       await readAllNotifications();
+
+      const readAt = new Date().toISOString();
+      setNotifications((prev) =>
+        prev.map((notification) =>
+          notification.readAt ? notification : { ...notification, readAt },
+        ),
+      );
+      setUnreadCount(0);
     } catch (err) {
       console.error("알림 전체 읽음 처리 실패:", err);
     }

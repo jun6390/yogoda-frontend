@@ -3,7 +3,7 @@
 import type { ElementType } from "react";
 import { useCallback, useRef, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
-import { Bell, Tag, Calendar, MessageCircle, Trash2 } from "lucide-react";
+import { Bell, Bot, Tag, Calendar, MessageCircle, Trash2 } from "lucide-react";
 
 import type { AppNotification, NotificationType } from "@/lib/api/notification";
 import { cn } from "@/lib/utils";
@@ -25,7 +25,22 @@ const NOTIFICATION_META: Record<
     icon: MessageCircle,
     chipClassName: "bg-brand-soft text-icon-brand",
   },
+  usage_pattern_changed: {
+    icon: Bot,
+    chipClassName: "bg-brand-soft text-icon-brand",
+  },
 };
+
+const DEFAULT_NOTIFICATION_META = {
+  icon: Bell,
+  chipClassName: "bg-surface-subtle text-icon-secondary",
+};
+
+function getNotificationMeta(type: string) {
+  return (
+    NOTIFICATION_META[type as NotificationType] ?? DEFAULT_NOTIFICATION_META
+  );
+}
 
 const REVEAL_WIDTH = 76;
 
@@ -97,10 +112,7 @@ export function NotificationPanel({
           </div>
           <button
             type="button"
-            // unreadCount는 낙관적으로 먼저 0으로 갱신되는 클라이언트 값이라,
-            // 실제로는 서버에 안 읽은 알림이 남아있어도(예: 이전 요청 실패)
-            // 0이면 버튼이 막혀서 다시 시도할 방법이 없었음. 진행 중일 때만 막음
-            disabled={isMarkingAll}
+            disabled={isMarkingAll || unreadCount === 0}
             onClick={() => void handleMarkAllAsRead()}
             className="font-sans text-caption-12-bold text-text-brand disabled:cursor-default disabled:text-text-tertiary"
           >
@@ -147,7 +159,7 @@ function NotificationItem({
   onClick: () => void;
   onDelete?: () => Promise<void>;
 }) {
-  const meta = NOTIFICATION_META[notification.type];
+  const meta = getNotificationMeta(notification.type);
   const Icon = meta.icon;
   const isUnread = !notification.readAt;
 
