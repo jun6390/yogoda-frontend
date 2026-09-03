@@ -10,6 +10,9 @@ import { Toast } from "@/components/ui/Toast/Toast";
 
 interface IdentityVerificationCardProps {
   onVerify?: (message: string, extraPayload?: Record<string, unknown>) => void;
+  // 이미 이 단계를 지나 다음 단계로 넘어간 경우 true. 지난 대화에 남아있는 카드를
+  // 다시 열어서 재제출하는 걸 막기 위해 트리거 버튼을 잠금
+  disabled?: boolean;
 }
 
 function digitsOnly(value: string) {
@@ -41,6 +44,7 @@ function generateVerificationCode() {
  */
 export function IdentityVerificationCard({
   onVerify,
+  disabled = false,
 }: IdentityVerificationCardProps) {
   const [open, setOpen] = useState(false);
   const [name, setName] = useState("");
@@ -193,6 +197,7 @@ export function IdentityVerificationCard({
         <Button
           variant="inChat"
           className="w-full"
+          disabled={disabled}
           onClick={() => setOpen(true)}
         >
           본인 확인하기

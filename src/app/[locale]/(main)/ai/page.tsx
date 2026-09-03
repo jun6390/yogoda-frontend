@@ -356,9 +356,13 @@ export default function AIConsultationPage() {
                       />
                     )}
 
-                    {/* 휴대폰 본인인증 카드 */}
+                    {/* 휴대폰 본인인증 카드. 이미 다음 단계로 넘어갔다면(=지난 대화의
+                        카드라면) 트리거 버튼을 잠가서 재제출을 막음 */}
                     {msg.type === "identity_verification" && (
-                      <IdentityVerificationCard onVerify={sendMessageSilent} />
+                      <IdentityVerificationCard
+                        onVerify={sendMessageSilent}
+                        disabled={currentSignupStep !== "identity_verification"}
+                      />
                     )}
 
                     {/* 가입 정보 최종 확인 카드 */}
@@ -394,13 +398,8 @@ export default function AIConsultationPage() {
             <AITypingIndicator state="typing" message={thinkingMessage} />
           </AIChatBubble>
         )}
-        {/* 답변 텍스트는 다 왔지만 카드처럼 더 올 수 있는 내용을 기다리는 중 (가입
-            플로우 전용 — 일반 채팅에서 기다리는 건 항상 퀵답변이라 아래 스켈레톤으로 대신함) */}
-        {!isTyping && isLoadingExtra && isSignupFlow && (
-          <AIChatBubble noBackground>
-            <AITypingIndicator state="typing" message={t("loadingExtra")} />
-          </AIChatBubble>
-        )}
+        {/* 답변 텍스트는 다 왔지만 카드처럼 더 올 수 있는 내용을 기다리는 중 (가입 플로우 전용) */}
+        {!isTyping && isLoadingExtra && isSignupFlow && <SignupCardSkeleton />}
         <div ref={chatEndRef} />
       </div>
 
@@ -416,21 +415,6 @@ export default function AIConsultationPage() {
             >
               {reply}
             </button>
-          ))}
-        </div>
-      )}
-
-      {/* 퀵답변이 오기 전, 말풍선 로딩 대신 칩 자리에 스켈레톤을 보여줌.
-          실제 칩과 같은 px-md py-xs 여백을 둬서 높이가 자연스럽게 일치하게 함 */}
-      {!isTyping && isLoadingExtra && !isSignupFlow && !isInputDisabled && (
-        <div className="absolute bottom-[88px] left-0 right-0 flex flex-nowrap gap-xs px-lg pb-xs z-10 overflow-x-auto scrollbar-hide">
-          {["w-16", "w-20", "w-14"].map((width, i) => (
-            <div
-              key={i}
-              className={`shrink-0 rounded-full border border-border-default bg-linear-to-r from-surface-subtle via-surface to-surface-subtle bg-size-[200%_100%] px-md py-xs text-caption-13-medium animate-[skeletonShimmer_1.5s_ease-in-out_infinite] ${width}`}
-            >
-              &nbsp;
-            </div>
           ))}
         </div>
       )}
@@ -602,6 +586,30 @@ function UserBubbleSkeleton({
         className={`animate-pulse rounded-[12px] rounded-tr-[4px] bg-action-primary/20 ${height} ${width}`}
       />
     </div>
+  );
+}
+
+// 가입 플로우 카드(약관 동의/본인 확인 등)가 오기 전 자리에 보여주는 스켈레톤.
+// 실제 카드들의 공통 형태(아이콘+제목 헤더, 목록, 하단 버튼)를 본떠서 만듦
+function SignupCardSkeleton() {
+  const shimmer =
+    "bg-linear-to-r from-surface-subtle via-surface to-surface-subtle bg-size-[200%_100%] animate-[skeletonShimmer_1.5s_ease-in-out_infinite]";
+
+  return (
+    <AIChatBubble noBackground>
+      <div className="w-full rounded-md rounded-tl-xs border border-border-default bg-surface p-lg flex flex-col gap-md shadow-sm">
+        <div className="flex items-center gap-sm">
+          <div className={`size-7 shrink-0 rounded-full ${shimmer}`} />
+          <div className={`h-3.5 w-32 rounded ${shimmer}`} />
+        </div>
+        <div className="flex flex-col gap-sm">
+          <div className={`h-3 w-full rounded ${shimmer}`} />
+          <div className={`h-3 w-5/6 rounded ${shimmer}`} />
+          <div className={`h-3 w-3/5 rounded ${shimmer}`} />
+        </div>
+        <div className={`h-11 w-full rounded-md ${shimmer}`} />
+      </div>
+    </AIChatBubble>
   );
 }
 
