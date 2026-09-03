@@ -9,7 +9,11 @@ import {
 } from "react";
 import { io, Socket } from "socket.io-client";
 
-import { API_BASE_URL, refreshAccessToken } from "@/lib/api/client";
+import {
+  API_BASE_URL,
+  isAccessTokenNearExpiry,
+  refreshAccessToken,
+} from "@/lib/api/client";
 import { endChatSession, getLatestChatSession } from "@/lib/api/chat";
 import { clearChatSessionStorage } from "@/lib/chatSessionStorage";
 import { useAuthStore } from "@/stores/useAuthStore";
@@ -310,12 +314,11 @@ export function useAIChat({
     const socket = io(`${apiBase}/chat`, {
       transports: ["websocket"],
       // 함수로 주면 (재)연결마다 다시 평가됨. accessToken이 만료된 채로 붙으면
-      // 백엔드가 에러 없이 조용히 비회원으로 처리해버려서, 연결 시도 직전에 매번
-      // 먼저 갱신을 시도해 만료된 토큰으로 붙는 걸 최대한 막음
+      // 백엔드가 에러 없이 조용히 비회원으로 처리해버려서, 만료가 임박했을 때만 연결 시도 직전에 갱신을 시도함.
       auth: async (cb) => {
         const { accessToken } = useAuthStore.getState();
         let token = accessToken ?? undefined;
-        if (token) {
+        if (token && isAccessTokenNearExpiry(token)) {
           try {
             token = await refreshAccessToken();
           } catch {

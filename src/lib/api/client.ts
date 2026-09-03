@@ -37,6 +37,28 @@ export function extractMessage(data: unknown): string | null {
   return null;
 }
 
+/*
+ * JWT의 payload만 디코드해 만료 시각(exp)을 확인함. 서명 검증은 하지 않음 —
+ * 이 값은 "지금 갱신이 필요한가"만 판단하는 용도라, 위조된 토큰이어도 실제
+ * 요청(Authorization 헤더)이 서버에서 거부되므로 보안에 영향이 없음
+ */
+export function isAccessTokenNearExpiry(
+  token: string,
+  bufferSeconds = 30,
+): boolean {
+  try {
+    const payload = token.split(".")[1];
+    const base64 = payload.replace(/-/g, "+").replace(/_/g, "/");
+    const json = JSON.parse(atob(base64)) as { exp?: number };
+
+    if (typeof json.exp !== "number") return true;
+
+    return Date.now() >= json.exp * 1000 - bufferSeconds * 1000;
+  } catch {
+    return true;
+  }
+}
+
 export async function refreshAccessToken(): Promise<string> {
   /*
    * 여러 API 요청에서 동시에 401이 발생하더라도
