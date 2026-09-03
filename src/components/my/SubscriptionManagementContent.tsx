@@ -155,7 +155,10 @@ export function SubscriptionManagementContent() {
     [filter, query.data?.subscriptions],
   );
   const invalidate = () =>
-    queryClient.invalidateQueries({ queryKey: ["subscriptions", "me"] });
+    Promise.all([
+      queryClient.invalidateQueries({ queryKey: ["subscriptions", "me"] }),
+      queryClient.invalidateQueries({ queryKey: ["my-usage-report"] }),
+    ]);
   const addMutation = useMutation({
     mutationFn: () =>
       addMySubscription({
