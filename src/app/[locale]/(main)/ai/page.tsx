@@ -86,7 +86,11 @@ export default function AIConsultationPage() {
     trackUiEvent,
     showConsentBanner,
     respondToConsent,
-  } = useAIChat({ preselectedPlan });
+  } = useAIChat({
+    preselectedPlan,
+    onSignupExit: () => setPreselectedPlan(undefined),
+    onSignupKickoffRequested: (plan) => setPreselectedPlan(plan),
+  });
 
   const [inputText, setInputText] = useState("");
   // 회원 전용 "채팅 끝내기" 확인 팝업 표시 여부
