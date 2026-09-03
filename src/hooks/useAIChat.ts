@@ -619,7 +619,9 @@ export function useAIChat({ preselectedPlan }: UseAIChatOptions = {}) {
               signupEntrySentRef.current = signupPlanOnLoad.code;
             }
             setMessages([
-              WELCOME_MESSAGE,
+              // 가입 플로우로 들어온 경우, dbMessages 맨 앞에 이미 저장된
+              // 가입 인삿말이 있으므로 일반 웰컴 메시지를 따로 붙이지 않음
+              ...(isSignupFlowOnLoad ? [] : [WELCOME_MESSAGE]),
               ...dbMessages.flatMap((m) => {
                 // 카드 타입 메시지 — 텍스트 없이 카드만 렌더링
                 if (m.messageType === "fraud_warning") {
@@ -972,7 +974,13 @@ export function useAIChat({ preselectedPlan }: UseAIChatOptions = {}) {
     signupEntrySentRef.current = preselectedPlan.code;
 
     const entryMessage = createSignupEntryMessage(preselectedPlan, user?.name);
-    setMessages((prev) => [...prev, entryMessage]);
+    setMessages((prev) =>
+      // 아직 일반 웰컴 메시지 하나뿐인 첫 진입이면, 서로 연관 없어 보이는
+      // 두 말풍선이 쌓이지 않도록 가입 인삿말로 교체함
+      prev.length === 1 && prev[0].id === WELCOME_MESSAGE.id
+        ? [entryMessage]
+        : [...prev, entryMessage],
+    );
     setQuickReplies(["네, 진행할게요"]);
 
     // 화면에 보여준 인삿말을 그대로 DB에도 저장해, 새로고침해도 실제 대화
