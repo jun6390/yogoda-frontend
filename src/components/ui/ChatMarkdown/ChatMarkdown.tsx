@@ -1,3 +1,4 @@
+import { memo } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 
@@ -30,7 +31,10 @@ function fixAmbiguousBoldClose(text: string): string {
  * 부모(AIChatBubble)가 whitespace-pre-line을 쓰기 때문에, 마크다운 블록 요소들이
  * 줄바꿈까지 이중으로 반영되지 않도록 이 래퍼에서 whitespace를 다시 normal로 되돌림.
  */
-export function ChatMarkdown({ children, compact = false }: ChatMarkdownProps) {
+export const ChatMarkdown = memo(function ChatMarkdown({
+  children,
+  compact = false,
+}: ChatMarkdownProps) {
   const bodyTextClassName = compact
     ? "text-caption-12-regular"
     : "text-body-14-regular";
@@ -124,4 +128,4 @@ export function ChatMarkdown({ children, compact = false }: ChatMarkdownProps) {
       </ReactMarkdown>
     </div>
   );
-}
+});

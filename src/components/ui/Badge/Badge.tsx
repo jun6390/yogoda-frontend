@@ -27,7 +27,7 @@ export function Badge({
          */
         variant === "default" && "bg-background text-text-secondary",
 
-        variant === "accent" && "bg-brand-soft text-action-primary",
+        variant === "accent" && "bg-brand-soft text-text-brand",
 
         /*
          * 색이 있는 배경(히어로 영역 등) 위에서도 잘 보여야 하는 뱃지용.
@@ -37,7 +37,7 @@ export function Badge({
 
         variant === "success" && "bg-success-soft text-success",
 
-        variant === "price" && "bg-background text-action-primary",
+        variant === "price" && "bg-background text-text-brand",
 
         variant === "error" && "bg-error-soft text-error",
 

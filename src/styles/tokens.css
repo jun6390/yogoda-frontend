@@ -19,14 +19,14 @@
   --primitive-gray-200: #e5e5eb;
   --primitive-gray-300: #d1d5db;
   --primitive-gray-400: #9a9aa3;
-  --primitive-gray-500: #6f6f79;
+  --primitive-gray-500: #686872;
   --primitive-gray-600: #4b5563;
   --primitive-gray-700: #373741;
   --primitive-gray-800: #1f2937;
   --primitive-gray-850: #1d2430;
   --primitive-gray-900: #17171c;
 
-  --primitive-success: #199e63;
+  --primitive-success: #137b4d;
   --primitive-success-soft: #eaf8f1;
   --primitive-warning: #e58b00;
   --primitive-error: #d92d43;
@@ -49,9 +49,9 @@
   --semantic-text-on-primary: var(--primitive-white);
   --semantic-text-primary: var(--primitive-gray-900);
   --semantic-text-secondary: var(--primitive-gray-500);
-  --semantic-text-tertiary: var(--primitive-gray-400);
+  --semantic-text-tertiary: var(--primitive-gray-500);
   --semantic-text-inverse: var(--primitive-white);
-  --semantic-text-brand: var(--primitive-brand-magenta);
+  --semantic-text-brand: var(--primitive-brand-magenta-dark);
   --semantic-text-on-cool-surface: #536781;
   --semantic-text-strong-on-cool-surface: #172033;
 
@@ -61,7 +61,7 @@
   --semantic-action-primary: var(--primitive-brand-magenta);
   --semantic-action-primary-hover: var(--primitive-brand-magenta-dark);
   --semantic-action-secondary: var(--primitive-brand-magenta-light);
-  --semantic-toast-background: var(--primitive-brand-magenta-light);
+  --semantic-toast-background: var(--primitive-brand-magenta-dark);
   --semantic-toast-foreground: var(--primitive-white);
   --semantic-toast-action-text: var(--primitive-white);
 
@@ -100,7 +100,7 @@
   --semantic-text-secondary: var(--primitive-gray-300);
   --semantic-text-tertiary: var(--primitive-gray-400);
   --semantic-text-inverse: var(--primitive-gray-900);
-  --semantic-text-brand: var(--primitive-brand-magenta-light);
+  --semantic-text-brand: #f582c2;
   --semantic-text-on-cool-surface: #536781;
   --semantic-text-strong-on-cool-surface: #172033;
 
@@ -110,7 +110,7 @@
   --semantic-action-primary: var(--primitive-brand-magenta);
   --semantic-action-primary-hover: var(--primitive-brand-magenta-dark);
   --semantic-action-secondary: var(--primitive-brand-magenta-light);
-  --semantic-toast-background: var(--primitive-brand-magenta-light);
+  --semantic-toast-background: var(--primitive-brand-magenta-dark);
   --semantic-toast-foreground: var(--primitive-white);
   --semantic-toast-action-text: var(--primitive-white);
 

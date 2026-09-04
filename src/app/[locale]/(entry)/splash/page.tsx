@@ -5,7 +5,7 @@ import { useTranslations } from "next-intl";
 import { useEffect } from "react";
 
 import { useRouter } from "@/i18n/navigation";
-import { verifySession } from "@/lib/api/client";
+import { useAuthStore } from "@/stores/useAuthStore";
 
 const SPLASH_DURATION = 1500;
 
@@ -14,20 +14,11 @@ export default function SplashPage() {
   const t = useTranslations("Splash");
 
   useEffect(() => {
-    let cancelled = false;
-
-    const timer = new Promise<void>((resolve) =>
-      window.setTimeout(resolve, SPLASH_DURATION),
-    );
-
-    Promise.all([verifySession(), timer]).then(([isValidSession]) => {
-      if (cancelled) return;
-      router.replace(isValidSession ? "/" : "/onboarding");
-    });
-
-    return () => {
-      cancelled = true;
-    };
+    // AuthProvider has already restored or rejected the session before mounting.
+    const timer = window.setTimeout(() => {
+      router.replace(useAuthStore.getState().accessToken ? "/" : "/onboarding");
+    }, SPLASH_DURATION);
+    return () => window.clearTimeout(timer);
   }, [router]);
 
   return (

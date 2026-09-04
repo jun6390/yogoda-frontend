@@ -1,4 +1,5 @@
 import type { ButtonHTMLAttributes, HTMLAttributes, ReactNode } from "react";
+import { useId } from "react";
 import { useTranslations } from "next-intl";
 
 import { Button } from "../Button/Button";
@@ -35,6 +36,8 @@ export function Modal({
   onMouseDown,
   ...props
 }: ModalProps) {
+  const headingId = useId();
+  const descriptionId = useId();
   const common = useTranslations("Common");
   const modal = useTranslations("Modal");
   const resolvedSecondaryLabel =
@@ -46,6 +49,8 @@ export function Modal({
     <div
       role="dialog"
       aria-modal="true"
+      aria-labelledby={props["aria-label"] ? undefined : headingId}
+      aria-describedby={descriptionId}
       className={cn(
         "relative flex w-[calc(100vw-40px)] max-w-[350px] flex-col items-center rounded-xl bg-surface p-2xl text-center shadow-md",
         className,
@@ -68,10 +73,16 @@ export function Modal({
       <div className="flex size-[40px] items-center justify-center rounded-full bg-brand-soft">
         {icon ?? <FigmaImage alt="" src={modalSparkles} className="size-xl" />}
       </div>
-      <h2 className="mt-lg font-sans text-title-16-bold text-text-primary">
+      <h2
+        id={headingId}
+        className="mt-lg font-sans text-title-16-bold text-text-primary"
+      >
         {heading}
       </h2>
-      <p className="whitespace-pre-line py-2xl font-sans text-body-14-regular text-text-secondary">
+      <p
+        id={descriptionId}
+        className="whitespace-pre-line py-2xl font-sans text-body-14-regular text-text-secondary"
+      >
         {description}
       </p>
       <Button

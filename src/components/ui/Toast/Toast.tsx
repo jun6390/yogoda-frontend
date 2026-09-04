@@ -44,7 +44,7 @@ export function Toast({
       {resolvedActionLabel ? (
         <button
           type="button"
-          className="shrink-0 rounded-sm bg-toast-foreground/30 px-md py-sm font-sans text-caption-12-bold text-toast-action-text"
+          className="shrink-0 rounded-sm bg-black/15 px-md py-sm font-sans text-caption-12-bold text-toast-action-text"
         >
           {resolvedActionLabel}
         </button>

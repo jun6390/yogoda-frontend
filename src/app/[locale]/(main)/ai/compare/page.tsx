@@ -109,7 +109,10 @@ export default function PlanComparePage() {
     };
   }, [selectedPlan]);
 
-  if (isCurrentPending || isSelectedPending) {
+  if (
+    (Boolean(accessToken) && isCurrentPending) ||
+    (Boolean(code) && isSelectedPending)
+  ) {
     return <PageSpinner label={t("loading")} />;
   }
 

@@ -48,12 +48,12 @@ export function UsageReportContent() {
 
   const report = reportQuery.data;
   const numberFormatter = new Intl.NumberFormat(locale);
-  const usageRate = Math.min(
-    100,
-    Math.round((report.dataUsed / report.dataLimit) * 100),
-  );
-  const remainingData = Math.max(0, report.dataLimit - report.dataUsed);
+  const usageRate = report.dataLimit
+    ? Math.min(100, Math.round((report.dataUsed / report.dataLimit) * 100))
+    : 0;
+  const remainingData = Math.max(0, (report.dataLimit ?? 0) - report.dataUsed);
   const maxHistoryAmount = Math.max(
+    1,
     ...report.history.map((item) => item.amount),
   );
   const usageDecreased = report.changeRate <= -20;
@@ -86,24 +86,31 @@ export function UsageReportContent() {
                 {t("gigabytes", { amount: report.dataUsed })}
               </strong>
               <span className="font-sans text-caption-12-regular text-text-secondary">
-                / {t("gigabytes", { amount: report.dataLimit })}
+                /{" "}
+                {report.dataLimit === null
+                  ? t("unlimitedData")
+                  : t("gigabytes", { amount: report.dataLimit })}
               </span>
             </p>
           </div>
-          <div className="mt-md h-[8px] overflow-hidden rounded-full bg-border-default">
-            <div
-              className="h-full rounded-full bg-action-primary"
-              style={{ width: `${usageRate}%` }}
-            />
-          </div>
-          <div className="mt-sm flex items-center justify-between gap-md font-sans text-caption-12-regular">
-            <span className="text-text-secondary">
-              {t("usageRate", { rate: usageRate })}
-            </span>
-            <strong className="text-success">
-              {t("remainingData", { amount: remainingData.toFixed(1) })}
-            </strong>
-          </div>
+          {report.dataLimit !== null && (
+            <>
+              <div className="mt-md h-[8px] overflow-hidden rounded-full bg-border-default">
+                <div
+                  className="h-full rounded-full bg-action-primary"
+                  style={{ width: `${usageRate}%` }}
+                />
+              </div>
+              <div className="mt-sm flex items-center justify-between gap-md font-sans text-caption-12-regular">
+                <span className="text-text-secondary">
+                  {t("usageRate", { rate: usageRate })}
+                </span>
+                <strong className="text-success">
+                  {t("remainingData", { amount: remainingData.toFixed(1) })}
+                </strong>
+              </div>
+            </>
+          )}
         </ReportCard>
 
         <ReportCard>
@@ -272,16 +279,14 @@ export function UsageReportContent() {
           />
         )}
 
-        {process.env.NODE_ENV !== "production" && (
-          <div className="pt-sm text-center">
-            <Link
-              href="/my/usage/demo"
-              className="inline-flex font-sans text-caption-13-medium text-text-secondary"
-            >
-              {t("demoSettings")}
-            </Link>
-          </div>
-        )}
+        <div className="pt-sm text-center">
+          <Link
+            href="/my/usage/demo"
+            className="inline-flex font-sans text-caption-13-medium text-text-secondary"
+          >
+            {t("demoSettings")}
+          </Link>
+        </div>
       </main>
     </div>
   );

@@ -26,6 +26,10 @@ import {
   reactivateMySubscription,
 } from "@/lib/api/subscription";
 import { cn } from "@/lib/utils";
+import {
+  parseSubscriptionForm,
+  toLocalDateInput,
+} from "@/lib/subscription-form";
 import { useHydrated } from "@/hooks/useHydrated";
 import { useAuthStore } from "@/stores/useAuthStore";
 import type {
@@ -131,9 +135,7 @@ export function SubscriptionManagementContent() {
   const [monthlyFee, setMonthlyFee] = useState(
     String(serviceCatalog[0].monthlyFee),
   );
-  const [startedAt, setStartedAt] = useState(
-    new Date().toISOString().slice(0, 10),
-  );
+  const [startedAt, setStartedAt] = useState(() => toLocalDateInput());
   const [cancelTarget, setCancelTarget] = useState<UserSubscription | null>(
     null,
   );
@@ -159,15 +161,17 @@ export function SubscriptionManagementContent() {
       queryClient.invalidateQueries({ queryKey: ["subscriptions", "me"] }),
       queryClient.invalidateQueries({ queryKey: ["my-usage-report"] }),
     ]);
+  const parsedForm = parseSubscriptionForm(monthlyFee, startedAt);
   const addMutation = useMutation({
-    mutationFn: () =>
-      addMySubscription({
+    mutationFn: () => {
+      if (!parsedForm) throw new Error(t("invalidInput"));
+      return addMySubscription({
         serviceCode: selectedService.serviceCode,
         serviceName: selectedService.serviceName,
         category: selectedService.category,
-        monthlyFee: Number(monthlyFee),
-        startedAt: new Date(`${startedAt}T00:00:00`).toISOString(),
-      }),
+        ...parsedForm,
+      });
+    },
     onSuccess: async () => {
       await invalidate();
       setFilter("active");
@@ -297,18 +301,17 @@ export function SubscriptionManagementContent() {
                   />
                 </label>
                 {addMutation.isError && (
-                  <p className="font-sans text-caption-12-regular text-error">
+                  <p
+                    role="alert"
+                    className="font-sans text-caption-12-regular text-error"
+                  >
                     {addMutation.error.message}
                   </p>
                 )}
                 <Button
                   onClick={() => addMutation.mutate()}
                   loading={addMutation.isPending}
-                  disabled={
-                    !startedAt ||
-                    monthlyFee.trim() === "" ||
-                    Number(monthlyFee) < 0
-                  }
+                  disabled={!parsedForm}
                   className="h-[48px] w-full py-0 text-label-14-bold"
                 >
                   {t("save")}
@@ -340,6 +343,14 @@ export function SubscriptionManagementContent() {
               ))}
             </div>
 
+            {statusMutation.isError && (
+              <p
+                role="alert"
+                className="font-sans text-caption-12-regular text-error"
+              >
+                {t("updateError")}
+              </p>
+            )}
             {subscriptions.length ? (
               <section className="space-y-lg">
                 {subscriptions.map((subscription) => (
@@ -354,11 +365,14 @@ export function SubscriptionManagementContent() {
                         : t("reactivate")
                     }
                     pending={statusMutation.isPending}
-                    onAction={() =>
-                      subscription.status === "active"
-                        ? setCancelTarget(subscription)
-                        : statusMutation.mutate(subscription)
-                    }
+                    onAction={() => {
+                      statusMutation.reset();
+                      if (subscription.status === "active") {
+                        setCancelTarget(subscription);
+                      } else {
+                        statusMutation.mutate(subscription);
+                      }
+                    }}
                   />
                 ))}
               </section>
@@ -380,7 +394,9 @@ export function SubscriptionManagementContent() {
         >
           <Modal
             heading={t("cancelTitle", { name: cancelTarget.serviceName })}
-            description={t("cancelDescription")}
+            description={
+              statusMutation.isError ? t("updateError") : t("cancelDescription")
+            }
             primaryLabel={t("confirmCancel")}
             secondaryLabel={t("keep")}
             primaryLoading={statusMutation.isPending}

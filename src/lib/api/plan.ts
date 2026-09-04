@@ -5,8 +5,6 @@ import type {
   Plan,
   PlanCancelResult,
   PlanComparisonResult,
-  PlanSubscriptionResponse,
-  SelectedPlanOptions,
 } from "@/types/plan";
 
 export function getPlans() {
@@ -27,27 +25,6 @@ export function getPlanByCode(code: string) {
  */
 export function getCurrentPlan() {
   return apiFetch<CurrentPlan | null>("/api/plans/me/current");
-}
-
-export function joinPlan(code: string, selectedOptions: SelectedPlanOptions) {
-  return apiFetch<PlanSubscriptionResponse>(`/api/plans/${code}/join`, {
-    method: "POST",
-    body: {
-      selectedOptions,
-    },
-  });
-}
-
-/*
- * 현재 이용 중인 요금제를 다른 요금제로 변경함
- */
-export function changePlan(code: string, selectedOptions: SelectedPlanOptions) {
-  return apiFetch<PlanSubscriptionResponse>(`/api/plans/${code}/change`, {
-    method: "PATCH",
-    body: {
-      selectedOptions,
-    },
-  });
 }
 
 export function cancelCurrentPlan() {

@@ -1,4 +1,5 @@
 import { useAuthStore } from "@/stores/useAuthStore";
+import type { AuthUser } from "@/types/auth";
 
 /*
  * 서버 API의 base URL. REST 요청(fetch)은 빈 문자열이어도 상대경로로 정상 동작하지만,
@@ -23,6 +24,7 @@ interface ApiFetchOptions extends Omit<RequestInit, "body"> {
 
 interface RefreshResponse {
   accessToken: string;
+  user: AuthUser;
 }
 
 let refreshPromise: Promise<string> | null = null;
@@ -37,6 +39,28 @@ export function extractMessage(data: unknown): string | null {
   return null;
 }
 
+/*
+ * JWT의 payload만 디코드해 만료 시각(exp)을 확인함. 서명 검증은 하지 않음 —
+ * 이 값은 "지금 갱신이 필요한가"만 판단하는 용도라, 위조된 토큰이어도 실제
+ * 요청(Authorization 헤더)이 서버에서 거부되므로 보안에 영향이 없음
+ */
+export function isAccessTokenNearExpiry(
+  token: string,
+  bufferSeconds = 30,
+): boolean {
+  try {
+    const payload = token.split(".")[1];
+    const base64 = payload.replace(/-/g, "+").replace(/_/g, "/");
+    const json = JSON.parse(atob(base64)) as { exp?: number };
+
+    if (typeof json.exp !== "number") return true;
+
+    return Date.now() >= json.exp * 1000 - bufferSeconds * 1000;
+  } catch {
+    return true;
+  }
+}
+
 export async function refreshAccessToken(): Promise<string> {
   /*
    * 여러 API 요청에서 동시에 401이 발생하더라도
@@ -44,9 +68,11 @@ export async function refreshAccessToken(): Promise<string> {
    */
   if (!refreshPromise) {
     refreshPromise = (async () => {
+      const revision = useAuthStore.getState().revision;
       const response = await fetch(`${API_BASE_URL}/api/auth/refresh`, {
         method: "POST",
         credentials: "include",
+        signal: AbortSignal.timeout(15000),
         headers: {
           "Content-Type": "application/json",
         },
@@ -56,8 +82,20 @@ export async function refreshAccessToken(): Promise<string> {
         .json()
         .catch(() => null)) as RefreshResponse | null;
 
-      if (!response.ok || !data || typeof data.accessToken !== "string") {
-        useAuthStore.getState().clearAuth();
+      if (useAuthStore.getState().revision !== revision) {
+        throw new ApiError(
+          "로그인 상태가 변경됐어요. 다시 시도해 주세요.",
+          409,
+        );
+      }
+      if (
+        !response.ok ||
+        !data ||
+        typeof data.accessToken !== "string" ||
+        !data.user?.userId
+      ) {
+        if (response.status === 401 || response.status === 403)
+          useAuthStore.getState().clearAuth();
 
         throw new ApiError(
           extractMessage(data) ??
@@ -66,7 +104,7 @@ export async function refreshAccessToken(): Promise<string> {
         );
       }
 
-      useAuthStore.getState().setAccessToken(data.accessToken);
+      useAuthStore.getState().setAuth(data.accessToken, data.user);
 
       return data.accessToken;
     })().finally(() => {
@@ -126,7 +164,7 @@ export async function apiFetch<T>(
    * refresh token으로 새 access token을 발급받은 뒤
    * 기존 요청을 한 번만 다시 시도함
    */
-  if (response.status === 401) {
+  if (response.status === 401 && accessToken) {
     accessToken = await refreshAccessToken();
 
     response = await request(path, accessToken, body, headers, options);

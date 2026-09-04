@@ -56,6 +56,9 @@ export function MainShell({ children }: MainShellProps) {
   const [permissionToast, setPermissionToast] = useState<string | null>(null);
 
   const {
+    isLoading: notificationsLoading,
+    loadError: notificationsLoadError,
+    retryLoading: retryNotifications,
     notifications,
     unreadCount,
     markAsRead,
@@ -97,12 +100,17 @@ export function MainShell({ children }: MainShellProps) {
     let permissionStatus: PermissionStatus | null = null;
     let cancelled = false;
 
-    navigator.permissions.query({ name: "geolocation" }).then((status) => {
-      if (cancelled) return;
-      permissionStatus = status;
-      setLocationPermission(status.state);
-      status.onchange = () => setLocationPermission(status.state);
-    });
+    navigator.permissions
+      .query({ name: "geolocation" })
+      .then((status) => {
+        if (cancelled) return;
+        permissionStatus = status;
+        setLocationPermission(status.state);
+        status.onchange = () => setLocationPermission(status.state);
+      })
+      .catch(() => {
+        // Some browsers expose Permissions but do not support this permission query.
+      });
 
     return () => {
       cancelled = true;
@@ -170,7 +178,11 @@ export function MainShell({ children }: MainShellProps) {
       return;
     }
 
-    setNotificationPermission(await Notification.requestPermission());
+    try {
+      setNotificationPermission(await Notification.requestPermission());
+    } catch {
+      setPermissionToast(menu("permissionUnsupported"));
+    }
   };
 
   const { mutate: requestLogout, isPending: isPendingLogout } = useMutation({
@@ -219,6 +231,10 @@ export function MainShell({ children }: MainShellProps) {
         overlay={
           isNotificationPanelOpen && (
             <NotificationPanel
+              isLoading={notificationsLoading}
+              loadError={notificationsLoadError}
+              onRetry={retryNotifications}
+              totalUnreadCount={unreadCount}
               notifications={notifications}
               onClose={() => setIsNotificationPanelOpen(false)}
               onNotificationClick={handleNotificationClick}

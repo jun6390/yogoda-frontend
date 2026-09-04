@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useSyncExternalStore } from "react";
+import { useEffect } from "react";
+import { useAuthHydrated } from "@/hooks/useAuthHydrated";
 import type { LucideIcon } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import {
@@ -42,29 +43,6 @@ interface TodoItem {
   title: string;
   description: string;
   icon: LucideIcon;
-}
-
-function subscribeToAuthHydration(onStoreChange: () => void) {
-  const unsubscribeHydrate = useAuthStore.persist.onHydrate(onStoreChange);
-  const unsubscribeFinishHydration =
-    useAuthStore.persist.onFinishHydration(onStoreChange);
-
-  return () => {
-    unsubscribeHydrate();
-    unsubscribeFinishHydration();
-  };
-}
-
-function useAuthHydrated() {
-  /*
-   * zustand persist hydration 상태는 React state가 아니므로
-   * useSyncExternalStore로 구독해서 토큰 복원 전 로그인 페이지로 튀는 문제를 막음
-   */
-  return useSyncExternalStore(
-    subscribeToAuthHydration,
-    () => useAuthStore.persist.hasHydrated(),
-    () => false,
-  );
 }
 
 function getDaysUntilExpiration(expiresAt: string) {
@@ -217,7 +195,7 @@ export function HomeContent() {
   const todoCount = t("todoCount", { count: todoItems.length });
 
   const usageReport = usageQuery.data;
-  const usageRate = usageReport
+  const usageRate = usageReport?.dataLimit
     ? Math.min(
         100,
         Math.round((usageReport.dataUsed / usageReport.dataLimit) * 100),
@@ -236,9 +214,11 @@ export function HomeContent() {
       })
     : t("usageChecking");
   const usageLimitLabel = usageReport
-    ? t("dataSummaryLimit", {
-        amount: numberFormatter.format(usageReport.dataLimit),
-      })
+    ? usageReport.dataLimit === null
+      ? t("unlimitedData")
+      : t("dataSummaryLimit", {
+          amount: numberFormatter.format(usageReport.dataLimit),
+        })
     : t("usageChecking");
 
   const analysisAmount = hasCurrentPlan
@@ -341,27 +321,31 @@ export function HomeContent() {
               </p>
             </div>
 
-            <div className="mt-lg h-[8px] overflow-hidden rounded-full bg-border-default">
-              <div
-                className="h-full rounded-full bg-action-primary"
-                style={{ width: `${usageRate}%` }}
-              />
-            </div>
+            {usageReport?.dataLimit !== null && (
+              <>
+                <div className="mt-lg h-[8px] overflow-hidden rounded-full bg-border-default">
+                  <div
+                    className="h-full rounded-full bg-action-primary"
+                    style={{ width: `${usageRate}%` }}
+                  />
+                </div>
 
-            <div className="mt-sm flex items-center justify-between gap-lg font-sans text-caption-12-regular">
-              <span className="text-text-secondary">
-                {usageReport
-                  ? t("dataSummaryUsageRate", { rate: usageRate })
-                  : t("usageCheckingDescription")}
-              </span>
-              <strong className="text-success">
-                {usageReport
-                  ? t("dataSummaryRemainingData", {
-                      amount: remainingDataLabel,
-                    })
-                  : t("usageChecking")}
-              </strong>
-            </div>
+                <div className="mt-sm flex items-center justify-between gap-lg font-sans text-caption-12-regular">
+                  <span className="text-text-secondary">
+                    {usageReport
+                      ? t("dataSummaryUsageRate", { rate: usageRate })
+                      : t("usageCheckingDescription")}
+                  </span>
+                  <strong className="text-success">
+                    {usageReport
+                      ? t("dataSummaryRemainingData", {
+                          amount: remainingDataLabel,
+                        })
+                      : t("usageChecking")}
+                  </strong>
+                </div>
+              </>
+            )}
           </section>
         )}
 

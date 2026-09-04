@@ -7,6 +7,7 @@ import { Bell, Bot, Tag, Calendar, MessageCircle, Trash2 } from "lucide-react";
 
 import type { AppNotification, NotificationType } from "@/lib/api/notification";
 import { cn } from "@/lib/utils";
+import { Spinner } from "../Spinner/Spinner";
 
 // 타입별로 성격에 맞는 색을 따로 둬서 목록에서 한눈에 구분되게 함
 const NOTIFICATION_META: Record<
@@ -45,7 +46,11 @@ function getNotificationMeta(type: string) {
 const REVEAL_WIDTH = 76;
 
 interface NotificationPanelProps {
+  isLoading?: boolean;
+  loadError?: boolean;
+  onRetry?: () => void;
   notifications: AppNotification[];
+  totalUnreadCount?: number;
   onClose: () => void;
   /** 읽음 처리(서버 반영)까지 끝난 뒤 이동해야 해서 Promise를 반환받음 */
   onNotificationClick: (notification: AppNotification) => Promise<void>;
@@ -60,7 +65,11 @@ interface NotificationPanelProps {
  * - 좌로 스와이프: 삭제 버튼 노출 (iOS 스타일)
  */
 export function NotificationPanel({
+  isLoading = false,
+  loadError = false,
+  onRetry,
   notifications,
+  totalUnreadCount,
   onClose,
   onNotificationClick,
   onMarkAllAsRead,
@@ -68,13 +77,18 @@ export function NotificationPanel({
 }: NotificationPanelProps) {
   const notificationT = useTranslations("Notifications");
   const locale = useLocale();
-  const unreadCount = notifications.filter((n) => !n.readAt).length;
+  const unreadCount =
+    totalUnreadCount ?? notifications.filter((n) => !n.readAt).length;
   const [isMarkingAll, setIsMarkingAll] = useState(false);
+  const [hasError, setHasError] = useState(false);
 
   const handleMarkAllAsRead = async () => {
     setIsMarkingAll(true);
+    setHasError(false);
     try {
       await onMarkAllAsRead();
+    } catch {
+      setHasError(true);
     } finally {
       setIsMarkingAll(false);
     }
@@ -92,10 +106,11 @@ export function NotificationPanel({
 
       <div
         role="dialog"
+        aria-busy={isLoading}
         aria-label={notificationT("title")}
         className={cn(
           "absolute right-4 top-[60px] z-50",
-          "flex max-h-[460px] w-[340px] flex-col overflow-hidden",
+          "flex max-h-[min(460px,calc(100dvh-150px))] w-[340px] max-w-[calc(100vw-32px)] flex-col overflow-hidden",
           "rounded-xl border border-border-default bg-surface shadow-lg",
         )}
       >
@@ -112,7 +127,9 @@ export function NotificationPanel({
           </div>
           <button
             type="button"
-            disabled={isMarkingAll || unreadCount === 0}
+            disabled={
+              isLoading || loadError || isMarkingAll || unreadCount === 0
+            }
             onClick={() => void handleMarkAllAsRead()}
             className="font-sans text-caption-12-bold text-text-brand disabled:cursor-default disabled:text-text-tertiary"
           >
@@ -122,7 +139,35 @@ export function NotificationPanel({
           </button>
         </div>
 
-        {notifications.length === 0 ? (
+        {hasError && (
+          <p
+            role="alert"
+            className="px-lg py-sm font-sans text-caption-12-regular text-error"
+          >
+            {notificationT("updateError")}
+          </p>
+        )}
+        {loadError && (
+          <div role="alert" className="space-y-sm px-lg py-lg">
+            <p className="font-sans text-caption-12-regular text-error">
+              {notificationT("loadError")}
+            </p>
+            {onRetry && (
+              <button
+                type="button"
+                onClick={onRetry}
+                className="font-sans text-caption-12-bold text-text-brand"
+              >
+                {notificationT("retry")}
+              </button>
+            )}
+          </div>
+        )}
+        {isLoading && notifications.length === 0 ? (
+          <div className="flex justify-center py-3xl">
+            <Spinner label={notificationT("loading")} />
+          </div>
+        ) : notifications.length === 0 && !loadError ? (
           <NotificationEmptyState label={notificationT("empty")} />
         ) : (
           <ul className="flex-1 overflow-y-auto">
@@ -131,10 +176,23 @@ export function NotificationPanel({
                 key={notification.id}
                 notification={notification}
                 locale={locale}
-                onClick={() => void onNotificationClick(notification)}
+                onClick={() => {
+                  setHasError(false);
+                  void onNotificationClick(notification).catch(() =>
+                    setHasError(true),
+                  );
+                }}
                 onDelete={
                   onNotificationDelete
-                    ? () => onNotificationDelete(notification)
+                    ? async () => {
+                        setHasError(false);
+                        try {
+                          await onNotificationDelete(notification);
+                        } catch (error) {
+                          setHasError(true);
+                          throw error;
+                        }
+                      }
                     : undefined
                 }
               />
@@ -159,6 +217,8 @@ function NotificationItem({
   onClick: () => void;
   onDelete?: () => Promise<void>;
 }) {
+  const notificationT = useTranslations("Notifications");
+  const deleteButton = useRef<HTMLButtonElement>(null);
   const meta = getNotificationMeta(notification.type);
   const Icon = meta.icon;
   const isUnread = !notification.readAt;
@@ -237,10 +297,15 @@ function NotificationItem({
 
   const handleDeleteClick = async (e: React.MouseEvent) => {
     e.stopPropagation();
-    if (!onDelete) return;
+    if (!onDelete || isExiting) return;
     // 아이템을 왼쪽으로 밀어내며 높이를 접는 exit 애니메이션
     setIsExiting(true);
-    setTimeout(() => void onDelete(), 300);
+    try {
+      await onDelete();
+    } catch {
+      setIsExiting(false);
+      snapTo(0);
+    }
   };
 
   return (
@@ -248,14 +313,17 @@ function NotificationItem({
       className={cn(
         "relative overflow-hidden border-b border-border-default last:border-b-0",
         "transition-[max-height,opacity] duration-300 ease-out",
-        isExiting ? "max-h-0 opacity-0" : "max-h-[120px] opacity-100",
+        isExiting ? "max-h-0 opacity-0" : "opacity-100",
       )}
     >
       {/* 뒤쪽 레이어: 삭제 버튼. 앞쪽 콘텐츠가 스와이프로 밀리면 드러남 */}
       {onDelete && (
         <button
           type="button"
-          aria-label="알림 삭제"
+          ref={deleteButton}
+          aria-label={notificationT("delete")}
+          tabIndex={offset < 0 ? 0 : -1}
+          onFocus={() => snapTo(-REVEAL_WIDTH)}
           onClick={(e) => void handleDeleteClick(e)}
           className={cn(
             "absolute right-0 top-0 flex h-full w-[76px] flex-col items-center justify-center gap-[3px]",
@@ -270,6 +338,14 @@ function NotificationItem({
       <button
         type="button"
         onClick={handleContentClick}
+        onKeyDown={(event) => {
+          if (onDelete && event.key === "Delete") {
+            event.preventDefault();
+            snapTo(-REVEAL_WIDTH);
+            deleteButton.current?.focus();
+          }
+          if (event.key === "Escape") snapTo(0);
+        }}
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}

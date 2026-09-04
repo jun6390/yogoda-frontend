@@ -122,6 +122,7 @@ export function CouponWalletContent() {
               >
                 <Image
                   src="/yogoda-banners/coupon-character-transparent.png"
+                  loading="eager"
                   alt=""
                   width={700}
                   height={379}
