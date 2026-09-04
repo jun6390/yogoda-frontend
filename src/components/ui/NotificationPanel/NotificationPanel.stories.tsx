@@ -56,6 +56,10 @@ export const AllRead: Story = {
   },
 };
 export const Empty: Story = { args: { notifications: [] } };
+export const Loading: Story = { args: { notifications: [], isLoading: true } };
+export const LoadError: Story = {
+  args: { notifications: [], loadError: true, onRetry: () => undefined },
+};
 
 export const UnknownNotificationType: Story = {
   args: {

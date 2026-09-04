@@ -66,7 +66,7 @@ export function BenefitRow({
       </div>
       <span
         className={cn(
-          "shrink-0 font-sans text-label-14-bold text-action-primary",
+          "shrink-0 font-sans text-label-14-bold text-text-brand",
           type === "price" && "text-text-primary",
         )}
       >

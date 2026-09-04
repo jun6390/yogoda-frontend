@@ -259,11 +259,16 @@
     "closeMenu": "Close menu"
   },
   "Notifications": {
+    "loading": "Loading notifications",
+    "loadError": "Could not load notifications.",
+    "retry": "Retry",
+    "delete": "Delete notification",
     "title": "Notifications",
     "empty": "No notifications yet",
     "close": "Close notifications",
     "markAllAsRead": "Mark all read",
-    "markingAllAsRead": "Updating"
+    "markingAllAsRead": "Updating",
+    "updateError": "Could not update notifications. Please try again."
   },
   "Menu": {
     "title": "Menu",
@@ -533,6 +538,8 @@
     "loginRequired": "Please log in to continue.",
     "loginDescription": "Log in to manage your subscription profile.",
     "loadError": "Unable to load subscriptions.",
+    "updateError": "Could not update your subscription. Please try again.",
+    "invalidInput": "Please check the monthly fee and start date.",
     "loadErrorDescription": "Please try again in a moment.",
     "retry": "Try again",
     "activeSubscriptions": "Active subscriptions",
@@ -713,6 +720,7 @@
     "gigabytes": "{amount}GB",
     "usageRate": "{rate}% used",
     "remainingData": "{amount}GB remaining",
+    "unlimitedData": "Unlimited",
     "recentUsage": "Recent 3-month usage",
     "averageUsage": "3-month average {amount}GB",
     "summary": "Monthly usage summary",
@@ -902,6 +910,7 @@
     "usageLoadError": "Review your usage report",
     "dataSummaryTitle": "Data this month",
     "dataSummaryLimit": "{amount}GB",
+    "unlimitedData": "Unlimited",
     "dataSummaryUsageRate": "{rate}% used",
     "dataSummaryRemainingData": "{amount}GB remaining",
     "noPlanBillingAmount": "Join required",

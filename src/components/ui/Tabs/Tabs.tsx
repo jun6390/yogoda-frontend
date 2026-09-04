@@ -51,7 +51,7 @@ export function Tabs<T extends string>({
               "relative flex h-full flex-1 items-center justify-center",
               "font-sans text-caption-13-medium text-text-secondary",
               "focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-action-primary",
-              isActive && "text-caption-13-bold text-action-primary",
+              isActive && "text-caption-13-bold text-text-brand",
             )}
           >
             {tab.label}

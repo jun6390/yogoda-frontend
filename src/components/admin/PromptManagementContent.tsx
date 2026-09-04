@@ -60,7 +60,12 @@ export function PromptManagementContent() {
   // 임시저장된 초안이 있으면 그걸, 없으면 현재 운영 버전을 기본값으로 돌려줌.
   // 편집 중 자동저장이 이 쿼리를 다시 무효화하지 않으므로, 창을 다시 포커스해도
   // 방금 GET으로 받아온(=자기 자신이 막 저장한) 내용으로 덮어써지지 않음
-  const { data: draft } = useQuery({
+  const {
+    data: draft,
+    isPending: isDraftPending,
+    isError: isDraftError,
+    refetch: refetchDraft,
+  } = useQuery({
     queryKey: ADMIN_PROMPT_QUERY_KEYS.draft,
     queryFn: getPromptDraft,
     refetchOnWindowFocus: false,
@@ -82,11 +87,22 @@ export function PromptManagementContent() {
     setContent(draft.content);
   }
 
-  const draftMutation = useMutation({ mutationFn: savePromptDraft });
+  const draftMutation = useMutation({
+    mutationFn: savePromptDraft,
+    onSuccess: (data) => {
+      queryClient.setQueryData(ADMIN_PROMPT_QUERY_KEYS.draft, data);
+    },
+  });
   const { mutate: saveDraft } = draftMutation;
+  const savedContent = draftMutation.data?.content ?? draft?.content;
 
   useEffect(() => {
-    if (!hasSyncedDraft) {
+    if (
+      !hasSyncedDraft ||
+      draftMutation.isPending ||
+      draftMutation.isError ||
+      content === savedContent
+    ) {
       return;
     }
 
@@ -95,7 +111,14 @@ export function PromptManagementContent() {
     }, DRAFT_AUTOSAVE_DELAY_MS);
 
     return () => window.clearTimeout(timeoutId);
-  }, [content, hasSyncedDraft, saveDraft]);
+  }, [
+    content,
+    hasSyncedDraft,
+    saveDraft,
+    savedContent,
+    draftMutation.isPending,
+    draftMutation.isError,
+  ]);
 
   const deployMutation = useMutation({
     mutationFn: createPrompt,
@@ -113,7 +136,10 @@ export function PromptManagementContent() {
 
   const hasChanges = Boolean(prompt) && content !== prompt?.content;
   const canDeploy =
-    hasChanges && summary.trim().length > 0 && !deployMutation.isPending;
+    hasChanges &&
+    content.trim().length > 0 &&
+    summary.trim().length > 0 &&
+    !deployMutation.isPending;
 
   const handleReset = () => {
     if (!prompt) {
@@ -122,6 +148,7 @@ export function PromptManagementContent() {
 
     setContent(prompt.content);
     setSummary("");
+    if (draftMutation.isError) draftMutation.reset();
     deployMutation.reset();
     setDeployedMessage(null);
   };
@@ -188,7 +215,7 @@ export function PromptManagementContent() {
           )}
 
           <div className="mt-lg">
-            {isPending && <PromptEditorSkeleton />}
+            {(isPending || isDraftPending) && <PromptEditorSkeleton />}
 
             {isError && (
               <ErrorState
@@ -201,6 +228,14 @@ export function PromptManagementContent() {
               />
             )}
 
+            {isDraftError && (
+              <ErrorState
+                title="초안을 불러오지 못했어요"
+                retryLabel="다시 시도"
+                onRetry={() => refetchDraft()}
+              />
+            )}
+
             {prompt && draft && (
               <div className="flex flex-col gap-2xl lg:flex-row">
                 <div className="flex flex-1 flex-col gap-md">
@@ -209,13 +244,18 @@ export function PromptManagementContent() {
                   </p>
 
                   <textarea
+                    aria-label="프롬프트 내용"
                     value={content}
-                    onChange={(event) => setContent(event.target.value)}
+                    onChange={(event) => {
+                      if (draftMutation.isError) draftMutation.reset();
+                      setContent(event.target.value);
+                    }}
                     className="min-h-45 w-full flex-1 resize-y rounded-md border border-border-default bg-background p-md font-sans text-body-14-regular text-text-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-action-primary"
                   />
 
                   <input
                     type="text"
+                    aria-label="수정 내용 요약"
                     value={summary}
                     onChange={(event) => setSummary(event.target.value)}
                     placeholder="수정 내용 요약을 입력하세요 (버전 히스토리에 표시돼요)"
@@ -233,11 +273,13 @@ export function PromptManagementContent() {
                       <p className="font-sans text-caption-12-regular text-text-tertiary">
                         {draftMutation.isPending
                           ? "임시저장 중..."
-                          : draftMutation.data?.updatedAt
-                            ? `임시저장됨 ${formatDateTime(draftMutation.data.updatedAt)} · ${draftMutation.data.updatedBy}`
-                            : draft.updatedAt
-                              ? `임시저장됨 ${formatDateTime(draft.updatedAt)} · ${draft.updatedBy}`
-                              : ""}
+                          : draftMutation.isError
+                            ? "자동저장 실패"
+                            : draftMutation.data?.updatedAt
+                              ? `임시저장됨 ${formatDateTime(draftMutation.data.updatedAt)} · ${draftMutation.data.updatedBy}`
+                              : draft.updatedAt
+                                ? `임시저장됨 ${formatDateTime(draft.updatedAt)} · ${draft.updatedBy}`
+                                : ""}
                       </p>
                     </div>
 
@@ -270,6 +312,15 @@ export function PromptManagementContent() {
                         ? deployMutation.error.message
                         : "배포 중 오류가 발생했어요."}
                     </p>
+                  )}
+
+                  {draftMutation.isError && (
+                    <ErrorState
+                      title="초안을 저장하지 못했어요"
+                      description="편집 중인 내용은 유지돼요."
+                      retryLabel="다시 저장"
+                      onRetry={() => saveDraft({ content })}
+                    />
                   )}
 
                   {deployedMessage && (

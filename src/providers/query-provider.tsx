@@ -1,4 +1,6 @@
 "use client";
+import { AuthProvider } from "./auth-provider";
+import { ApiError } from "@/lib/api/client";
 
 import {
   QueryClient,
@@ -11,6 +13,9 @@ function makeQueryClient() {
     defaultOptions: {
       queries: {
         staleTime: 60 * 1000,
+        retry: (failureCount, error) =>
+          !(error instanceof ApiError && [401, 403].includes(error.status)) &&
+          failureCount < 3,
       },
     },
   });
@@ -38,6 +43,8 @@ export function QueryProvider({ children }: QueryProviderProps) {
   const queryClient = getQueryClient();
 
   return (
-    <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+    <QueryClientProvider client={queryClient}>
+      <AuthProvider>{children}</AuthProvider>
+    </QueryClientProvider>
   );
 }

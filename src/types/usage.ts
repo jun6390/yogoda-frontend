@@ -10,7 +10,7 @@ export interface UsageReport {
   scenario: DemoUsageScenario;
   period: string;
   dataUsed: number;
-  dataLimit: number;
+  dataLimit: number | null;
   callMinutes: number;
   subscriptionCount: number;
   monthlyFee: number;

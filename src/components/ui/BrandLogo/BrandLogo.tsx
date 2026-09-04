@@ -62,6 +62,7 @@ export function BrandLogo({
 
   return (
     <span
+      role="img"
       aria-label={brand ?? "제휴 매장"}
       className={cn(
         "flex size-[44px] shrink-0 items-center justify-center overflow-hidden rounded-sm",
